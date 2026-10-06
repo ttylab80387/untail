@@ -1,0 +1,211 @@
+{
+  "utm_*": {
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "行銷活動標記（來源、媒介、活動名稱），網站用來統計流量從哪裡來。",
+      "en": "Marketing campaign tag (source, medium, campaign name) used by sites to attribute traffic.",
+      "ja": "マーケティングキャンペーンのタグ（参照元・媒体・キャンペーン名）。サイトが流入元を集計するために使います。"
+    }
+  },
+  "fbclid": {
+    "owner": "Meta",
+    "category": "ad_click",
+    "risk": "medium",
+    "desc": {
+      "zh-TW": "Facebook 點擊識別碼，讓網站與 Meta 把這次造訪和你在 Facebook 上的活動關聯起來。",
+      "en": "Facebook click identifier that lets the site and Meta link this visit to your Facebook activity.",
+      "ja": "Facebook のクリック識別子。サイトと Meta がこの訪問をあなたの Facebook 上の行動と結び付けられます。"
+    }
+  },
+  "gclid": {
+    "owner": "Google",
+    "category": "ad_click",
+    "risk": "medium",
+    "desc": {
+      "zh-TW": "Google 廣告點擊識別碼，用來追蹤廣告的轉換成效。",
+      "en": "Google Ads click identifier used for ad conversion tracking.",
+      "ja": "Google 広告のクリック識別子。広告のコンバージョン計測に使われます。"
+    }
+  },
+  "_ga": {
+    "owner": "Google",
+    "category": "session",
+    "risk": "medium",
+    "desc": {
+      "zh-TW": "Google Analytics 跨網站識別碼，可在不同網站之間延續對你的追蹤。",
+      "en": "Google Analytics cross-domain identifier that carries your tracking session across sites.",
+      "ja": "Google アナリティクスのクロスドメイン識別子。サイトをまたいで追跡を引き継ぎます。"
+    }
+  },
+  "_gl": {
+    "owner": "Google",
+    "category": "session",
+    "risk": "medium",
+    "desc": {
+      "zh-TW": "Google Analytics 跨網站識別碼，可在不同網站之間延續對你的追蹤。",
+      "en": "Google Analytics cross-domain identifier that carries your tracking session across sites.",
+      "ja": "Google アナリティクスのクロスドメイン識別子。サイトをまたいで追跡を引き継ぎます。"
+    }
+  },
+  "igsh": {
+    "owner": "Meta",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "Instagram 分享識別碼，可能讓 Instagram 得知是誰分享了這個連結。",
+      "en": "Instagram share identifier that may reveal to Instagram who shared this link.",
+      "ja": "Instagram の共有識別子。誰がこのリンクを共有したかを Instagram が把握できる可能性があります。"
+    }
+  },
+  "igshid": {
+    "owner": "Meta",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "Instagram 分享識別碼（舊版），可能讓 Instagram 得知是誰分享了這個連結。",
+      "en": "Legacy Instagram share identifier that may reveal to Instagram who shared this link.",
+      "ja": "旧形式の Instagram 共有識別子。誰がこのリンクを共有したかを Instagram が把握できる可能性があります。"
+    }
+  },
+  "spotify.com:si": {
+    "owner": "Spotify",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "Spotify 分享識別碼，可能讓 Spotify 得知是誰分享給你的。",
+      "en": "Spotify share identifier that may reveal to Spotify who shared this with you.",
+      "ja": "Spotify の共有識別子。誰があなたに共有したかを Spotify が把握できる可能性があります。"
+    }
+  },
+  "youtube.com:si": {
+    "owner": "Google",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "YouTube 分享識別碼，可能讓 YouTube 得知是誰分享給你的。",
+      "en": "YouTube share identifier that may reveal to YouTube who shared this with you.",
+      "ja": "YouTube の共有識別子。誰があなたに共有したかを YouTube が把握できる可能性があります。"
+    }
+  },
+  "youtu.be:si": {
+    "owner": "Google",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "YouTube 分享識別碼，可能讓 YouTube 得知是誰分享給你的。",
+      "en": "YouTube share identifier that may reveal to YouTube who shared this with you.",
+      "ja": "YouTube の共有識別子。誰があなたに共有したかを YouTube が把握できる可能性があります。"
+    }
+  },
+  "facebook.com:share-id": {
+    "owner": "Meta",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "Facebook 分享連結的專屬 ID，可能讓 Facebook 得知是誰分享給你的。",
+      "en": "Unique ID of a Facebook share link that may reveal to Facebook who shared it with you.",
+      "ja": "Facebook 共有リンク固有の ID。誰があなたに共有したかを Facebook が把握できる可能性があります。"
+    }
+  },
+  "facebook.com:share_url": {
+    "owner": "Meta",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "夾帶原始分享連結（含分享 ID）的參數。",
+      "en": "Carries the original share link, including its share ID.",
+      "ja": "共有 ID を含む元の共有リンクを保持するパラメータです。"
+    }
+  },
+  "facebook.com:rdid": {
+    "owner": "Meta",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "Facebook 轉址時加入的識別碼，每次都不同，用途未公開。",
+      "en": "Identifier Facebook adds while redirecting; changes every time, purpose undocumented.",
+      "ja": "Facebook がリダイレクト時に付与する識別子。毎回変わり、用途は非公開です。"
+    }
+  },
+  "threads.com:share-id": {
+    "owner": "Meta",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "Threads 分享連結的專屬 ID，可能讓 Threads 得知是誰分享給你的。",
+      "en": "Unique ID of a Threads share link that may reveal to Threads who shared it with you.",
+      "ja": "Threads 共有リンク固有の ID。誰があなたに共有したかを Threads が把握できる可能性があります。"
+    }
+  },
+  "threads.com:xmt": {
+    "owner": "Meta",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "Threads 分享參數，可能與分享者的帳號關聯。",
+      "en": "Threads share parameter that may be linked to the sharer's account.",
+      "ja": "共有者のアカウントと関連付けられている可能性がある Threads の共有パラメータです。"
+    }
+  },
+  "threads.com:slof": {
+    "owner": "Meta",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "Threads 分享來源標記，用途未公開。",
+      "en": "Threads share-source flag; purpose undocumented.",
+      "ja": "Threads の共有元フラグ。用途は非公開です。"
+    }
+  },
+  "threads.net:share-id": {
+    "owner": "Meta",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "Threads 分享連結的專屬 ID，可能讓 Threads 得知是誰分享給你的。",
+      "en": "Unique ID of a Threads share link that may reveal to Threads who shared it with you.",
+      "ja": "Threads 共有リンク固有の ID。誰があなたに共有したかを Threads が把握できる可能性があります。"
+    }
+  },
+  "threads.net:xmt": {
+    "owner": "Meta",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "Threads 分享參數，可能與分享者的帳號關聯。",
+      "en": "Threads share parameter that may be linked to the sharer's account.",
+      "ja": "共有者のアカウントと関連付けられている可能性がある Threads の共有パラメータです。"
+    }
+  },
+  "threads.net:slof": {
+    "owner": "Meta",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "Threads 分享來源標記，用途未公開。",
+      "en": "Threads share-source flag; purpose undocumented.",
+      "ja": "Threads の共有元フラグ。用途は非公開です。"
+    }
+  },
+  "amazon.com:tag": {
+    "owner": "Amazon",
+    "category": "affiliate",
+    "risk": "medium",
+    "desc": {
+      "zh-TW": "Amazon 聯盟行銷代碼：透過這個連結購買，分享者會獲得分潤。",
+      "en": "Amazon affiliate tag: the sharer earns a commission if you buy through this link.",
+      "ja": "Amazon アソシエイトのタグ。このリンク経由で購入すると共有者に報酬が入ります。"
+    }
+  },
+  "amazon.co.jp:tag": {
+    "owner": "Amazon",
+    "category": "affiliate",
+    "risk": "medium",
+    "desc": {
+      "zh-TW": "Amazon 聯盟行銷代碼：透過這個連結購買，分享者會獲得分潤。",
+      "en": "Amazon affiliate tag: the sharer earns a commission if you buy through this link.",
+      "ja": "Amazon アソシエイトのタグ。このリンク経由で購入すると共有者に報酬が入ります。"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "@linkclean/rules",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsx src/build.ts",
+    "test": "vitest run test/unit",
+    "test:regression": "vitest run test/regression",
+    "test:live": "tsx src/live.ts",
+    "clean-url": "tsx src/cli.ts",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@linkclean/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
+  }
+}

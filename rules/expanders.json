@@ -1,0 +1,15 @@
+{
+  "facebook": {
+    "match": "^https://(www|m)\\.facebook\\.com/share/",
+    "loginWall": { "match": "^https://(www|m)\\.facebook\\.com/login", "param": "next" },
+    "normalizeHost": { "m.facebook.com": "www.facebook.com" },
+    "shareId": "/share/(?:[a-z]/)?([^/?#]+)"
+  },
+  "threads": {
+    "match": "^https://www\\.threads\\.(com|net)/share/",
+    "shareId": "/share/([^/?#]+)"
+  },
+  "generic": {
+    "match": "^https?://(bit\\.ly|t\\.co|lnkd\\.in|amzn\\.to|shp\\.ee|fb\\.me)/"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "providers": {
+    "threads": {
+      "urlPattern": "^https?:\\/\\/(?:[a-z0-9-]+\\.)*?threads\\.(?:com|net)(?:[/:?#]|$)",
+      "rules": ["xmt", "slof"]
+    },
+    "facebook": {
+      "rules": ["rdid", "share_url"]
+    }
+  }
+}
