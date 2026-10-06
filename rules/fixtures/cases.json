@@ -1,0 +1,56 @@
+[
+  {
+    "name": "threads share link",
+    "input": "https://www.threads.com/share/BAAtest0001/",
+    "responses": { "https://www.threads.com/share/BAAtest0001/": "https://www.threads.com/@someone/post/DTest00001?xmt=AQGtest&slof=1" },
+    "expected": { "cleanUrl": "https://www.threads.com/@someone/post/DTest00001", "status": "clean", "removedKeys": ["share-id", "xmt", "slof"] }
+  },
+  {
+    "name": "facebook share link, direct redirect (iOS-like UA)",
+    "input": "https://www.facebook.com/share/p/TEST01/",
+    "responses": { "https://www.facebook.com/share/p/TEST01/": "https://www.facebook.com/groups/somegroup/permalink/1234567890/?rdid=abcDEF&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2Fp%2FTEST01%2F" },
+    "expected": { "cleanUrl": "https://www.facebook.com/groups/somegroup/permalink/1234567890/", "status": "clean", "removedKeys": ["share-id", "share_url", "rdid"] }
+  },
+  {
+    "name": "facebook share link, login wall (Android-like UA)",
+    "input": "https://www.facebook.com/share/p/TEST01/",
+    "responses": { "https://www.facebook.com/share/p/TEST01/": "https://m.facebook.com/login.php?next=https%3A%2F%2Fm.facebook.com%2Fgroups%2Fsomegroup%2Fpermalink%2F1234567890%2F%3Frdid%3Dxyz%26share_url%3Dhttps%253A%252F%252Fm.facebook.com%252Fshare%252Fp%252FTEST01%252F%26refsrc%3Ddeprecated&refsrc=deprecated&rdid=xyz&_rdr" },
+    "expected": { "cleanUrl": "https://www.facebook.com/groups/somegroup/permalink/1234567890/", "status": "clean", "removedKeys": ["share-id", "share_url", "rdid", "refsrc"] }
+  },
+  {
+    "name": "l.facebook.com outbound wrapper",
+    "input": "https://l.facebook.com/l.php?u=https%3A%2F%2Fexample.com%2Fa%3Futm_source%3Dfb%26id%3D5&h=AT0test",
+    "responses": {},
+    "expected": { "cleanUrl": "https://example.com/a?id=5", "status": "clean", "removedKeys": ["utm_source"] }
+  },
+  {
+    "name": "generic short link",
+    "input": "https://bit.ly/3test",
+    "responses": { "https://bit.ly/3test": "https://example.com/page?utm_campaign=x&id=7&gclid=Cj0test" },
+    "expected": { "cleanUrl": "https://example.com/page?id=7", "status": "clean", "removedKeys": ["gclid", "utm_campaign"] }
+  },
+  {
+    "name": "spotify si",
+    "input": "https://open.spotify.com/track/4testTrack?si=abc123",
+    "responses": {},
+    "expected": { "cleanUrl": "https://open.spotify.com/track/4testTrack", "status": "clean", "removedKeys": ["si"] }
+  },
+  {
+    "name": "youtu.be si",
+    "input": "https://youtu.be/abcDEF12345?si=XyZtest",
+    "responses": {},
+    "expected": { "cleanUrl": "https://youtu.be/abcDEF12345", "status": "clean", "removedKeys": ["si"] }
+  },
+  {
+    "name": "instagram igsh",
+    "input": "https://www.instagram.com/reel/ABCtest123/?igsh=MWQ1test",
+    "responses": {},
+    "expected": { "cleanUrl": "https://www.instagram.com/reel/ABCtest123/", "status": "clean", "removedKeys": ["igsh"] }
+  },
+  {
+    "name": "shared text with title and fbclid",
+    "input": "好文推薦 https://example.com/post?id=1&fbclid=IwARtest。",
+    "responses": {},
+    "expected": { "cleanUrl": "https://example.com/post?id=1", "status": "clean", "removedKeys": ["fbclid"] }
+  }
+]
