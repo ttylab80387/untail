@@ -1,12 +1,20 @@
 {
   "facebook": {
-    "match": "^https://(www|m)\\.facebook\\.com/share/",
-    "loginWall": { "match": "^https://(www|m)\\.facebook\\.com/login", "param": "next" },
-    "normalizeHost": { "m.facebook.com": "www.facebook.com" },
+    "match": "^https?://(?:(?:www|m|web|mbasic)\\.)?facebook\\.com/share/",
+    "loginWall": {
+      "match": "^https?://(?:(?:www|m|web|mbasic)\\.)?facebook\\.com/login",
+      "param": "next"
+    },
+    "normalizeHost": {
+      "m.facebook.com": "www.facebook.com",
+      "web.facebook.com": "www.facebook.com",
+      "mbasic.facebook.com": "www.facebook.com",
+      "facebook.com": "www.facebook.com"
+    },
     "shareId": "/share/(?:[a-z]/)?([^/?#]+)"
   },
   "threads": {
-    "match": "^https://www\\.threads\\.(com|net)/share/",
+    "match": "^https?://(?:www\\.)?threads\\.(com|net)/share/",
     "shareId": "/share/([^/?#]+)"
   },
   "generic": {
