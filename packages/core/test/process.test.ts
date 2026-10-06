@@ -126,6 +126,20 @@ describe('processUrl', () => {
     expect(r).toMatchObject({ status: 'partial', reason: 'expand_timeout' });
   });
 
+  it('reports unresolved when the expanded URL still embeds the share link', async () => {
+    const FB_SHARE = 'https://www.facebook.com/share/p/TEST01abc/';
+    const leaky = `https://www.facebook.com/groups/g/permalink/1/?shared_from=${encodeURIComponent(FB_SHARE)}`;
+    const r = await processUrl(FB_SHARE, rules, { expand: true, locale: 'en', fetch: mapFetch({ [FB_SHARE]: leaky }) });
+    expect(r).toMatchObject({ status: 'partial', reason: 'unresolved' });
+    expect(r.removed.map((p) => p.key)).not.toContain('share-id');
+  });
+
+  it('reports unresolved when an unknown login page carries the share ID', async () => {
+    const login = `https://www.threads.com/login/?next=${encodeURIComponent(THREADS)}`;
+    const r = await processUrl(THREADS, rules, { expand: true, locale: 'en', fetch: mapFetch({ [THREADS]: login }) });
+    expect(r).toMatchObject({ status: 'partial', reason: 'unresolved' });
+  });
+
   it('does not touch the network when expansion is disabled', async () => {
     const r = await processUrl(THREADS, rules, { expand: false, locale: 'en', fetch: noFetch });
     expect(r).toMatchObject({ cleanUrl: THREADS, status: 'partial', reason: 'expand_disabled', removed: [] });
