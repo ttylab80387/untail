@@ -77,14 +77,14 @@ type FetchFn = (url: string, init: { method: 'HEAD' | 'GET'; headers: Record<str
 function processUrl(
   input: string,
   rules: RuleBundle,
-  opts: { expand: boolean; locale: string; fetch?: FetchFn; timeoutMs?: number },
+  opts: { expand: boolean; locale: string; fetch?: FetchFn; userAgent?: string; timeoutMs?: number },
 ): Promise<ProcessResult>;
 
 interface ProcessResult {
   originalUrl: string;
   cleanUrl: string;
   status: 'clean' | 'partial' | 'failed';
-  reason?: 'expand_disabled' | 'expand_timeout' | 'login_wall' | 'network' | 'invalid_input';
+  reason?: 'expand_disabled' | 'expand_timeout' | 'unresolved' | 'network' | 'invalid_input';
   removed: AnalyzedParam[];   // every removed param / path segment, with explanation
   hops: string[];             // redirect chain, for display
 }
@@ -140,7 +140,7 @@ input text
 ```
 
 - 結果判定：
-  - 最終網址仍符合 `match`（仍是 `/share/`）或停在登入頁但解析不出 `next` → `partial / login_wall`
+  - 最終網址仍符合 `match`（仍是 `/share/`）或停在登入頁但解析不出 `next` → `partial / unresolved`
   - 逾時 / 網路錯誤 → `partial / expand_timeout` 或 `network`
   - 用戶關閉展開，但網址符合白名單 → `partial / expand_disabled`
   - `partial` 時 `cleanUrl` 仍會清掉看得到的參數，但 UI 必須顯示警告（§6.3）
