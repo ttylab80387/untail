@@ -1,0 +1,79 @@
+// ClearURLs provider format (subset we use), merged with our overrides.
+export interface Provider {
+  urlPattern: string;
+  completeProvider?: boolean;
+  rules?: string[];
+  rawRules?: string[];
+  referralMarketing?: string[];
+  exceptions?: string[];
+  redirections?: string[];
+  forceRedirection?: boolean;
+}
+
+export interface Expander {
+  match: string; // regex on the full URL
+  loginWall?: { match: string; param: string }; // match: regex on the full URL of the login page
+  normalizeHost?: Record<string, string>;
+  shareId?: string; // regex on the path, capture group 1 = share ID
+}
+
+export type Locale = 'zh-TW' | 'en' | 'ja';
+export type Category = 'sharer_id' | 'ad_click' | 'affiliate' | 'campaign' | 'session' | 'unknown';
+export type Risk = 'high' | 'medium' | 'low';
+
+export interface KnowledgeEntry {
+  owner?: string;
+  category: Category;
+  risk: Risk;
+  desc: Partial<Record<Locale, string>>;
+}
+
+export interface RuleBundle {
+  schemaVersion: 1;
+  version: string;
+  providers: Record<string, Provider>;
+  expanders: Record<string, Expander>;
+  knowledge: Record<string, KnowledgeEntry>;
+}
+
+// A param or path segment removed from a URL, before analysis.
+export interface RemovedItem {
+  key: string; // param name, or "share-id" for path-based IDs
+  value: string;
+  host: string; // host of the URL it was removed from
+}
+
+export interface AnalyzedParam {
+  key: string;
+  value: string;
+  owner?: string;
+  category: Category;
+  risk: Risk;
+  desc?: string;
+}
+
+export type Status = 'clean' | 'partial' | 'failed';
+export type ExpandFailure = 'expand_timeout' | 'unresolved' | 'network';
+export type Reason = 'expand_disabled' | ExpandFailure | 'invalid_input';
+
+export interface ProcessResult {
+  originalUrl: string;
+  cleanUrl: string;
+  status: Status;
+  reason?: Reason;
+  removed: AnalyzedParam[];
+  hops: string[];
+}
+
+export interface FetchInit {
+  method: 'HEAD' | 'GET';
+  headers: Record<string, string>;
+  signal: AbortSignal;
+}
+
+export interface FetchResponse {
+  url: string;
+  status: number;
+}
+
+export type FetchFn = (url: string, init: FetchInit) => Promise<FetchResponse>;
