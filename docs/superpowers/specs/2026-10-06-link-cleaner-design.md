@@ -18,12 +18,12 @@
 4. 結果頁列出被移除的參數，附用途、所屬公司、風險等級，可點開看詳細說明
 5. 本機歷史紀錄（可關閉、可清空）
 6. 短網址在手機端展開（可在設定關閉）
+7. 介面與追蹤碼說明支援 **繁體中文 / English / 日本語**（見 §6.4）
 
 ### 1.3 不在 MVP 範圍
 - 付費 / Pro / RevenueCat（架構保留 `isPro` 開關，見 §8）
 - Android `PROCESS_TEXT`（選取文字選單），列為 Android 第二版
 - 統計儀表板、自訂規則、批次清理
-- 多語系（MVP 只做繁體中文，字串集中在單一檔案，之後再加）
 
 ### 1.4 原則
 - **不使用任何第三方分析 / 廣告 / 崩潰回報 SDK**
@@ -40,6 +40,7 @@
 | 歷史紀錄 | `expo-sqlite` |
 | 剪貼簿 / 分享 | `expo-clipboard`、RN `Share` |
 | 規則快取 | `expo-file-system` |
+| 多語系 | `expo-localization` + `i18next` |
 | Monorepo | pnpm workspaces |
 | 測試 | Jest（core 與規則建置）|
 | 規則發佈 | GitHub Actions → GitHub Pages |
@@ -56,7 +57,7 @@ trackurlapp/
 ├── apps/mobile/            # Expo app (iOS + Android)
 ├── rules/
 │   ├── overrides.json      # Fixes/additions on top of ClearURLs
-│   ├── knowledge.json      # Param explanations (zh-TW)
+│   ├── knowledge.json      # Param explanations (zh-TW / en / ja)
 │   ├── expanders.json      # Per-site expander config
 │   ├── regression.json     # Real links + expected output (live tests)
 │   ├── fixtures/           # Recorded redirect chains (offline tests)
@@ -76,7 +77,7 @@ type FetchFn = (url: string, init: { method: 'HEAD' | 'GET'; headers: Record<str
 function processUrl(
   input: string,
   rules: RuleBundle,
-  opts: { expand: boolean; fetch?: FetchFn; timeoutMs?: number },
+  opts: { expand: boolean; locale: string; fetch?: FetchFn; timeoutMs?: number },
 ): Promise<ProcessResult>;
 
 interface ProcessResult {
@@ -94,7 +95,7 @@ interface AnalyzedParam {
   owner?: string;             // e.g. "Meta"
   category: 'sharer_id' | 'ad_click' | 'affiliate' | 'campaign' | 'session' | 'unknown';
   risk: 'high' | 'medium' | 'low';
-  descZh?: string;
+  desc?: string;              // resolved for current locale (fallback: en)
 }
 ```
 
@@ -167,6 +168,13 @@ interface RuleBundle {
   expanders: Record<string, object>;
   knowledge: Record<string, KnowledgeEntry>;
 }
+
+interface KnowledgeEntry {
+  owner?: string;
+  category: AnalyzedParam['category'];
+  risk: AnalyzedParam['risk'];
+  desc: { 'zh-TW'?: string; en?: string; ja?: string };
+}
 ```
 
 ### 5.2 CI 流程（`rules.yml`）
@@ -177,7 +185,8 @@ interface RuleBundle {
 2. 合併 → 產出 `rules.json`
 3. **離線測試**（決定是否發佈）：`packages/core` 單元測試，以及用 `fixtures/` 錄好的跳轉鏈跑回歸測試，不連網，結果固定
 4. 通過 → 計算 sha256、發佈到 GitHub Pages
-5. **線上測試**（不影響發佈）：用 `regression.json` 的真實連結實際連網跑一次。失敗就讓 workflow 標紅，GitHub 寄通知信 → 代表 Meta 等平台改了行為，需要人工處理
+5. **翻譯檢查**（不影響發佈）：列出 `knowledge.json` 缺 `zh-TW` / `en` / `ja` 翻譯的條目，輸出成 workflow 警告
+6. **線上測試**（不影響發佈）：用 `regression.json` 的真實連結實際連網跑一次。失敗就讓 workflow 標紅，GitHub 寄通知信 → 代表 Meta 等平台改了行為，需要人工處理
 
 > 注意：`regression.json` 放在公開 repo。裡面的分享連結帶有分享者 ID，**只能放可以公開的連結**（例如專門建來測試的帳號分享出來的連結）。
 
@@ -211,7 +220,14 @@ ClearURLs 規則為 **LGPL-3.0**。repo 與 App 的「開源授權」頁都要�
 - `partial`：黃色警告，依 `reason` 顯示原因，例如「無法展開 Facebook 分享連結，網址中仍可能含有分享者資訊」；**`partial` 時不自動複製**，需要用戶手動按
 - `failed`：「找不到有效網址」
 
-### 6.4 歷史紀錄（SQLite）
+### 6.4 多語系
+- 支援 `zh-TW`、`en`、`ja`，跟隨系統語言；不支援的語言用 `en`。所有中文系統（含 zh-CN、zh-HK）MVP 一律顯示繁體中文
+- App 內不做語言切換；`app.json` 宣告支援的 locales，讓 iOS 與 Android 13+ 可以在系統設定裡針對單一 App 切換語言
+- UI 字串：`apps/mobile/src/i18n/{zh-TW,en,ja}.json`
+- 知識庫說明 fallback：目前語言 → `en` → 只顯示參數名稱與分類
+- `core` 不處理語言：`analyze` 接收 `locale` 參數，回傳解析後的 `desc`
+
+### 6.5 歷史紀錄（SQLite）
 
 ```sql
 CREATE TABLE history (
@@ -241,10 +257,11 @@ CREATE TABLE history (
 - `isPro` 開關（目前固定 false），之後接 RevenueCat 一次性買斷
 - Android `PROCESS_TEXT`
 - FB `og:url` HTML 解析備案
-- 統計儀表板、自訂規則、多語系
+- 統計儀表板、自訂規則、更多語系
 
 ## 9. 上架準備
-- 隱私政策：放在 GitHub Pages，說明「不收集資料；只會連到規則更新網址與短網址服務；歷史紀錄只存本機」
+- 商店頁面（名稱、描述、截圖）準備 zh-TW / en / ja 三種語言
+- 隱私政策：放在 GitHub Pages，提供三種語言，說明「不收集資料；只會連到規則更新網址與短網址服務；歷史紀錄只存本機」
 - App Store 隱私標籤：Data Not Collected
 - Google Play：新個人開發者帳號需要先做封閉測試（12 名測試者 / 14 天，申請前到 Play Console 確認最新門檻），要提早開始找人
 - 費用：Apple USD 99/年，Google USD 25 一次性
