@@ -16,8 +16,8 @@
 
 - §2「規則快取：`expo-file-system`」→ 改存 SQLite 的 `kv` 表：App 已經用 SQLite，少一個依賴與一套 API
 - §6.5 歷史表多存 `reason`、`hops_json` 兩欄：從歷史點進去才能顯示完整結果卡片（spec §6.1 要求）
-- §6.1「左滑刪除」→ 長按刪除；「點開 bottom sheet 看說明」→ 點擊就地展開說明：都不需要額外的手勢 / sheet 套件
-- §6.4（多語系）「Android 13+ 系統設定可針對單一 App 切換語言」→ MVP 只做 iOS（`CFBundleLocalizations`）；Android 跟隨系統語言
+- §6.1「左滑刪除」→ 長按刪除；「點開 bottom sheet 看說明」→ 點擊就地展開說明：都不需要額外的手勢 / sheet 套件（**待用戶確認**；若要照 spec 原樣，另加一個 task）
+- §6.1 設定頁的「隱私政策」改為 App 內建頁面，不依賴 `SITE_BASE_URL`（GitHub Pages 建好前也看得到）
 
 ## Global Constraints
 
@@ -25,10 +25,12 @@
 - 不使用任何第三方分析 / 廣告 / 崩潰回報 SDK（spec §1.4）
 - `src/lib/**` 不可 import `react-native`、`expo-*` 或 React；平台能力一律從參數注入
 - 規則包遠端網址由 `src/config.ts` 的 `SITE_BASE_URL` 提供；**空字串代表停用遠端更新**，App 只用內建規則包（GitHub repo 建好前就是這個狀態）
+- Android 關閉系統備份（`allowBackup: false`），歷史紀錄不會進 Google Drive 備份
 - 展開請求的 User-Agent：`LinkClean/<app version>`，不可用瀏覽器 UA
 - 自動複製只在 `status === 'clean'` 且設定開啟時發生；`partial` 一律不自動複製（spec §6.3）
 - 歷史最多 200 筆；關閉歷史時不寫入、既有紀錄保留（spec §6.5）
-- 規則更新：距上次成功檢查 ≥ 24 小時才檢查；`sha256` 與快取不同才下載；下載後驗證 sha256 與 `validateBundle`，任何失敗都靜默沿用現有規則（spec §5.3）
+- 規則更新：啟動與回到前景時檢查，距上次**完成的**檢查 ≥ 24 小時才連網；`sha256` 與快取不同（或快取損毀）才下載；下載後驗證 sha256 與 `validateBundle`，任何失敗都靜默沿用現有規則（spec §5.3）
+- 分享進來的內容在設定與規則載入完成後才處理，且依序一次處理一個
 - 介面語言：`zh*` → zh-TW、`ja*` → ja、其他 → en（沿用 core 的 `resolveLocale`）
 - 程式碼註解用英文；使用者可見文字只放在 `src/i18n/locales/*.json`
 - 每個 commit 訊息結尾加：`Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`
@@ -36,7 +38,7 @@
 ## Review Focus
 
 1. **遠端規則包內容壞掉**（缺 `urlPattern`、expander `match` 無法編譯、`expanders` 是空的、`schemaVersion` 不支援）→ 不可採用，沿用目前規則；測試在 Task 1、Task 4。
-2. **同一個分享被處理兩次**（App 冷啟動時 share intent 與首頁 effect 都觸發）→ 只清理一次、只寫一筆歷史；在 Task 7 的首頁以 `resetShareIntent()` 後才處理，並在手動檢查清單驗證。
+2. **分享的時機**：冷啟動時在設定載入前就收到分享、在設定頁時收到分享、連續快速分享兩次 → 都要用使用者的設定處理、回到首頁顯示、每次分享只處理一次且結果不互相覆蓋；Task 7 的 `ShareWatcher` + 佇列處理，Task 9 用 adb 與手動清單驗證。
 3. **SQLite 快取裡的規則包 JSON 損毀** → 回到內建規則包，不可當掉；測試在 Task 4。
 4. **剪貼簿內容不是網址**（一般文字、空字串）→ 顯示「找不到有效網址」，不寫入歷史、不複製；測試在 Task 5。
 5. **設定 JSON 損毀或缺欄位** → 用預設值補齊，不可當掉；測試在 Task 3。
@@ -62,6 +64,7 @@ trackurlapp/
     │   ├── history.tsx
     │   ├── result/[id].tsx             # history entry detail
     │   ├── settings.tsx
+    │   ├── privacy.tsx                 # in-app privacy policy
     │   └── licenses.tsx
     └── src/
         ├── config.ts                   # SITE_BASE_URL, user agent
@@ -98,7 +101,12 @@ trackurlapp/
   - `compile(src, flags?)`：`src` 不是字串時回傳 `null`（原本會變成 `new RegExp(undefined)`，對所有網址成立）
   - `validateBundle(data: unknown): string[]`（空陣列 = 可採用），由 `index.ts` 匯出
 
-`validateBundle` 檢查：是物件；`schemaVersion === 1`；`version` 是字串；`providers` / `expanders` / `knowledge` 是物件；每個 provider 有字串 `urlPattern`；每個 expander 的 `match` 是字串且可編譯；`expanders` 不可為空（空的話分享連結會被誤判為 clean）。provider 的 `urlPattern` 編譯失敗**不算錯誤**（core 本來就會略過該 provider）。
+`validateBundle` 檢查 core 會讀到的**每一個欄位**，避免壞資料讓 core 在執行中 throw：
+- 是物件；`schemaVersion === 1`；`version` 是字串；`providers` / `expanders` / `knowledge` 是物件
+- provider：有字串 `urlPattern`；`rules` / `rawRules` / `referralMarketing` / `exceptions` / `redirections` 若存在必須是字串陣列
+- expander：`match` 是字串且可編譯；`loginWall` 若存在必須是 `{ match: 可編譯字串, param: 字串 }`；`normalizeHost` 若存在必須是值皆為字串的物件；`shareId` 若存在必須是字串；`expanders` 不可為空（空的話分享連結會被誤判為 clean）
+- knowledge：每筆是物件，`category` / `risk` 是合法列舉值，`desc` 是值皆為字串的物件，`owner` 若存在是字串
+- provider 的 `urlPattern` 或規則 regex 編譯失敗**不算錯誤**（core 本來就會略過）
 
 - [ ] **Step 1: 寫失敗測試**
 
@@ -157,6 +165,29 @@ describe('validateBundle', () => {
   it('rejects an empty expander set', () => {
     expect(validateBundle({ ...valid(), expanders: {} })).toEqual(['expanders is empty']);
   });
+
+  it('rejects provider rule fields that are not string arrays', () => {
+    const b = valid();
+    (b.providers as Record<string, unknown>).bad = { urlPattern: '.*', exceptions: 42, rules: ['ok', 1] };
+    expect(validateBundle(b)).toEqual(['providers.bad.rules: must be a string array', 'providers.bad.exceptions: must be a string array']);
+  });
+
+  it('rejects malformed optional expander fields', () => {
+    const b = { ...valid(), expanders: { x: { match: '^https://x/', loginWall: { match: '(' }, normalizeHost: { a: 1 }, shareId: 5 } } };
+    expect(validateBundle(b)).toEqual(['expanders.x.loginWall: invalid', 'expanders.x.normalizeHost: invalid', 'expanders.x.shareId: invalid']);
+  });
+
+  it('rejects malformed knowledge entries', () => {
+    const b = {
+      ...valid(),
+      knowledge: {
+        ok: { category: 'campaign', risk: 'low', desc: { en: 'x' } },
+        nodesc: { category: 'campaign', risk: 'low' },
+        badcat: { category: 'nope', risk: 'low', desc: {} },
+      },
+    };
+    expect(validateBundle(b)).toEqual(['knowledge.nodesc: invalid entry', 'knowledge.badcat: invalid entry']);
+  });
 });
 ```
 
@@ -183,8 +214,16 @@ import { compile } from './regex';
 
 const isObj = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
+const isStrArr = (v: unknown) => Array.isArray(v) && v.every((x) => typeof x === 'string');
+const isStrMap = (v: unknown) => isObj(v) && Object.values(v).every((x) => typeof x === 'string');
+const isPattern = (v: unknown) => typeof v === 'string' && compile(v) !== null;
 
-// Validates a bundle obtained at runtime. Any error means: keep the previous bundle.
+const RULE_FIELDS = ['rules', 'rawRules', 'referralMarketing', 'exceptions', 'redirections'] as const;
+const CATEGORIES = ['sharer_id', 'ad_click', 'affiliate', 'campaign', 'session', 'unknown'];
+const RISKS = ['high', 'medium', 'low'];
+
+// Validates a bundle obtained at runtime: every field core reads must have the type core expects.
+// Any error means: keep the previous bundle.
 export function validateBundle(data: unknown): string[] {
   if (!isObj(data)) return ['bundle is not an object'];
   const errors: string[] = [];
@@ -196,12 +235,38 @@ export function validateBundle(data: unknown): string[] {
   if (errors.length) return errors;
 
   for (const [name, p] of Object.entries(data.providers as Record<string, unknown>)) {
-    if (!isObj(p) || typeof p.urlPattern !== 'string') errors.push(`providers.${name}: missing urlPattern`);
+    if (!isObj(p) || typeof p.urlPattern !== 'string') {
+      errors.push(`providers.${name}: missing urlPattern`);
+      continue;
+    }
+    for (const f of RULE_FIELDS) {
+      if (p[f] !== undefined && !isStrArr(p[f])) errors.push(`providers.${name}.${f}: must be a string array`);
+    }
   }
+
   const expanders = Object.entries(data.expanders as Record<string, unknown>);
   if (expanders.length === 0) errors.push('expanders is empty');
   for (const [name, e] of expanders) {
-    if (!isObj(e) || typeof e.match !== 'string' || !compile(e.match)) errors.push(`expanders.${name}: invalid match`);
+    if (!isObj(e) || !isPattern(e.match)) {
+      errors.push(`expanders.${name}: invalid match`);
+      continue;
+    }
+    const wall = e.loginWall;
+    if (wall !== undefined && !(isObj(wall) && isPattern(wall.match) && typeof wall.param === 'string')) {
+      errors.push(`expanders.${name}.loginWall: invalid`);
+    }
+    if (e.normalizeHost !== undefined && !isStrMap(e.normalizeHost)) errors.push(`expanders.${name}.normalizeHost: invalid`);
+    if (e.shareId !== undefined && typeof e.shareId !== 'string') errors.push(`expanders.${name}.shareId: invalid`);
+  }
+
+  for (const [key, k] of Object.entries(data.knowledge as Record<string, unknown>)) {
+    const ok =
+      isObj(k) &&
+      CATEGORIES.includes(k.category as string) &&
+      RISKS.includes(k.risk as string) &&
+      isStrMap(k.desc) &&
+      (k.owner === undefined || typeof k.owner === 'string');
+    if (!ok) errors.push(`knowledge.${key}: invalid entry`);
   }
   return errors;
 }
@@ -250,7 +315,6 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Consumes: `@linkclean/core`（workspace）、`rules/dist/rules.json`（Plan 1 的建置產物）
 - Produces:
   - `SITE_BASE_URL: string`（`''` = 停用遠端更新；之後填 `https://<user>.github.io/<repo>/`，結尾要有 `/`）
-  - `PRIVACY_URL: string | null`（`SITE_BASE_URL` 為空時是 `null`）
   - `USER_AGENT: string`（`LinkClean/<app.json version>`）
   - `pnpm --filter @linkclean/mobile sync-rules`、`test`、`typecheck`、`bundle-check`
   - `assets/rules.json`：內建規則包快照
@@ -291,7 +355,7 @@ root `package.json` 的 `scripts` 加入：
     "start": "expo start",
     "ios": "expo run:ios",
     "android": "expo run:android",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit -p .",
     "sync-rules": "node scripts/sync-rules.mjs",
     "bundle-check": "expo export --platform ios --platform android --output-dir .expo-export-check"
@@ -313,7 +377,7 @@ cd ../..
 pnpm install
 pnpm test
 ```
-Expected: 安裝成功；Plan 1 的測試在 hoisted 安裝下仍全部通過（core 104+、rules 13）
+Expected: 安裝成功；Plan 1 的測試在 hoisted 安裝下仍全部通過（core、rules；mobile 還沒有測試，`--passWithNoTests` 讓它不失敗）
 
 - [ ] **Step 3: App 設定檔**
 
@@ -329,16 +393,15 @@ Expected: 安裝成功；Plan 1 的測試在 hoisted 安裝下仍全部通過（
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.linkclean.app",
-      "supportsTablet": true,
-      "infoPlist": {
-        "CFBundleLocalizations": ["zh-Hant", "en", "ja"]
-      }
+      "supportsTablet": true
     },
     "android": {
-      "package": "com.linkclean.app"
+      "package": "com.linkclean.app",
+      "allowBackup": false
     },
     "plugins": [
       "expo-router",
+      ["expo-localization", { "supportedLocales": ["zh-Hant", "en", "ja"] }],
       [
         "expo-share-intent",
         {
@@ -402,8 +465,6 @@ import Constants from 'expo-constants';
 // Base URL of the GitHub Pages site that hosts rules.json, rules.meta.json and privacy.html.
 // Must end with "/". Empty string disables remote rule updates (bundled rules only).
 export const SITE_BASE_URL = '';
-
-export const PRIVACY_URL: string | null = SITE_BASE_URL ? `${SITE_BASE_URL}privacy.html` : null;
 
 export const USER_AGENT = `LinkClean/${Constants.expoConfig?.version ?? '0'}`;
 ```
@@ -794,18 +855,19 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `CHECK_INTERVAL_MS = 86_400_000`
   - `interface UpdateDeps { db: Db; baseUrl: string; fetchText(url: string): Promise<string>; sha256(text: string): Promise<string>; now: number }`
   - `type UpdateOutcome = 'disabled' | 'throttled' | 'up-to-date' | 'updated' | 'failed'`
-  - `loadRules(db: Db, bundled: RuleBundle): Promise<RuleBundle>`（快取有效就用快取，否則內建）
-  - `updateRules(deps: UpdateDeps, opts?: { force?: boolean }): Promise<UpdateOutcome>`
+  - `loadRules(db: Db, bundled: RuleBundle): Promise<RuleBundle>`（快取有效就用快取，否則內建；永不 throw）
+  - `updateRules(deps: UpdateDeps, opts?: { force?: boolean }): Promise<UpdateOutcome>`（永不 throw）
+
+快取格式：kv 的 `rules.cache` 存一筆 `{"sha256": "...", "text": "<rules.json 原文>"}`。**規則與雜湊寫在同一筆**，不會出現一半更新的狀態。
 
 行為（spec §5.3）：
 1. `baseUrl` 空字串 → `disabled`
-2. 非 `force` 且距上次**成功取得 meta** 不到 24 小時 → `throttled`
-3. 取 `<baseUrl>rules.meta.json`；成功取得才記錄檢查時間
-4. meta 的 `schemaVersion !== 1` 或沒有 `sha256` → `failed`
-5. `sha256` 等於快取的 sha256 → `up-to-date`
-6. 取 `<baseUrl>rules.json`，雜湊不符、JSON 無效、`validateBundle` 有錯 → `failed`，快取不變
-7. 成功 → 寫入快取（內容 + sha256）→ `updated`
-8. 任何例外 → `failed`
+2. 非 `force` 且距上次**完成的檢查**（結果是 `up-to-date` 或 `updated`）不到 24 小時 → `throttled`。失敗不記錄時間，下次啟動 / 回到前景會再試（Ruling：失敗的代價只是一個很小的 meta 請求，不該因一次網路錯誤停更 24 小時）
+3. 取 `<baseUrl>rules.meta.json`；`schemaVersion !== 1` 或沒有 `sha256` → `failed`
+4. 快取存在、內容通過 `validateBundle`、快取的 sha256 等於 meta，**且重新計算快取原文的雜湊也相符** → 記錄檢查時間，`up-to-date`。任何一項不符就當作沒有快取，重新下載（快取損毀能自我修復）
+5. 取 `<baseUrl>rules.json`；雜湊不符、JSON 無效、`validateBundle` 有錯 → `failed`，快取不變
+6. 成功 → 一次寫入快取 → 記錄檢查時間 → `updated`
+7. 任何例外（含 SQLite 讀寫失敗）→ `failed`
 
 - [ ] **Step 1: 寫失敗測試**
 
@@ -821,7 +883,9 @@ import type { UpdateDeps } from './rulesStore';
 import { nodeDb } from './testing/nodeDb';
 
 const BASE = 'https://example.github.io/linkclean/';
-const sha = async (t: string) => createHash('sha256').update(t, 'utf8').digest('hex');
+const shaSync = (t: string) => createHash('sha256').update(t, 'utf8').digest('hex');
+const sha = async (t: string) => shaSync(t);
+const NOW = CHECK_INTERVAL_MS * 10;
 
 const bundle = (version: string): RuleBundle => ({
   schemaVersion: 1,
@@ -832,17 +896,17 @@ const bundle = (version: string): RuleBundle => ({
 });
 const BUNDLED = bundle('bundled');
 
-async function site(rules: unknown, meta?: Record<string, unknown>) {
+function site(rules: unknown, meta?: Record<string, unknown>, opts: { rulesFails?: boolean } = {}) {
   const text = typeof rules === 'string' ? rules : JSON.stringify(rules);
-  const m = meta ?? { schemaVersion: 1, version: 'remote', sha256: await sha(text) };
+  const m = meta ?? { schemaVersion: 1, version: 'remote', sha256: shaSync(text) };
   const calls: string[] = [];
   const fetchText = async (url: string) => {
     calls.push(url);
     if (url === `${BASE}rules.meta.json`) return JSON.stringify(m);
-    if (url === `${BASE}rules.json`) return text;
-    throw new Error(`unexpected ${url}`);
+    if (url === `${BASE}rules.json` && !opts.rulesFails) return text;
+    throw new Error(`fetch failed: ${url}`);
   };
-  return { fetchText, calls };
+  return { fetchText, calls, sha256: String(m.sha256) };
 }
 
 let db: Db;
@@ -851,79 +915,95 @@ beforeEach(async () => {
   await migrate(db);
 });
 
-const deps = (fetchText: UpdateDeps['fetchText'], now = CHECK_INTERVAL_MS * 10): UpdateDeps => ({
+const deps = (fetchText: UpdateDeps['fetchText'], now = NOW, over: Partial<UpdateDeps> = {}): UpdateDeps => ({
   db,
   baseUrl: BASE,
   fetchText,
   sha256: sha,
   now,
+  ...over,
 });
 
 describe('loadRules', () => {
   it('uses the bundled rules when nothing is cached', async () => {
     expect(await loadRules(db, BUNDLED)).toBe(BUNDLED);
   });
+
   it('falls back to bundled rules when the cache is corrupted or invalid', async () => {
-    await setKv(db, 'rules.json', '{broken');
+    await setKv(db, 'rules.cache', '{broken');
     expect(await loadRules(db, BUNDLED)).toBe(BUNDLED);
-    await setKv(db, 'rules.json', JSON.stringify({ ...bundle('x'), expanders: {} }));
+    const bad = JSON.stringify({ ...bundle('x'), expanders: {} });
+    await setKv(db, 'rules.cache', JSON.stringify({ sha256: shaSync(bad), text: bad }));
     expect(await loadRules(db, BUNDLED)).toBe(BUNDLED);
   });
 });
 
 describe('updateRules', () => {
   it('is disabled without a base URL', async () => {
-    const { fetchText } = await site(bundle('remote'));
-    expect(await updateRules({ ...deps(fetchText), baseUrl: '' })).toBe('disabled');
+    expect(await updateRules(deps(site(bundle('r')).fetchText, NOW, { baseUrl: '' }))).toBe('disabled');
   });
 
   it('downloads, verifies and caches a new bundle', async () => {
-    const { fetchText } = await site(bundle('remote'));
-    expect(await updateRules(deps(fetchText))).toBe('updated');
+    expect(await updateRules(deps(site(bundle('remote')).fetchText))).toBe('updated');
     expect((await loadRules(db, BUNDLED)).version).toBe('remote');
   });
 
-  it('throttles checks within 24 hours unless forced', async () => {
-    const { fetchText, calls } = await site(bundle('remote'));
-    const now = CHECK_INTERVAL_MS * 10;
-    await updateRules(deps(fetchText, now));
-    calls.length = 0;
-    expect(await updateRules(deps(fetchText, now + CHECK_INTERVAL_MS - 1))).toBe('throttled');
-    expect(calls).toEqual([]);
-    expect(await updateRules(deps(fetchText, now + 1), { force: true })).toBe('up-to-date');
+  it('throttles completed checks for 24 hours unless forced', async () => {
+    const s = site(bundle('remote'));
+    await updateRules(deps(s.fetchText));
+    s.calls.length = 0;
+    expect(await updateRules(deps(s.fetchText, NOW + CHECK_INTERVAL_MS - 1))).toBe('throttled');
+    expect(s.calls).toEqual([]);
+    expect(await updateRules(deps(s.fetchText, NOW + 1), { force: true })).toBe('up-to-date');
   });
 
-  it('skips the download when the sha256 matches the cache', async () => {
-    const { fetchText, calls } = await site(bundle('remote'));
-    await updateRules(deps(fetchText));
-    calls.length = 0;
-    expect(await updateRules(deps(fetchText), { force: true })).toBe('up-to-date');
-    expect(calls).toEqual([`${BASE}rules.meta.json`]);
+  it('skips the download when the cached bundle matches', async () => {
+    const s = site(bundle('remote'));
+    await updateRules(deps(s.fetchText));
+    s.calls.length = 0;
+    expect(await updateRules(deps(s.fetchText), { force: true })).toBe('up-to-date');
+    expect(s.calls).toEqual([`${BASE}rules.meta.json`]);
+  });
+
+  it('repairs a corrupted cache even when its stored hash matches', async () => {
+    const s = site(bundle('remote'));
+    await updateRules(deps(s.fetchText));
+    await setKv(db, 'rules.cache', JSON.stringify({ sha256: s.sha256, text: '{broken' }));
+    expect(await updateRules(deps(s.fetchText), { force: true })).toBe('updated');
+    expect((await loadRules(db, BUNDLED)).version).toBe('remote');
   });
 
   it('rejects a bundle whose hash does not match', async () => {
-    const { fetchText } = await site(bundle('remote'), { schemaVersion: 1, version: 'remote', sha256: 'deadbeef' });
-    expect(await updateRules(deps(fetchText))).toBe('failed');
+    const s = site(bundle('remote'), { schemaVersion: 1, version: 'remote', sha256: 'deadbeef' });
+    expect(await updateRules(deps(s.fetchText))).toBe('failed');
     expect(await loadRules(db, BUNDLED)).toBe(BUNDLED);
   });
 
   it('rejects a structurally invalid bundle', async () => {
-    const { fetchText } = await site({ ...bundle('remote'), expanders: {} });
-    expect(await updateRules(deps(fetchText))).toBe('failed');
+    expect(await updateRules(deps(site({ ...bundle('remote'), expanders: {} }).fetchText))).toBe('failed');
     expect(await loadRules(db, BUNDLED)).toBe(BUNDLED);
   });
 
   it('rejects unsupported meta schema versions', async () => {
-    const { fetchText } = await site(bundle('remote'), { schemaVersion: 2, version: 'remote', sha256: 'x' });
-    expect(await updateRules(deps(fetchText))).toBe('failed');
+    const s = site(bundle('remote'), { schemaVersion: 2, version: 'remote', sha256: 'x' });
+    expect(await updateRules(deps(s.fetchText))).toBe('failed');
   });
 
-  it('does not record a check time when the network fails', async () => {
-    const offline = async () => {
-      throw new Error('offline');
-    };
-    expect(await updateRules(deps(offline))).toBe('failed');
+  it('does not throttle after a failed check', async () => {
+    expect(await updateRules(deps(site(bundle('remote'), undefined, { rulesFails: true }).fetchText))).toBe('failed');
     expect(await getKv(db, 'rules.checkedAt')).toBeNull();
+    expect(await updateRules(deps(site(bundle('remote')).fetchText))).toBe('updated');
+  });
+
+  it('reports storage errors as failed instead of throwing', async () => {
+    const broken: Db = {
+      ...db,
+      getFirstAsync: async () => {
+        throw new Error('disk I/O error');
+      },
+    };
+    expect(await updateRules(deps(site(bundle('remote')).fetchText, NOW, { db: broken }))).toBe('failed');
+    expect(await loadRules(broken, BUNDLED)).toBe(BUNDLED);
   });
 });
 ```
@@ -944,8 +1024,8 @@ import type { Db } from './db';
 
 export const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
-const K_RULES = 'rules.json';
-const K_SHA = 'rules.sha256';
+// Bundle text and its hash live in one record so they can never diverge.
+const K_CACHE = 'rules.cache';
 const K_CHECKED = 'rules.checkedAt';
 
 export interface UpdateDeps {
@@ -958,12 +1038,28 @@ export interface UpdateDeps {
 
 export type UpdateOutcome = 'disabled' | 'throttled' | 'up-to-date' | 'updated' | 'failed';
 
-export async function loadRules(db: Db, bundled: RuleBundle): Promise<RuleBundle> {
-  const raw = await getKv(db, K_RULES);
-  if (!raw) return bundled;
+interface Cached {
+  sha256: string;
+  text: string;
+  bundle: RuleBundle;
+}
+
+async function readCache(db: Db): Promise<Cached | null> {
+  const raw = await getKv(db, K_CACHE);
+  if (!raw) return null;
   try {
-    const data: unknown = JSON.parse(raw);
-    return validateBundle(data).length === 0 ? (data as RuleBundle) : bundled;
+    const rec = JSON.parse(raw) as { sha256?: unknown; text?: unknown };
+    if (typeof rec.sha256 !== 'string' || typeof rec.text !== 'string') return null;
+    const data: unknown = JSON.parse(rec.text);
+    return validateBundle(data).length ? null : { sha256: rec.sha256, text: rec.text, bundle: data as RuleBundle };
+  } catch {
+    return null;
+  }
+}
+
+export async function loadRules(db: Db, bundled: RuleBundle): Promise<RuleBundle> {
+  try {
+    return (await readCache(db))?.bundle ?? bundled;
   } catch {
     return bundled;
   }
@@ -972,21 +1068,25 @@ export async function loadRules(db: Db, bundled: RuleBundle): Promise<RuleBundle
 export async function updateRules(deps: UpdateDeps, opts: { force?: boolean } = {}): Promise<UpdateOutcome> {
   const { db, baseUrl, now } = deps;
   if (!baseUrl) return 'disabled';
-  const last = Number((await getKv(db, K_CHECKED)) ?? 0);
-  if (!opts.force && now - last < CHECK_INTERVAL_MS) return 'throttled';
-
   try {
+    const last = Number((await getKv(db, K_CHECKED)) ?? 0);
+    if (!opts.force && now - last < CHECK_INTERVAL_MS) return 'throttled';
+
     const meta = JSON.parse(await deps.fetchText(`${baseUrl}rules.meta.json`)) as Record<string, unknown>;
-    await setKv(db, K_CHECKED, String(now));
     if (meta.schemaVersion !== 1 || typeof meta.sha256 !== 'string') return 'failed';
-    if (meta.sha256 === (await getKv(db, K_SHA))) return 'up-to-date';
+
+    const cached = await readCache(db);
+    if (cached && cached.sha256 === meta.sha256 && (await deps.sha256(cached.text)) === meta.sha256) {
+      await setKv(db, K_CHECKED, String(now));
+      return 'up-to-date';
+    }
 
     const text = await deps.fetchText(`${baseUrl}rules.json`);
     if ((await deps.sha256(text)) !== meta.sha256) return 'failed';
     if (validateBundle(JSON.parse(text)).length) return 'failed';
 
-    await setKv(db, K_RULES, text);
-    await setKv(db, K_SHA, meta.sha256);
+    await setKv(db, K_CACHE, JSON.stringify({ sha256: meta.sha256, text }));
+    await setKv(db, K_CHECKED, String(now));
     return 'updated';
   } catch {
     return 'failed';
@@ -1027,7 +1127,8 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 行為：
 - `failed`（沒有網址）→ 不寫歷史、不複製
 - 其他結果 → 歷史開啟時寫入
-- 只有 `clean` 且 `autoCopy` 開啟才複製
+- 只有 `clean` 且 `autoCopy` 開啟才複製；`copied` 只在複製真的成功時為 `true`
+- 寫歷史或複製失敗都不影響回傳的清理結果
 - `settings.expand` 直接傳給 `processUrl` 的 `expand`
 
 - [ ] **Step 1: 寫失敗測試**
@@ -1115,6 +1216,22 @@ describe('cleanInput', () => {
     expect(copied).toEqual([]);
   });
 
+  it('still returns the result when history or clipboard writes fail', async () => {
+    const broken: Db = {
+      ...db,
+      runAsync: async () => {
+        throw new Error('disk full');
+      },
+    };
+    const out = await cleanInput('https://ex.com/a?utm_source=x', deps({
+      db: broken,
+      copy: async () => {
+        throw new Error('clipboard denied');
+      },
+    }));
+    expect(out).toMatchObject({ copied: false, result: { status: 'clean', cleanUrl: 'https://ex.com/a' } });
+  });
+
   it('respects the history and auto-copy switches', async () => {
     const out = await cleanInput('https://ex.com/a?utm_source=x', deps({ settings: { expand: true, autoCopy: false, history: false } }));
     expect(out.copied).toBe(false);
@@ -1199,10 +1316,24 @@ export async function cleanInput(input: string, deps: CleanDeps): Promise<CleanO
   });
   if (result.status === 'failed') return { result, copied: false };
 
-  if (deps.settings.history) await addHistory(deps.db, result, deps.now());
+  // Side effects are best-effort: a storage or clipboard failure must never hide the cleaned result.
+  if (deps.settings.history) {
+    try {
+      await addHistory(deps.db, result, deps.now());
+    } catch {
+      // history is optional
+    }
+  }
+  let copied = false;
   // Only a fully clean URL is copied automatically (spec §6.3).
-  const copied = result.status === 'clean' && deps.settings.autoCopy;
-  if (copied) await deps.copy(result.cleanUrl);
+  if (result.status === 'clean' && deps.settings.autoCopy) {
+    try {
+      await deps.copy(result.cleanUrl);
+      copied = true;
+    } catch {
+      copied = false;
+    }
+  }
   return { result, copied };
 }
 ```
@@ -1361,6 +1492,7 @@ Expected: FAIL（找不到 `locales/*.json`）
     "title": "開源授權",
     "clearurls": "追蹤參數規則來自 ClearURLs 專案（gitlab.com/ClearURLs/rules），以 GNU LGPL-3.0 授權。"
   },
+  "privacy": {"title": "隱私政策", "p1": "LinkClean 不收集任何資料。沒有帳號、沒有伺服器，也沒有使用任何第三方分析、廣告或崩潰回報工具。", "p2": "規則更新：App 每天最多自動連到規則網站一次，或在你按下「立即更新規則」時連線，下載追蹤參數規則。", "p3": "短網址展開：當你清理的是白名單內的短網址或分享連結（例如 Facebook、Threads、bit.ly），App 會從你的手機直接連到該服務取得原始網址。先送出 HEAD 請求，服務不支援時才改用 GET（此時會下載頁面內容，但不解析也不執行）。之後的跳轉由該服務決定。可在設定中關閉。", "p4": "歷史紀錄只存在 App 的本機儲存空間，App 不會傳送到任何伺服器。Android 已關閉系統備份；iOS 上它可能和其他 App 資料一樣，被包含在你自己的 iCloud 或電腦備份中。歷史可以關閉，也可以隨時清除。", "p5": "剪貼簿只在你按下「貼上」或「複製」，或開啟「自動複製乾淨連結」時使用。"},
   "nav": { "history": "歷史", "settings": "設定" }
 }
 ```
@@ -1435,6 +1567,7 @@ Expected: FAIL（找不到 `locales/*.json`）
     "title": "Open-source licenses",
     "clearurls": "Tracking-parameter rules come from the ClearURLs project (gitlab.com/ClearURLs/rules), licensed under the GNU LGPL-3.0."
   },
+  "privacy": {"title": "Privacy policy", "p1": "LinkClean collects no data. It has no accounts and no servers, and uses no third-party analytics, advertising or crash-reporting tools.", "p2": "Rule updates: the app contacts the rules website automatically at most once a day, or when you tap \"Update rules now\", to download tracking-parameter rules.", "p3": "Short-link expansion: when a link you clean is an allow-listed short or share link (for example Facebook, Threads, bit.ly), the app contacts that service directly from your phone to find the original URL. It sends a HEAD request first and falls back to GET only if the service does not support HEAD (page content is then downloaded but never parsed or executed). Further redirects are chosen by that service. You can turn this off in Settings.", "p4": "History is kept only in the app's local storage and is never sent to any server by the app. Android system backup is disabled; on iOS it may be included, like other app data, in your own iCloud or computer backups. History can be turned off and cleared at any time.", "p5": "The clipboard is used only when you tap Paste or Copy, or when automatic copying of clean links is on."},
   "nav": { "history": "History", "settings": "Settings" }
 }
 ```
@@ -1509,6 +1642,7 @@ Expected: FAIL（找不到 `locales/*.json`）
     "title": "オープンソースライセンス",
     "clearurls": "トラッキングパラメータのルールは ClearURLs プロジェクト（gitlab.com/ClearURLs/rules）のもので、GNU LGPL-3.0 でライセンスされています。"
   },
+  "privacy": {"title": "プライバシーポリシー", "p1": "LinkClean はデータを一切収集しません。アカウントもサーバーもなく、第三者の分析・広告・クラッシュレポートツールも使用していません。", "p2": "ルールの更新：アプリは 1 日に最大 1 回自動で、または「今すぐルールを更新」をタップしたときに、ルールのウェブサイトへ接続してトラッキングパラメータのルールをダウンロードします。", "p3": "短縮 URL の展開：クリーンにするリンクが許可リストにある短縮 URL・共有リンク（Facebook、Threads、bit.ly など）の場合、元の URL を取得するために端末からそのサービスへ直接接続します。まず HEAD リクエストを送り、対応していない場合のみ GET を使います（その場合ページの内容をダウンロードしますが、解析や実行はしません）。その後のリダイレクト先はそのサービスが決めます。設定でオフにできます。", "p4": "履歴はアプリのローカルストレージにのみ保存され、アプリがサーバーへ送信することはありません。Android のシステムバックアップは無効にしています。iOS では他のアプリデータと同様に、ご自身の iCloud やコンピュータのバックアップに含まれる場合があります。履歴はオフにでき、いつでも削除できます。", "p5": "クリップボードは「貼り付け」や「コピー」をタップしたとき、または「クリーンなリンクを自動でコピー」がオンのときだけ使用します。"},
   "nav": { "history": "履歴", "settings": "設定" }
 }
 ```
@@ -1555,17 +1689,28 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 **Files:**
 - Create: `apps/mobile/src/theme.ts`, `apps/mobile/src/state/AppContext.tsx`, `apps/mobile/src/components/ResultCard.tsx`
-- Create: `apps/mobile/app/+native-intent.ts`, `apps/mobile/app/history.tsx`, `apps/mobile/app/result/[id].tsx`, `apps/mobile/app/settings.tsx`, `apps/mobile/app/licenses.tsx`
+- Create: `apps/mobile/app/+native-intent.ts`, `apps/mobile/app/history.tsx`, `apps/mobile/app/result/[id].tsx`, `apps/mobile/app/settings.tsx`, `apps/mobile/app/privacy.tsx`, `apps/mobile/app/licenses.tsx`
 - Replace: `apps/mobile/app/_layout.tsx`, `apps/mobile/app/index.tsx`
 
 **Interfaces:**
-- Consumes: Task 2 的 `SITE_BASE_URL` / `PRIVACY_URL` / `USER_AGENT`；Task 3 的 db / settings；Task 4 的 `loadRules` / `updateRules` / `UpdateOutcome`；Task 5 的 `cleanInput` / `rnFetch` / `CleanOutcome`；Task 6 的 `locale` 與 i18n
+- Consumes: Task 2 的 `SITE_BASE_URL` / `USER_AGENT`；Task 3 的 db / settings；Task 4 的 `loadRules` / `updateRules` / `UpdateOutcome`；Task 5 的 `cleanInput` / `rnFetch` / `CleanOutcome`；Task 6 的 i18n
 - Produces:
-  - `useApp(): AppState`，`AppState = { db: Db; rules: RuleBundle; settings: Settings; setSettings(s: Settings): Promise<void>; clean(input: string): Promise<CleanOutcome>; refreshRules(): Promise<UpdateOutcome> }`
+  - `useApp(): AppState`
+  - `AppState = { ready: boolean; db: Db; rules: RuleBundle; settings: Settings; locale: Locale; input: string; setInput(text: string): void; outcome: CleanOutcome | null; busy: boolean; submit(text: string): Promise<void>; setSettings(s: Settings): Promise<void>; refreshRules(): Promise<UpdateOutcome> }`
   - `<ResultCard result={ProcessResult} copied={boolean} />`
   - `useColors(): Colors`
 
-UI 層沒有單元測試（spec §7）；驗證方式是 typecheck、`bundle-check`，以及 Task 9 的模擬器建置與手動檢查清單。
+設計重點（對應審核意見）：
+- **等載入完成**：設定與快取規則載入前 `ready = false`；分享進來的內容與「清理」按鈕都等 `ready` 才處理，冷啟動時不會用預設設定清理
+- **一次一個**：`submit()` 把清理排進佇列依序執行，每次執行都讀最新的規則 / 設定 / 語言；連續分享不會互相覆蓋結果或剪貼簿
+- **最上層接收分享**：`ShareWatcher` 在 layout 裡，不管目前在哪個畫面都會處理分享，並回到首頁顯示結果；先 `resetShareIntent()` 再處理，同一個分享只處理一次
+- **回到前景**：監聽 `AppState`，回到前景時做一次（受 24 小時節流的）規則檢查；同時間只會有一個更新在跑
+- **語言即時更新**：用 `useLocales()`，系統語言改變時 i18next 與後續清理的說明語言一起更新
+- `SQLiteProvider` 的 `onInit` 用模組層級的固定函式，避免主題切換時重新開啟資料庫
+
+UI 層沒有單元測試（spec §7）；驗證方式是 typecheck、`bundle-check`，以及 Task 9 的模擬器建置、adb 分享測試與手動檢查清單。
+
+**已知限制（不在本計畫處理）：** 歷史紀錄存的是建立當時語言的說明文字；之後切換系統語言，舊紀錄的說明不會跟著換。
 
 - [ ] **Step 1: 主題與 App 狀態**
 
@@ -1618,13 +1763,16 @@ export function useColors(): Colors {
 ```tsx
 import * as Clipboard from 'expo-clipboard';
 import * as Crypto from 'expo-crypto';
+import { useLocales } from 'expo-localization';
 import { useSQLiteContext } from 'expo-sqlite';
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import type { RuleBundle } from '@linkclean/core';
+import { AppState as RNAppState } from 'react-native';
+import { resolveLocale } from '@linkclean/core';
+import type { Locale, RuleBundle } from '@linkclean/core';
 import bundledJson from '../../assets/rules.json';
 import { SITE_BASE_URL, USER_AGENT } from '../config';
-import { locale } from '../i18n';
+import i18n from '../i18n';
 import { cleanInput } from '../lib/cleaner';
 import type { CleanOutcome } from '../lib/cleaner';
 import type { Db } from '../lib/db';
@@ -1637,11 +1785,17 @@ import type { Settings } from '../lib/settings';
 const BUNDLED = bundledJson as unknown as RuleBundle;
 
 export interface AppState {
+  ready: boolean;
   db: Db;
   rules: RuleBundle;
   settings: Settings;
+  locale: Locale;
+  input: string;
+  setInput(text: string): void;
+  outcome: CleanOutcome | null;
+  busy: boolean;
+  submit(text: string): Promise<void>;
   setSettings(s: Settings): Promise<void>;
-  clean(input: string): Promise<CleanOutcome>;
   refreshRules(): Promise<UpdateOutcome>;
 }
 
@@ -1658,49 +1812,118 @@ const sha256 = (text: string) => Crypto.digestStringAsync(Crypto.CryptoDigestAlg
 export function AppProvider({ children }: { children: ReactNode }) {
   // expo-sqlite's SQLiteDatabase implements the Db subset used by src/lib.
   const db = useSQLiteContext() as unknown as Db;
+  const locale = resolveLocale(useLocales()[0]?.languageTag ?? 'en');
+  const [ready, setReady] = useState(false);
   const [rules, setRules] = useState<RuleBundle>(BUNDLED);
   const [settings, setSettingsState] = useState<Settings>(DEFAULT_SETTINGS);
+  const [input, setInput] = useState('');
+  const [outcome, setOutcome] = useState<CleanOutcome | null>(null);
+  const [pending, setPending] = useState(0);
+
+  // Queued work reads these at run time, so it never uses stale rules, settings or locale.
+  const latest = useRef({ rules, settings, locale });
+  latest.current = { rules, settings, locale };
+  const queue = useRef<Promise<void>>(Promise.resolve());
+  const refreshing = useRef<Promise<UpdateOutcome> | null>(null);
+
+  useEffect(() => {
+    void i18n.changeLanguage(locale);
+  }, [locale]);
 
   const refresh = useCallback(
-    async (force: boolean): Promise<UpdateOutcome> => {
-      const outcome = await updateRules({ db, baseUrl: SITE_BASE_URL, fetchText, sha256, now: Date.now() }, { force });
-      if (outcome === 'updated') setRules(await loadRules(db, BUNDLED));
-      return outcome;
+    (force: boolean): Promise<UpdateOutcome> => {
+      // One update at a time: startup, foreground and manual checks can overlap.
+      if (!refreshing.current) {
+        refreshing.current = (async () => {
+          try {
+            const result = await updateRules({ db, baseUrl: SITE_BASE_URL, fetchText, sha256, now: Date.now() }, { force });
+            if (result === 'updated') setRules(await loadRules(db, BUNDLED));
+            return result;
+          } finally {
+            refreshing.current = null;
+          }
+        })();
+      }
+      return refreshing.current;
     },
     [db],
   );
 
   useEffect(() => {
+    let alive = true;
     void (async () => {
-      setSettingsState(await loadSettings(db));
-      setRules(await loadRules(db, BUNDLED));
-      await refresh(false);
+      let s = DEFAULT_SETTINGS;
+      let r = BUNDLED;
+      try {
+        [s, r] = await Promise.all([loadSettings(db), loadRules(db, BUNDLED)]);
+      } catch {
+        // Unreadable storage: keep defaults rather than blocking the app.
+      }
+      if (!alive) return;
+      setSettingsState(s);
+      setRules(r);
+      setReady(true);
+      void refresh(false);
     })();
+    const sub = RNAppState.addEventListener('change', (state) => {
+      if (state === 'active') void refresh(false);
+    });
+    return () => {
+      alive = false;
+      sub.remove();
+    };
   }, [db, refresh]);
+
+  const submit = useCallback(
+    (text: string): Promise<void> => {
+      setInput(text);
+      setPending((n) => n + 1);
+      const job = queue.current.then(async () => {
+        try {
+          const { rules: r, settings: s, locale: l } = latest.current;
+          setOutcome(
+            await cleanInput(text, {
+              db,
+              rules: r,
+              settings: s,
+              locale: l,
+              fetch: rnFetch,
+              userAgent: USER_AGENT,
+              copy: Clipboard.setStringAsync,
+              now: Date.now,
+            }),
+          );
+        } catch {
+          // cleanInput handles expected failures itself; never let one job stall the queue.
+        } finally {
+          setPending((n) => n - 1);
+        }
+      });
+      queue.current = job;
+      return job;
+    },
+    [db],
+  );
 
   const value = useMemo<AppState>(
     () => ({
+      ready,
       db,
       rules,
       settings,
+      locale,
+      input,
+      setInput,
+      outcome,
+      busy: pending > 0,
+      submit,
       async setSettings(s) {
         setSettingsState(s);
         await saveSettings(db, s);
       },
-      clean: (input) =>
-        cleanInput(input, {
-          db,
-          rules,
-          settings,
-          locale,
-          fetch: rnFetch,
-          userAgent: USER_AGENT,
-          copy: Clipboard.setStringAsync,
-          now: Date.now,
-        }),
       refreshRules: () => refresh(true),
     }),
-    [db, rules, settings, refresh],
+    [ready, db, rules, settings, locale, input, outcome, pending, submit, refresh],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
@@ -1826,9 +2049,9 @@ const styles = StyleSheet.create({
 });
 ```
 
-- [ ] **Step 3: 版面、分享導向與首頁**
+- [ ] **Step 3: 版面、分享接收與首頁**
 
-`apps/mobile/app/+native-intent.ts`（分享進來的 deep link 一律導回首頁，由首頁處理）:
+`apps/mobile/app/+native-intent.ts`（iOS 分享擴充功能開啟 App 時的 deep link 一律導到首頁）:
 ```ts
 import { getShareExtensionKey } from 'expo-share-intent';
 
@@ -1844,15 +2067,35 @@ export function redirectSystemPath({ path }: { path: string; initial: boolean })
 `apps/mobile/app/_layout.tsx`:
 ```tsx
 import '../src/i18n';
-import { Link, Stack } from 'expo-router';
-import { ShareIntentProvider } from 'expo-share-intent';
+import { Link, router, Stack } from 'expo-router';
+import { ShareIntentProvider, useShareIntentContext } from 'expo-share-intent';
 import { SQLiteProvider } from 'expo-sqlite';
+import type { SQLiteDatabase } from 'expo-sqlite';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Text } from 'react-native';
 import { migrate } from '../src/lib/db';
 import type { Db } from '../src/lib/db';
-import { AppProvider } from '../src/state/AppContext';
+import { AppProvider, useApp } from '../src/state/AppContext';
 import { useColors } from '../src/theme';
+
+// Stable reference: a new onInit on every render would make SQLiteProvider reopen the database.
+const initDb = (db: SQLiteDatabase) => migrate(db as unknown as Db);
+
+// Consumes shares on any screen, exactly once, after settings and rules have loaded.
+function ShareWatcher() {
+  const { isReady, hasShareIntent, shareIntent, resetShareIntent } = useShareIntentContext();
+  const { ready, submit } = useApp();
+  useEffect(() => {
+    if (!isReady || !ready || !hasShareIntent) return;
+    const text = shareIntent.text ?? shareIntent.webUrl ?? '';
+    resetShareIntent();
+    if (!text) return;
+    if (router.canDismiss()) router.dismissAll();
+    void submit(text);
+  }, [isReady, ready, hasShareIntent, shareIntent, resetShareIntent, submit]);
+  return null;
+}
 
 function HeaderLinks() {
   const { t } = useTranslation();
@@ -1871,13 +2114,15 @@ export default function RootLayout() {
   const c = useColors();
   return (
     <ShareIntentProvider>
-      <SQLiteProvider databaseName="linkclean.db" onInit={(db) => migrate(db as unknown as Db)}>
+      <SQLiteProvider databaseName="linkclean.db" onInit={initDb}>
         <AppProvider>
+          <ShareWatcher />
           <Stack screenOptions={{ contentStyle: { backgroundColor: c.bg }, headerStyle: { backgroundColor: c.card }, headerTintColor: c.text }}>
             <Stack.Screen name="index" options={{ title: t('app.title'), headerRight: () => <HeaderLinks /> }} />
             <Stack.Screen name="history" options={{ title: t('history.title') }} />
             <Stack.Screen name="result/[id]" options={{ title: t('result.title') }} />
             <Stack.Screen name="settings" options={{ title: t('settings.title') }} />
+            <Stack.Screen name="privacy" options={{ title: t('privacy.title') }} />
             <Stack.Screen name="licenses" options={{ title: t('licenses.title') }} />
           </Stack>
         </AppProvider>
@@ -1890,44 +2135,17 @@ export default function RootLayout() {
 `apps/mobile/app/index.tsx`:
 ```tsx
 import * as Clipboard from 'expo-clipboard';
-import { useShareIntentContext } from 'expo-share-intent';
-import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { ResultCard } from '../src/components/ResultCard';
-import type { CleanOutcome } from '../src/lib/cleaner';
 import { useApp } from '../src/state/AppContext';
 import { useColors } from '../src/theme';
 
 export default function Home() {
   const { t } = useTranslation();
   const c = useColors();
-  const app = useApp();
-  const { hasShareIntent, shareIntent, resetShareIntent } = useShareIntentContext();
-  const [input, setInput] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [outcome, setOutcome] = useState<CleanOutcome | null>(null);
-
-  const run = useCallback(
-    async (text: string) => {
-      setInput(text);
-      setBusy(true);
-      try {
-        setOutcome(await app.clean(text));
-      } finally {
-        setBusy(false);
-      }
-    },
-    [app],
-  );
-
-  // Handle each share exactly once: clear the intent before processing it.
-  useEffect(() => {
-    if (!hasShareIntent) return;
-    const text = shareIntent.text ?? shareIntent.webUrl ?? '';
-    resetShareIntent();
-    if (text) void run(text);
-  }, [hasShareIntent, shareIntent, resetShareIntent, run]);
+  const { ready, input, setInput, busy, outcome, submit } = useApp();
+  const canClean = ready && !busy && input.trim().length > 0;
 
   const pasteFallback = async () => setInput(await Clipboard.getStringAsync());
 
@@ -1959,14 +2177,14 @@ export default function Home() {
           </Pressable>
         )}
         <Pressable
-          disabled={busy || !input.trim()}
-          onPress={() => void run(input)}
-          style={[styles.button, { backgroundColor: c.accent, opacity: busy || !input.trim() ? 0.5 : 1 }]}
+          disabled={!canClean}
+          onPress={() => void submit(input)}
+          style={[styles.button, { backgroundColor: c.accent, opacity: canClean ? 1 : 0.5 }]}
         >
           <Text style={styles.buttonText}>{busy ? t('home.cleaning') : t('home.clean')}</Text>
         </Pressable>
       </View>
-      {busy && <ActivityIndicator />}
+      {(busy || !ready) && <ActivityIndicator />}
       {outcome && !busy && <ResultCard result={outcome.result} copied={outcome.copied} />}
     </ScrollView>
   );
@@ -1982,7 +2200,7 @@ const styles = StyleSheet.create({
 });
 ```
 
-- [ ] **Step 4: 歷史、詳細、設定、授權**
+- [ ] **Step 4: 歷史、詳細、設定、隱私、授權**
 
 `apps/mobile/app/history.tsx`:
 ```tsx
@@ -2002,14 +2220,14 @@ export default function History() {
   const [items, setItems] = useState<HistoryEntry[]>([]);
 
   const reload = useCallback(() => {
-    void listHistory(db).then(setItems);
+    void listHistory(db).then(setItems, () => setItems([]));
   }, [db]);
   useFocusEffect(reload);
 
   const confirm = (message: string, action: () => Promise<void>) =>
     Alert.alert(message, undefined, [
       { text: t('history.cancel'), style: 'cancel' },
-      { text: t('history.delete'), style: 'destructive', onPress: () => void action().then(reload) },
+      { text: t('history.delete'), style: 'destructive', onPress: () => void action().finally(reload) },
     ]);
 
   return (
@@ -2071,7 +2289,7 @@ export default function HistoryResult() {
   const [entry, setEntry] = useState<HistoryEntry | null>(null);
 
   useEffect(() => {
-    void getHistory(db, Number(id)).then(setEntry);
+    void getHistory(db, Number(id)).then(setEntry, () => setEntry(null));
   }, [db, id]);
 
   return (
@@ -2087,8 +2305,7 @@ const styles = StyleSheet.create({ container: { padding: 16 } });
 import { Link } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Linking, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
-import { PRIVACY_URL } from '../src/config';
+import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import type { UpdateOutcome } from '../src/lib/rulesStore';
 import type { Settings } from '../src/lib/settings';
 import { useApp } from '../src/state/AppContext';
@@ -2102,6 +2319,17 @@ export default function SettingsScreen() {
   const [outcome, setOutcome] = useState<UpdateOutcome | null>(null);
 
   const toggle = (key: keyof Settings) => (value: boolean) => void setSettings({ ...settings, [key]: value });
+
+  const update = async () => {
+    setUpdating(true);
+    try {
+      setOutcome(await refreshRules());
+    } catch {
+      setOutcome('failed');
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   const row = (key: keyof Settings, label: string, hint?: string) => (
     <View style={[styles.row, { backgroundColor: c.card, borderColor: c.border }]}>
@@ -2121,24 +2349,15 @@ export default function SettingsScreen() {
 
       <View style={[styles.block, { backgroundColor: c.card, borderColor: c.border }]}>
         <Text style={{ color: c.text }}>{t('settings.rulesVersion', { version: rules.version })}</Text>
-        <Pressable
-          disabled={updating}
-          onPress={async () => {
-            setUpdating(true);
-            setOutcome(await refreshRules());
-            setUpdating(false);
-          }}
-        >
+        <Pressable disabled={updating} onPress={() => void update()}>
           <Text style={{ color: c.accent, opacity: updating ? 0.5 : 1 }}>{t('settings.updateNow')}</Text>
         </Pressable>
         {outcome && <Text style={{ color: c.muted }}>{t(`settings.update.${outcome}`)}</Text>}
       </View>
 
-      {PRIVACY_URL && (
-        <Pressable onPress={() => void Linking.openURL(PRIVACY_URL)}>
-          <Text style={[styles.link, { color: c.accent }]}>{t('settings.privacy')}</Text>
-        </Pressable>
-      )}
+      <Link href="/privacy" style={[styles.link, { color: c.accent }]}>
+        {t('settings.privacy')}
+      </Link>
       <Link href="/licenses" style={[styles.link, { color: c.accent }]}>
         {t('settings.licenses')}
       </Link>
@@ -2153,6 +2372,31 @@ const styles = StyleSheet.create({
   block: { borderWidth: 1, borderRadius: 10, padding: 12, gap: 8 },
   link: { paddingVertical: 8 },
 });
+```
+
+`apps/mobile/app/privacy.tsx`（App 內建隱私政策，不依賴 `SITE_BASE_URL`；內容與 `docs/site/privacy.html` 一致）:
+```tsx
+import { useTranslation } from 'react-i18next';
+import { ScrollView, StyleSheet, Text } from 'react-native';
+import { useColors } from '../src/theme';
+
+const PARAGRAPHS = ['p1', 'p2', 'p3', 'p4', 'p5'] as const;
+
+export default function Privacy() {
+  const { t } = useTranslation();
+  const c = useColors();
+  return (
+    <ScrollView contentContainerStyle={styles.container}>
+      {PARAGRAPHS.map((p) => (
+        <Text key={p} style={{ color: c.text, lineHeight: 22 }}>
+          {t(`privacy.${p}`)}
+        </Text>
+      ))}
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({ container: { padding: 16, gap: 14 } });
 ```
 
 `apps/mobile/app/licenses.tsx`:
@@ -2187,13 +2431,13 @@ pnpm mobile bundle-check
 ```
 Expected: typecheck 無錯誤；測試全部 PASS；iOS 與 Android bundle 都輸出成功。
 
-typecheck 若因 expo 套件型別與本計畫的寫法不符而失敗（例如 `ClipboardPasteButton` 的 prop 名稱、`redirectSystemPath` 的參數型別），以安裝版本的 `.d.ts` 為準修正，並記錄 Ruling。
+typecheck 若因 expo 套件型別與本計畫的寫法不符而失敗（例如 `router.dismissAll`、`redirectSystemPath` 的參數型別），以安裝版本的 `.d.ts` 為準修正，並記錄 Ruling。
 
 - [ ] **Step 6: Commit**
 
 ```bash
 git add apps/mobile
-git commit -m "feat(mobile): add home, result, history, settings and licenses screens
+git commit -m "feat(mobile): add home, result, history, settings, privacy and licenses screens
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -2208,7 +2452,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 **Interfaces:**
 - Consumes: Plan 1 的 Pages workflow
-- Produces: `<SITE_BASE_URL>privacy.html`（App 設定頁的隱私政策連結）
+- Produces: `<SITE_BASE_URL>privacy.html`（商店上架需要的公開隱私政策網址；內容與 App 內建的隱私政策頁一致）
 
 隱私政策內容依 spec §1.4、§4.3、§6.4、§9：不收集資料；只連到規則更新網址與白名單短網址服務（含 405 時改用 GET 的說明）；歷史只存本機、可關閉可清除；沒有第三方 SDK。
 
@@ -2239,10 +2483,10 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 <ul>
 <li><strong>不收集任何資料。</strong>LinkClean 沒有帳號、沒有伺服器，也沒有使用任何第三方分析、廣告或崩潰回報工具。</li>
 <li><strong>網路連線只有兩種：</strong>
-  (1) 每天最多一次，從本網站下載追蹤參數規則；
+  (1) 每天最多自動一次，或在你按下「立即更新規則」時，從本網站下載追蹤參數規則；
   (2) 你清理的連結若是白名單內的短網址或分享連結（例如 Facebook、Threads、bit.ly），App 會從你的手機直接連到該服務以取得原始網址。App 先送出 HEAD 請求；只有服務不支援時才改用 GET，此時會下載頁面內容，但不會解析或執行。之後的跳轉由該服務決定，等同你自己打開連結會經過的網址。你可以在設定中關閉短網址展開。</li>
-<li><strong>歷史紀錄只存在你的裝置上</strong>，可以在設定中關閉，也可以隨時清除。</li>
-<li>剪貼簿只在你按下「貼上」或啟用「自動複製乾淨連結」時使用。</li>
+<li><strong>歷史紀錄只存在 App 的本機儲存空間</strong>，App 不會傳送到任何伺服器。Android 已關閉系統備份；iOS 上它可能和其他 App 資料一樣，被包含在你自己的 iCloud 或電腦備份中。歷史可以在設定中關閉，也可以隨時清除。</li>
+<li>剪貼簿只在你按下「貼上」或「複製」，或開啟「自動複製乾淨連結」時使用。</li>
 </ul>
 </section>
 
@@ -2251,10 +2495,10 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 <ul>
 <li><strong>No data is collected.</strong> LinkClean has no accounts and no servers, and uses no third-party analytics, advertising or crash-reporting tools.</li>
 <li><strong>The app makes only two kinds of network requests:</strong>
-  (1) at most once a day, it downloads tracking-parameter rules from this website;
+  (1) automatically at most once a day, or when you tap "Update rules now", it downloads tracking-parameter rules from this website;
   (2) when a link you clean is an allow-listed short or share link (for example Facebook, Threads, bit.ly), the app contacts that service directly from your phone to find the original URL. It sends a HEAD request first and falls back to GET only if the service does not support HEAD; in that case page content is downloaded but never parsed or executed. Any further redirects are chosen by that service, the same ones you would pass through by opening the link yourself. You can turn short-link expansion off in Settings.</li>
-<li><strong>History stays on your device</strong>, can be turned off in Settings and can be cleared at any time.</li>
-<li>The clipboard is used only when you tap Paste or enable automatic copying of clean links.</li>
+<li><strong>History is kept only in the app's local storage</strong> and is never sent to any server by the app. Android system backup is disabled; on iOS it may be included, like other app data, in your own iCloud or computer backups. History can be turned off in Settings and cleared at any time.</li>
+<li>The clipboard is used only when you tap Paste or Copy, or when automatic copying of clean links is on.</li>
 </ul>
 </section>
 
@@ -2263,10 +2507,10 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 <ul>
 <li><strong>データは一切収集しません。</strong>LinkClean にはアカウントもサーバーもなく、第三者の分析・広告・クラッシュレポートツールも使用していません。</li>
 <li><strong>通信は次の 2 種類だけです：</strong>
-  (1) 1 日に最大 1 回、このウェブサイトからトラッキングパラメータのルールをダウンロードします。
+  (1) 1 日に最大 1 回自動で、または「今すぐルールを更新」をタップしたときに、このウェブサイトからトラッキングパラメータのルールをダウンロードします。
   (2) クリーンにするリンクが許可リストにある短縮 URL・共有リンク（Facebook、Threads、bit.ly など）の場合、元の URL を取得するために端末からそのサービスへ直接接続します。まず HEAD リクエストを送り、サービスが対応していない場合のみ GET を使います。その場合ページの内容をダウンロードしますが、解析や実行はしません。その後のリダイレクト先はそのサービスが決めるもので、ご自身でリンクを開いた場合と同じです。短縮 URL の展開は設定でオフにできます。</li>
-<li><strong>履歴は端末内にのみ保存されます。</strong>設定でオフにでき、いつでも削除できます。</li>
-<li>クリップボードは「貼り付け」をタップしたとき、または「クリーンなリンクを自動でコピー」を有効にしたときだけ使用します。</li>
+<li><strong>履歴はアプリのローカルストレージにのみ保存され、</strong>アプリがサーバーへ送信することはありません。Android のシステムバックアップは無効にしています。iOS では他のアプリデータと同様に、ご自身の iCloud やコンピュータのバックアップに含まれる場合があります。設定でオフにでき、いつでも削除できます。</li>
+<li>クリップボードは「貼り付け」や「コピー」をタップしたとき、または「クリーンなリンクを自動でコピー」がオンのときだけ使用します。</li>
 </ul>
 </section>
 </body>
@@ -2368,6 +2612,9 @@ Use links from a test account; never paste real personal share links into issues
 - [ ] Android: Facebook app → Share → LinkClean (FB share link expands to the post URL)
 - [ ] Sharing the same link twice in a row creates exactly two history entries (no duplicates per share)
 - [ ] Sharing while the app is already open replaces the current result
+- [ ] Sharing while the Settings screen is open returns to Home and shows the result
+- [ ] Cold start via share with history turned off adds no history entry (settings are applied before processing)
+- [ ] Sharing two links quickly shows the second result last; the clipboard holds the second clean link
 
 ## Paste
 - [ ] iOS: the system Paste button pastes without the "Allow Paste" prompt
@@ -2392,11 +2639,14 @@ Use links from a test account; never paste real personal share links into issues
 - [ ] Rules version is shown
 - [ ] "Update rules now" shows a message (disabled until SITE_BASE_URL is set)
 - [ ] Licenses page shows the ClearURLs LGPL-3.0 notice
-- [ ] Privacy policy link appears once SITE_BASE_URL is set and opens the page
+- [ ] Privacy policy opens the in-app page in the current language
+- [ ] Leaving the app in the background for over 24 hours, then reopening it, triggers a rule check (once SITE_BASE_URL is set)
 
 ## Languages
 - [ ] Device language Traditional Chinese / English / Japanese → UI and parameter explanations follow
 - [ ] iOS: Settings → LinkClean → Language can switch the app language
+- [ ] Android 13+: Settings → Apps → LinkClean → Language can switch the app language
+- [ ] Changing the system language while the app is running updates the UI
 ```
 
 - [ ] **Step 3: 同步 spec 與 README**
@@ -2404,7 +2654,8 @@ Use links from a test account; never paste real personal share links into issues
 spec 修改（逐字替換）：
 - §2 表格 `| 規則快取 | \`expo-file-system\` |` → `| 規則快取 | \`expo-sqlite\`（\`kv\` 表） |`
 - §6.1 表格「歷史」一列的「左滑刪除」→「長按刪除」；「結果卡片」一列的「點開 bottom sheet 看說明」→「點擊就地展開說明」
-- §6.4（多語系）「App 內不做語言切換；`app.json` 宣告支援的 locales，讓 iOS 與 Android 13+ 可以在系統設定裡針對單一 App 切換語言」→「App 內不做語言切換；iOS 透過 `CFBundleLocalizations` 可在系統設定裡針對單一 App 切換語言；Android 跟隨系統語言（單一 App 語言列為後續功能）」
+- §6.1 表格「設定」一列的「隱私政策」→「隱私政策（App 內建頁面）」
+- §2 表格「多語系」一列 → `expo-localization`（含 `supportedLocales` 設定，產生 iOS / Android 單一 App 語言設定）+ `i18next`
 - §6.5 歷史表 SQL 在 `status TEXT NOT NULL,` 之後加入 `reason TEXT,`，在 `removed_json TEXT NOT NULL` 之後加入 `, hops_json TEXT NOT NULL`
 
 `README.md` 的 Commands 區塊後加入：
