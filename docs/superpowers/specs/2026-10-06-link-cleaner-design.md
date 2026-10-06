@@ -42,7 +42,7 @@
 | 規則快取 | `expo-file-system` |
 | 多語系 | `expo-localization` + `i18next` |
 | Monorepo | pnpm workspaces |
-| 測試 | Jest（core 與規則建置）|
+| 測試 | Vitest（core 與規則建置）|
 | 規則發佈 | GitHub Actions → GitHub Pages |
 | 建置上架 | EAS Build / EAS Submit |
 
@@ -56,7 +56,7 @@ trackurlapp/
 │   └── src/{extract,unwrap,expand,clean,analyze,process,types}.ts
 ├── apps/mobile/            # Expo app (iOS + Android)
 ├── rules/
-│   ├── overrides.json      # Fixes/additions on top of ClearURLs
+│   ├── overrides.json      # Extra ClearURLs-format providers / rules (merged)
 │   ├── knowledge.json      # Param explanations (zh-TW / en / ja)
 │   ├── expanders.json      # Per-site expander config
 │   ├── regression.json     # Real links + expected output (live tests)
@@ -104,21 +104,22 @@ interface AnalyzedParam {
 ```
 input text
   → extract   取出文字裡第一個 http(s) 網址（分享內容常帶標題）；找不到 → failed/invalid_input
-  → unwrap    拆外連包裝（l.facebook.com/l.php?u=、google.com/url?q= 等，規則來自 bundle）
+  → unwrap    拆外連包裝（l.facebook.com/l.php?u=、google.com/url?q= 等，用 provider 的 `redirections`）
   → expand    只有網域在 bundle 的「展開白名單」內才會連網（見 4.3）
   → unwrap    展開後可能又是包裝網址，再拆一次
-  → clean     套用 ClearURLs 規則 + overrides，刪 query 參數 / 路徑追蹤段 / 網域正規化
+  → clean     套用合併後的 providers（rules / referralMarketing / rawRules / exceptions），刪 query 參數
   → analyze   每個被刪的項目對照 knowledge.json，未知的標成 category=unknown, risk=low
   → result
 ```
 
 ### 4.3 短網址展開（expand）
 
-- **只展開白名單網域**（`expanders.json` + 通用短網址清單：bit.ly、t.co、lnkd.in、amzn.to、shp.ee、fb.me 等）。其他網址一律不連網，避免把用戶的連結送到任意網站。
+- **只展開白名單網域**（`expanders.json`；通用短網址 bit.ly、t.co、lnkd.in、amzn.to、shp.ee、fb.me 等也是其中一個 expander）。其他網址一律不連網，避免把用戶的連結送到任意網站。
 - 固定 UA：`LinkClean/<version>`，兩個平台都明確設定。**不可用瀏覽器 UA**（spike 證實 FB 對瀏覽器 UA 不會 302）。
-- 方法：先送 `HEAD`，跟著跳轉，取最終 `response.url`；如果回應是 405，改用 `GET`。
-- 最多 5 跳，總逾時 5 秒。
-- 站點專用的後處理由 `expanders.json` 設定，不寫死在程式碼裡：
+- 方法：先送 `HEAD`，由平台的 fetch 自動跟著跳轉，取最終 `response.url`；如果回應是 405，改用 `GET`。
+- 總逾時 5 秒（跳轉次數由平台 fetch 的上限控制）。
+- core 不使用 `URL` / `URLSearchParams`（RN 實作不完整，且重新序列化會改變其他參數編碼），一律手動切 query 字串，保留的參數原樣不動。
+- 站點專用設定由 `expanders.json` 提供，不寫死在程式碼裡。**展開器只負責展開，刪參數一律交給 providers**（`overrides.json` 補上 Threads 的 `xmt`/`slof`、FB 的 `rdid`/`share_url` 等）：
 
 ```json
 {
@@ -126,11 +127,14 @@ input text
     "match": "^https://(www|m)\\.facebook\\.com/share/",
     "loginWall": { "pathPattern": "^/login", "param": "next" },
     "normalizeHost": { "m.facebook.com": "www.facebook.com" },
-    "stripParams": ["rdid", "share_url", "refsrc", "_rdr"]
+    "shareId": "/share/(?:[a-z]/)?([^/?#]+)"
   },
   "threads": {
     "match": "^https://www\\.threads\\.(com|net)/share/",
-    "stripParams": ["xmt", "slof"]
+    "shareId": "/share/([^/?#]+)"
+  },
+  "generic": {
+    "match": "^https?://(bit\\.ly|t\\.co|lnkd\\.in|amzn\\.to|shp\\.ee|fb\\.me)/"
   }
 }
 ```
@@ -161,11 +165,8 @@ input text
 interface RuleBundle {
   schemaVersion: 1;
   version: string;              // e.g. "2026.10.06.1"
-  clearurls: object;            // ClearURLs providers, as-is
-  overrides: object;            // our additions/fixes, applied after ClearURLs
-  unwrappers: object[];
-  shorteners: string[];         // generic shortener domains allowed to expand
-  expanders: Record<string, object>;
+  providers: Record<string, Provider>;   // ClearURLs providers merged with overrides.json
+  expanders: Record<string, Expander>;
   knowledge: Record<string, KnowledgeEntry>;
 }
 
@@ -246,7 +247,7 @@ CREATE TABLE history (
 
 | 層級 | 內容 |
 |---|---|
-| core 單元測試 | extract / unwrap / clean / analyze 各自的測試案例；expand 用假的 `fetch` 模擬 302、登入牆、逾時、405 |
+| core 單元測試（Vitest） | extract / unwrap / clean / analyze 各自的測試案例；expand 用假的 `fetch` 模擬 302、登入牆、逾時、405 |
 | 規則回歸（離線） | `fixtures/` 錄製的真實跳轉鏈 → 預期乾淨網址，CI 擋發佈 |
 | 規則回歸（線上） | `regression.json` 真實連結，每天跑，失敗只通知 |
 | App | 不寫 UI 自動化測試；改用實機手動檢查清單：iOS / Android 分享進來、貼上、複製、再分享、歷史、規則更新、關閉展開 |
