@@ -1,7 +1,8 @@
 import { getHost } from './query';
 
-// Printable ASCII except space, '"', '<', '>' (shared links are percent-encoded).
-const URL_RE = /https?:\/\/[!#-;=?-~]+/i;
+// Stop at whitespace, '"', '<', '>' and full-width punctuation; raw non-ASCII
+// (e.g. Chinese product names in shopee.tw paths) stays part of the URL.
+const URL_RE = /https?:\/\/[^\s"<>。，、；：！？「」『』（）【】]+/i;
 const TRAILING = /[.,;:!?'*]+$/;
 
 function count(s: string, ch: string): number {

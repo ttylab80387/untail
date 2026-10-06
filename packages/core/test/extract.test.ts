@@ -9,9 +9,14 @@ describe('extractUrl', () => {
     expect(extractUrl('看看這篇 https://www.threads.com/share/BAAtest0001/ 很好笑'))
       .toBe('https://www.threads.com/share/BAAtest0001/');
   });
-  it('stops at full-width punctuation and CJK text', () => {
+  it('stops at full-width punctuation and whitespace', () => {
     expect(extractUrl('連結：https://ex.com/a?x=1。謝謝')).toBe('https://ex.com/a?x=1');
-    expect(extractUrl('https://ex.com/a好文')).toBe('https://ex.com/a');
+    expect(extractUrl('「https://ex.com/a」')).toBe('https://ex.com/a');
+    expect(extractUrl('https://ex.com/a\u3000下一句')).toBe('https://ex.com/a');
+  });
+  it('keeps raw non-ASCII characters inside the URL', () => {
+    expect(extractUrl('看 https://zh.wikipedia.org/wiki/台灣 很棒')).toBe('https://zh.wikipedia.org/wiki/台灣');
+    expect(extractUrl('https://shopee.tw/商品-i.1.2?utm_source=x')).toBe('https://shopee.tw/商品-i.1.2?utm_source=x');
   });
   it('strips trailing ASCII punctuation', () => {
     expect(extractUrl('see https://ex.com/a.')).toBe('https://ex.com/a');
