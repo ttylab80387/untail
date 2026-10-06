@@ -115,7 +115,7 @@ input text
 ### 4.3 短網址展開（expand）
 
 - **只展開白名單網域**（`expanders.json`；通用短網址 bit.ly、t.co、lnkd.in、amzn.to、shp.ee、fb.me 等也是其中一個 expander）。其他網址一律不連網，避免把用戶的連結送到任意網站。
-- **白名單只約束第一個請求**：之後的跳轉由短網址服務決定，平台的 fetch 會自動跟隨（RN 的 fetch 無法逐跳控制），等同用戶自己點開連結會經過的網址；App 只送 `HEAD`，不載入頁面內容。隱私政策要照這個範圍寫。
+- **白名單只約束第一個請求**：之後的跳轉由短網址服務決定，平台的 fetch 會自動跟隨（RN 的 fetch 無法逐跳控制），等同用戶自己點開連結會經過的網址；App 先送 `HEAD`；只有伺服器回 405（不支援 HEAD）時才改送 `GET`，此時會下載頁面內容但不解析、不執行。隱私政策要照這個範圍寫。
 - 展開後若仍是另一個 expander 的網址（例如 `fb.me` → FB `/share/`）就繼續展開，最多 3 次；超過仍未解開 → `partial / unresolved`。外連包裝最多拆 3 層，超過同樣回報 `unresolved`。
 - 固定 UA：`LinkClean/<version>`，兩個平台都明確設定。**不可用瀏覽器 UA**（spike 證實 FB 對瀏覽器 UA 不會 302）。
 - 方法：先送 `HEAD`，由平台的 fetch 自動跟著跳轉，取最終 `response.url`；如果回應是 405，改用 `GET`。
@@ -196,7 +196,7 @@ interface KnowledgeEntry {
 ### 5.3 App 端更新
 
 - App 內打包一份 `rules.json` 當離線備援
-- 啟動或回到前景時，距上次檢查超過 24 小時才檢查：拉 `rules.meta.json` → 版本較新 → 拉 `rules.json` → 驗證 sha256 → 寫入快取並替換
+- 啟動或回到前景時，距上次檢查超過 24 小時才檢查：拉 `rules.meta.json` → `sha256` 與目前快取不同 → 拉 `rules.json` → 驗證 sha256 → 寫入快取並替換（`version` 只用於顯示，不用來比大小）
 - `schemaVersion` 大於 App 支援的版本 → 忽略，繼續用舊規則
 - 任何失敗都不打擾用戶，靜默沿用現有規則
 - 設定頁顯示目前規則版本，提供「立即更新」按鈕

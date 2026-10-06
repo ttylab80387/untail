@@ -32,7 +32,7 @@
 ## Review Focus
 
 1. **分享文字裡網址後面緊接全形標點或中文**（`連結：https://x.com/a?x=1。謝謝`）→ 只取出網址本身。測試在 Task 2。
-2. **保留下來的參數必須維持原本的編碼**（`q=%E4%B8%AD`、`x=a+b`、`&&` 不可被改寫；沒刪東西時逐字回傳）→ 測試在 Task 1 與 Task 3。
+2. **保留下來的參數必須維持原本的編碼**（`q=%E4%B8%AD`、`x=a+b` 不可被改寫；沒刪東西時逐字回傳；沒刪 query 參數時連 `&&` 也保留）→ 測試在 Task 1 與 Task 3。
 3. **不合法的 percent-encoding**（`%E0%A4%A`）不可讓程式 throw → 測試在 Task 1。
 4. **遠端規則包含無效 regex**（ClearURLs 或我們的資料出錯）→ 略過該條規則，其他規則照常運作 → 測試在 Task 2 與 Task 3。
 5. **大寫的 scheme / 網域**（`HTTPS://WWW.Threads.com/share/x`）→ 仍要比對到 expander 與 provider → 測試在 Task 1 與 Task 5。
@@ -253,8 +253,9 @@ describe('getHost / getPath', () => {
   it('strips userinfo and port', () => {
     expect(getHost('https://user:pw@ex.com:8080/a')).toBe('ex.com');
   });
-  it('returns empty host for non-URLs', () => {
+  it('returns empty host for non-URLs and host-less authorities', () => {
     expect(getHost('not a url')).toBe('');
+    expect(getHost('https://@/')).toBe('');
   });
   it('returns path without query or hash', () => {
     expect(getPath('https://ex.com/a/b?x=1#y')).toBe('/a/b');
@@ -295,7 +296,7 @@ export interface SplitUrl {
   hash: string; // "#..." or ""
 }
 
-const AUTHORITY = /^[a-z][a-z0-9+.-]*:\/\/(?:[^/?#@]*@)?([^/?#:]+)/i;
+const AUTHORITY = /^[a-z][a-z0-9+.-]*:\/\/(?:[^/?#@]*@)?([^/?#:@]+)/i;
 const PATH = /^[a-z][a-z0-9+.-]*:\/\/[^/?#]+([^?#]*)/i;
 
 export function safeDecode(s: string, plusAsSpace = false): string {
@@ -527,6 +528,7 @@ describe('extractUrl', () => {
   });
   it('rejects URLs without a host', () => {
     expect(extractUrl('https://?utm_source=x')).toBeNull();
+    expect(extractUrl('https://@/')).toBeNull();
   });
   it('returns null when there is no http(s) URL', () => {
     expect(extractUrl('no link here')).toBeNull();
@@ -694,7 +696,11 @@ describe('cleanUrl', () => {
     expect(cleanUrl('https://ex.com/?q=a&&x=1', providers)).toEqual({ url: 'https://ex.com/?q=a&&x=1', removed: [] });
   });
 
-  it('drops empty query components once something was removed', () => {
+  it('keeps the query byte-for-byte when only rawRules changed the URL', () => {
+    expect(cleanUrl('https://raw.example/item/ref=abc?keep=a&&b=1', providers).url).toBe('https://raw.example/item?keep=a&&b=1');
+  });
+
+  it('drops empty query components once a query param was removed', () => {
     expect(cleanUrl('https://ex.com/?q=a&&utm_source=x', providers).url).toBe('https://ex.com/?q=a');
   });
 
@@ -778,7 +784,9 @@ export function cleanUrl(url: string, providers: Record<string, Provider>): Clea
 
   // Nothing removed: hand back the exact input so signed or unusual URLs stay intact.
   if (removed.length === 0) return { url, removed };
-  return { url: joinUrl({ ...parts, pairs: kept.filter((pair) => pair.raw !== '') }), removed };
+  // Only tidy empty components when the query itself was edited.
+  const queryChanged = kept.length !== parts.pairs.length;
+  return { url: joinUrl({ ...parts, pairs: queryChanged ? kept.filter((pair) => pair.raw !== '') : kept }), removed };
 }
 ```
 
@@ -813,7 +821,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 行為：
 - 最多拆 3 層；`hops` 依序記錄每一層（第一個元素是輸入）
 - 拆到第 3 層後如果還能再拆 → `complete: false`（呼叫端要回報 `unresolved`，不可以當成已清乾淨）
-- 擷取到的目標：有 `http(s)://` 直接用；**沒有 scheme 但看起來是網域開頭**（ClearURLs 的 Google AMP `/amp/s/example.com/p` 規則就是這樣）→ 補上 `https://`；其他 scheme（`javascript:` 等）一律忽略
+- 擷取到的目標：先看原始擷取字串，可用就原樣使用（保留 `%2F` 等編碼）；不可用才解碼後再判斷。有 `http(s)://` 直接用；**沒有 scheme 但看起來是網域開頭**（ClearURLs 的 Google AMP `/amp/s/example.com/p` 規則就是這樣）→ 補上 `https://`；其他 scheme（`javascript:` 等）一律忽略
 
 - [ ] **Step 1: 寫失敗測試**
 
@@ -860,6 +868,10 @@ describe('unwrapUrl', () => {
 
   it('adds https:// to scheme-less targets such as Google AMP', () => {
     expect(unwrapUrl('https://www.google.com/amp/s/example.com/p', providers).url).toBe('https://example.com/p');
+  });
+
+  it('keeps encoded bytes of targets that are already usable', () => {
+    expect(unwrapUrl('https://www.google.com/amp/s/example.com/p%2Fq', providers).url).toBe('https://example.com/p%2Fq');
   });
 
   it('records every layer of nested wrappers', () => {
@@ -919,10 +931,13 @@ const SCHEME = /^[a-z][a-z0-9+.-]*:/i;
 const BARE_HOST = /^[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:[/?#]|$)/i;
 
 function toHttpUrl(captured: string): string | null {
-  const decoded = safeDecode(captured);
-  if (HTTP.test(decoded)) return decoded;
-  // ClearURLs captures may omit the scheme (e.g. Google AMP /amp/s/example.com/p).
-  if (!SCHEME.test(decoded) && BARE_HOST.test(decoded)) return `https://${decoded}`;
+  // Try the raw capture first so already-usable targets keep encoded bytes such as %2F;
+  // only percent-encoded wrappers (u=https%3A%2F%2F...) need decoding.
+  for (const candidate of [captured, safeDecode(captured)]) {
+    if (HTTP.test(candidate)) return candidate;
+    // ClearURLs captures may omit the scheme (e.g. Google AMP /amp/s/example.com/p).
+    if (!SCHEME.test(candidate) && BARE_HOST.test(candidate)) return `https://${candidate}`;
+  }
   return null;
 }
 
@@ -984,11 +999,11 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 行為：
 1. 用 `findExpander` 找出 `url` 對應的 expander；找不到就原樣回傳 `{ url, hops: [url], removed: [] }`
-2. 送 `HEAD`（header `User-Agent`），由 fetch 自動跟著跳轉；回應 405 時改送 `GET`；狀態 ≥ 400 → `network`
+2. 送 `HEAD`（header `User-Agent`），由 fetch 自動跟著跳轉；回應 405 時改送 `GET`（已過截止時間就不送）；狀態 ≥ 400 → `network`，`hops` 保留 fetch 回報的最終網址
 3. **硬性截止時間**：整個請求與 `timeoutMs` 的計時器賽跑，時間到就 abort 並回報 `expand_timeout`。fetch 不理會 abort 也不會卡住
 4. `res.url` 空字串時視為原網址
 5. 最終網址符合**任何一個** expander 的 `loginWall.match` → 取 `loginWall.param`；取不到、不是 http(s)、或取出來的網址**仍是登入頁** → `unresolved`
-6. 解析後的網址不是 http(s)，或仍符合**本身** expander 的 `match` → `unresolved`（符合**其他** expander 的情況交給 Task 7 的迴圈繼續展開）
+6. 解析後的網址不是 http(s)，或**跟原網址相同**（沒有跳轉）→ `unresolved`。跳到**另一個**短網址 / 分享連結（例如 `bit.ly` → `t.co`、`fb.me` → FB `/share/`）算成功，交給 Task 7 的迴圈繼續展開
 7. 套用任何 expander 的 `normalizeHost`
 8. 成功時才把 `shareId` 擷取到的 ID 放進 `removed`
 9. 失敗時回傳原網址、`removed: []`；`hops` 保留失敗前已走過的網址（連線失敗 / 逾時只有 `[url]`），方便除錯
@@ -1098,7 +1113,31 @@ describe('expandUrl', () => {
     expect(r.removed).toEqual([]);
   });
 
-  it('is unresolved when the final URL is still a share link', async () => {
+  it('hands a different short link back to the caller instead of failing', async () => {
+    const r = await expandUrl('https://bit.ly/a', expanders, opts(fakeFetch({ 'https://bit.ly/a': { url: 'https://t.co/b' } })));
+    expect(r).toEqual({ url: 'https://t.co/b', hops: ['https://bit.ly/a', 'https://t.co/b'], removed: [] });
+  });
+
+  it('keeps the redirect target on HTTP errors', async () => {
+    const r = await expandUrl('https://bit.ly/x', expanders, opts(fakeFetch({ 'https://bit.ly/x': { url: 'https://ex.com/gone', status: 404 } })));
+    expect(r).toEqual({ url: 'https://bit.ly/x', hops: ['https://bit.ly/x', 'https://ex.com/gone'], removed: [], reason: 'network' });
+  });
+
+  it('does not send GET after the deadline when a late HEAD returns 405', async () => {
+    const calls: Call[] = [];
+    const lateHead: FetchFn = async (url, init) => {
+      calls.push({ url, method: init.method, ua: init.headers['User-Agent'] });
+      if (init.method === 'GET') return { url: 'https://ex.com/a', status: 200 };
+      await new Promise((r) => setTimeout(r, 40));
+      return { url, status: 405 };
+    };
+    const r = await expandUrl('https://bit.ly/x', expanders, opts(lateHead, 10));
+    expect(r.reason).toBe('expand_timeout');
+    await new Promise((r) => setTimeout(r, 60));
+    expect(calls.map((c) => c.method)).toEqual(['HEAD']);
+  });
+
+  it('is unresolved when the final URL is still the same share link', async () => {
     const r = await expandUrl(FB, expanders, opts(fakeFetch({ [FB]: { url: FB } })));
     expect(r.reason).toBe('unresolved');
     expect(r.removed).toEqual([]);
@@ -1181,6 +1220,12 @@ export interface ExpandResult {
 
 class TimeoutError extends Error {}
 
+class HttpError extends Error {
+  constructor(readonly finalUrl: string) {
+    super('HTTP error');
+  }
+}
+
 export function findExpander(url: string, expanders: Record<string, Expander>): Expander | undefined {
   return Object.values(expanders).find((e) => matches(e.match, url));
 }
@@ -1205,8 +1250,12 @@ async function resolve(url: string, opts: ExpandOptions): Promise<string> {
   const work = (async () => {
     try {
       let res = await opts.fetch(url, { method: 'HEAD', headers, signal: controller.signal });
-      if (res.status === 405) res = await opts.fetch(url, { method: 'GET', headers, signal: controller.signal });
-      if (res.status >= 400) throw new Error(`HTTP ${res.status}`);
+      if (res.status === 405) {
+        // Never start a follow-up request after the deadline has passed.
+        if (controller.signal.aborted) throw new TimeoutError();
+        res = await opts.fetch(url, { method: 'GET', headers, signal: controller.signal });
+      }
+      if (res.status >= 400) throw new HttpError(res.url || url);
       return res.url || url;
     } catch (e) {
       throw controller.signal.aborted ? new TimeoutError() : e;
@@ -1237,6 +1286,7 @@ export async function expandUrl(url: string, expanders: Record<string, Expander>
   try {
     finalUrl = await resolve(url, opts);
   } catch (e) {
+    if (e instanceof HttpError) return fail('network', e.finalUrl === url ? [url] : [url, e.finalUrl]);
     return fail(e instanceof TimeoutError ? 'expand_timeout' : 'network');
   }
 
@@ -1249,7 +1299,8 @@ export async function expandUrl(url: string, expanders: Record<string, Expander>
     resolved = next;
     hops.push(resolved);
   }
-  if (!HTTP.test(resolved) || matches(expander.match, resolved)) return fail('unresolved', hops);
+  // A different URL that is again a short/share link is handed back to processUrl's loop.
+  if (!HTTP.test(resolved) || resolved === url) return fail('unresolved', hops);
 
   const normalized = normalizeHost(resolved, expanders);
   if (normalized !== resolved) hops.push(normalized);
@@ -1341,6 +1392,10 @@ describe('lookupKnowledge', () => {
   it('returns undefined for unknown keys', () => {
     expect(lookupKnowledge({ key: 'zzz', value: 'x', host: 'ex.com' }, kb)).toBeUndefined();
   });
+  it('ignores inherited Object.prototype keys', () => {
+    expect(lookupKnowledge({ key: 'constructor', value: 'x', host: 'ex.com' }, kb)).toBeUndefined();
+    expect(lookupKnowledge({ key: '__proto__', value: 'x', host: 'ex.com' }, kb)).toBeUndefined();
+  });
 });
 
 describe('analyze', () => {
@@ -1357,6 +1412,11 @@ describe('analyze', () => {
   it('marks unknown params as unknown / low', () => {
     expect(analyze([{ key: 'zzz', value: '1', host: 'ex.com' }], kb, 'en')).toEqual([
       { key: 'zzz', value: '1', category: 'unknown', risk: 'low' },
+    ]);
+  });
+  it('does not crash on prototype-named params', () => {
+    expect(analyze([{ key: 'constructor', value: '1', host: 'ex.com' }], {}, 'en')).toEqual([
+      { key: 'constructor', value: '1', category: 'unknown', risk: 'low' },
     ]);
   });
   it('sorts high risk first and keeps order within a level', () => {
@@ -1395,14 +1455,20 @@ export function resolveLocale(tag: string): Locale {
   return 'en';
 }
 
+// Keys come from URLs; only own properties count ("constructor", "__proto__" must not hit Object.prototype).
+function own(kb: Record<string, KnowledgeEntry>, k: string): KnowledgeEntry | undefined {
+  return Object.prototype.hasOwnProperty.call(kb, k) ? kb[k] : undefined;
+}
+
 export function lookupKnowledge(item: RemovedItem, kb: Record<string, KnowledgeEntry>): KnowledgeEntry | undefined {
   const key = item.key.toLowerCase();
   const labels = item.host.split('.');
   for (let i = 0; i < labels.length - 1; i++) {
-    const hit = kb[`${labels.slice(i).join('.')}:${key}`];
+    const hit = own(kb, `${labels.slice(i).join('.')}:${key}`);
     if (hit) return hit;
   }
-  if (kb[key]) return kb[key];
+  const exact = own(kb, key);
+  if (exact) return exact;
 
   let best: { len: number; entry: KnowledgeEntry } | undefined;
   for (const [k, entry] of Object.entries(kb)) {
@@ -1458,7 +1524,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `processUrl(input: string, rules: RuleBundle, opts: ProcessOptions): Promise<ProcessResult>`
   - `index.ts` 匯出：`processUrl`、`ProcessOptions`、`cleanUrl`、`unwrapUrl`、`UnwrapResult`、`expandUrl`、`findExpander`、`analyze`、`resolveLocale`、`extractUrl`、`DEFAULT_USER_AGENT`、`DEFAULT_TIMEOUT_MS`，以及 `types.ts` 的所有型別
 
-流程：extract → unwrap →（只要網址還符合某個 expander）expand → unwrap，**最多展開 3 次** → clean → analyze。
+流程：extract → unwrap →（只要網址還符合某個 expander）expand → unwrap，**最多展開 3 次，全部共用一個 `timeoutMs` 時間預算** → clean → analyze。
 - 沒抓到網址 → `failed / invalid_input`，`cleanUrl: ''`
 - unwrap 回報 `complete: false` → `partial / unresolved`
 - 網址符合 expander 但 `expand: false` 或沒有傳 `fetch` → 不連網，`partial / expand_disabled`
@@ -1586,6 +1652,18 @@ describe('processUrl', () => {
     expect(r).toMatchObject({ status: 'partial', reason: 'unresolved', cleanUrl: T3 });
   });
 
+  it('applies the timeout to the whole expansion chain', async () => {
+    const slow = (next: string): FetchFn => async () => {
+      await new Promise((r) => setTimeout(r, 30));
+      return { url: next, status: 200 };
+    };
+    const FB_SHARE = 'https://www.facebook.com/share/p/TEST01/';
+    const fetch: FetchFn = (url, init) =>
+      url === 'https://fb.me/abc' ? slow(FB_SHARE)(url, init) : slow('https://www.facebook.com/groups/g/permalink/1/')(url, init);
+    const r = await processUrl('https://fb.me/abc', rules, { expand: true, locale: 'en', fetch, timeoutMs: 50 });
+    expect(r).toMatchObject({ status: 'partial', reason: 'expand_timeout' });
+  });
+
   it('does not touch the network when expansion is disabled', async () => {
     const r = await processUrl(THREADS, rules, { expand: false, locale: 'en', fetch: noFetch });
     expect(r).toMatchObject({ cleanUrl: THREADS, status: 'partial', reason: 'expand_disabled', removed: [] });
@@ -1657,17 +1735,23 @@ export async function processUrl(input: string, rules: RuleBundle, opts: Process
   let url = first.url;
   if (!first.complete) reason = 'unresolved';
 
+  // One time budget for the whole chain, not per expansion.
+  const deadline = Date.now() + (opts.timeoutMs ?? DEFAULT_TIMEOUT_MS);
+
   // Keep expanding while the URL is still a known short/share link.
   for (let i = 0; !reason && findExpander(url, rules.expanders); i++) {
+    const remaining = deadline - Date.now();
     if (i === MAX_EXPANSIONS) {
       reason = 'unresolved';
     } else if (!opts.expand || !opts.fetch) {
       reason = 'expand_disabled';
+    } else if (remaining <= 0) {
+      reason = 'expand_timeout';
     } else {
       const r = await expandUrl(url, rules.expanders, {
         fetch: opts.fetch,
         userAgent: opts.userAgent ?? DEFAULT_USER_AGENT,
-        timeoutMs: opts.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+        timeoutMs: remaining,
       });
       r.hops.forEach(visit);
       reason = r.reason;
@@ -1743,7 +1827,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `missingTranslations(kb: Record<string, KnowledgeEntry>): string[]`
   - `buildBundle(input: OwnData & { clearurls: { providers: Record<string, Provider> }; version: string }): RuleBundle`
   - `sha256(text: string): string`（hex）
-  - `makeVersion(d: Date): string`（UTC，格式 `YYYY.MM.DD.HHmm`）
+  - `makeVersion(d: Date): string`（UTC，格式 `YYYY.MM.DD.HHmm`；**只用於顯示**，App 判斷要不要更新是比對 `sha256`，見 spec §5.3）
   - CLI：`pnpm build:rules [--clearurls <file>]`（pnpm 會把 script 名稱後的參數直接轉給腳本，不要加 `--`） → `rules/dist/rules.json`、`rules/dist/rules.meta.json`
   - `rules.meta.json`：`{ schemaVersion: 1, version, sha256, generatedAt }`，`sha256` 是 `rules.json` 檔案內容（UTF-8）的 hex
 
