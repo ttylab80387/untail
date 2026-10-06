@@ -7,3 +7,4 @@ export type { UnwrapResult } from './unwrap';
 export { expandUrl, findExpander, DEFAULT_USER_AGENT, DEFAULT_TIMEOUT_MS } from './expand';
 export { analyze, resolveLocale } from './analyze';
 export { extractUrl } from './extract';
+export { validateBundle } from './validate';

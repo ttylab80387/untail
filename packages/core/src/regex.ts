@@ -2,6 +2,8 @@ const cache = new Map<string, RegExp | null>();
 
 // Rules come from remote data; a bad pattern must never crash the app.
 export function compile(src: string, flags = 'i'): RegExp | null {
+  // Remote data may omit a pattern; new RegExp(undefined) would match everything.
+  if (typeof src !== 'string') return null;
   const key = `${flags}\u0000${src}`;
   const hit = cache.get(key);
   if (hit !== undefined) return hit;

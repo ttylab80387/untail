@@ -8,6 +8,10 @@ describe('compile', () => {
   it('returns null for invalid patterns instead of throwing', () => {
     expect(compile('(unclosed')).toBeNull();
   });
+  it('returns null for non-string patterns from broken remote data', () => {
+    expect(compile(undefined as unknown as string)).toBeNull();
+    expect(compile(42 as unknown as string)).toBeNull();
+  });
   it('caches by pattern and flags', () => {
     expect(compile('x')).toBe(compile('x'));
     expect(compile('x', 'gi')).not.toBe(compile('x'));

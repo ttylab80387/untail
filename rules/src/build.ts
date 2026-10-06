@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+import { validateBundle } from '@linkclean/core';
 import type { Provider } from '@linkclean/core';
 import { buildBundle, makeVersion, missingTranslations, sha256, validateOwnData } from './bundle';
 import type { OwnData } from './bundle';
@@ -41,6 +42,8 @@ async function main() {
 
   const now = new Date();
   const bundle = buildBundle({ ...own, clearurls: await loadClearUrls(values.clearurls), version: makeVersion(now) });
+  const bundleErrors = validateBundle(bundle);
+  if (bundleErrors.length) throw new Error(`built bundle is invalid:\n${bundleErrors.join('\n')}`);
   const json = JSON.stringify(bundle);
   const meta = { schemaVersion: bundle.schemaVersion, version: bundle.version, sha256: sha256(json), generatedAt: now.toISOString() };
 
