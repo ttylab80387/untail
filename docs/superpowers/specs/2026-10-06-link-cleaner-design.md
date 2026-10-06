@@ -61,7 +61,7 @@ trackurlapp/
 │   ├── expanders.json      # Per-site expander config
 │   ├── regression.json     # Real links + expected output (live tests)
 │   ├── fixtures/           # Recorded redirect chains (offline tests)
-│   └── build.ts            # Fetch ClearURLs → merge → test → emit
+│   └── src/                # build / merge / bundle / CLI / live check scripts
 ├── .github/workflows/rules.yml
 └── docs/
 ```
@@ -85,7 +85,7 @@ interface ProcessResult {
   cleanUrl: string;
   status: 'clean' | 'partial' | 'failed';
   reason?: 'expand_disabled' | 'expand_timeout' | 'unresolved' | 'network' | 'invalid_input';
-  removed: AnalyzedParam[];   // every removed param / path segment, with explanation
+  removed: AnalyzedParam[];   // every removed param / path segment (rawRules hits use key "raw"), with explanation
   hops: string[];             // redirect chain, for display
 }
 
@@ -115,6 +115,8 @@ input text
 ### 4.3 短網址展開（expand）
 
 - **只展開白名單網域**（`expanders.json`；通用短網址 bit.ly、t.co、lnkd.in、amzn.to、shp.ee、fb.me 等也是其中一個 expander）。其他網址一律不連網，避免把用戶的連結送到任意網站。
+- **白名單只約束第一個請求**：之後的跳轉由短網址服務決定，平台的 fetch 會自動跟隨（RN 的 fetch 無法逐跳控制），等同用戶自己點開連結會經過的網址；App 只送 `HEAD`，不載入頁面內容。隱私政策要照這個範圍寫。
+- 展開後若仍是另一個 expander 的網址（例如 `fb.me` → FB `/share/`）就繼續展開，最多 3 次；超過仍未解開 → `partial / unresolved`。外連包裝最多拆 3 層，超過同樣回報 `unresolved`。
 - 固定 UA：`LinkClean/<version>`，兩個平台都明確設定。**不可用瀏覽器 UA**（spike 證實 FB 對瀏覽器 UA 不會 302）。
 - 方法：先送 `HEAD`，由平台的 fetch 自動跟著跳轉，取最終 `response.url`；如果回應是 405，改用 `GET`。
 - 總逾時 5 秒（跳轉次數由平台 fetch 的上限控制）。
@@ -125,7 +127,7 @@ input text
 {
   "facebook": {
     "match": "^https://(www|m)\\.facebook\\.com/share/",
-    "loginWall": { "pathPattern": "^/login", "param": "next" },
+    "loginWall": { "match": "^https://(www|m)\\.facebook\\.com/login", "param": "next" },
     "normalizeHost": { "m.facebook.com": "www.facebook.com" },
     "shareId": "/share/(?:[a-z]/)?([^/?#]+)"
   },
