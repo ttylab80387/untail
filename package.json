@@ -1,0 +1,13 @@
+{
+  "name": "linkclean",
+  "private": true,
+  "packageManager": "pnpm@10.29.3",
+  "scripts": {
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "build:rules": "pnpm --filter @linkclean/rules build",
+    "test:regression": "pnpm --filter @linkclean/rules test:regression",
+    "test:live": "pnpm --filter @linkclean/rules test:live",
+    "clean-url": "pnpm --filter @linkclean/rules clean-url"
+  }
+}
