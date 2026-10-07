@@ -1,0 +1,71 @@
+{
+  "app": { "title": "LinkClean" },
+  "home": {
+    "placeholder": "Paste or type a link, or share one from another app",
+    "paste": "Paste",
+    "clean": "Clean",
+    "cleaning": "Cleaning…"
+  },
+  "result": {
+    "title": "Result",
+    "status": { "clean": "Cleaned", "partial": "May not be fully cleaned", "failed": "No valid link found" },
+    "reason": {
+      "expand_disabled": "Short-link expansion is off, so this share link may still identify who shared it.",
+      "expand_timeout": "Expanding the short link timed out; the link may still identify who shared it.",
+      "unresolved": "This share link could not be fully expanded; it may still identify who shared it.",
+      "network": "Network error while expanding the short link; it may still identify who shared it.",
+      "invalid_input": "Paste a link that starts with http:// or https://."
+    },
+    "copy": "Copy",
+    "copied": "Clean link copied",
+    "share": "Share",
+    "open": "Open",
+    "removedCount": "Tracking codes removed: {{count}}",
+    "noneRemoved": "No tracking codes found",
+    "owner": "From: {{owner}}",
+    "noDesc": "The purpose of this parameter is unknown.",
+    "hops": "Redirects"
+  },
+  "risk": { "high": "High risk", "medium": "Medium risk", "low": "Low risk" },
+  "category": {
+    "sharer_id": "Sharer identity",
+    "ad_click": "Ad click tracking",
+    "affiliate": "Affiliate",
+    "campaign": "Campaign",
+    "session": "Session",
+    "unknown": "Unknown"
+  },
+  "history": {
+    "title": "History",
+    "empty": "No history yet",
+    "clearAll": "Clear all",
+    "clearConfirm": "Delete all history?",
+    "deleteConfirm": "Delete this entry?",
+    "delete": "Delete",
+    "cancel": "Cancel"
+  },
+  "settings": {
+    "title": "Settings",
+    "expand": "Expand short links",
+    "expandHint": "Contacts the short-link service to find the original URL. When off, share links may not be fully cleaned.",
+    "autoCopy": "Copy clean links automatically",
+    "history": "Keep history",
+    "rulesVersion": "Rules version: {{version}}",
+    "updateNow": "Update rules now",
+    "update": {
+      "disabled": "No update source configured; using built-in rules.",
+      "throttled": "Checked recently.",
+      "up-to-date": "Rules are up to date.",
+      "updated": "Rules updated.",
+      "failed": "Update failed; keeping the current rules."
+    },
+    "privacy": "Privacy policy",
+    "licenses": "Open-source licenses"
+  },
+  "licenses": {
+    "title": "Open-source licenses",
+    "clearurls": "Tracking-parameter rules come from the ClearURLs project (gitlab.com/ClearURLs/rules), licensed under the GNU LGPL-3.0."
+  },
+  "privacy": {"title": "Privacy policy", "p1": "LinkClean collects no data. It has no accounts and no servers, and uses no third-party analytics, advertising or crash-reporting tools.", "p2": "Rule updates: the app contacts the rules website automatically at most once a day, or when you tap \"Update rules now\", to download tracking-parameter rules.", "p3": "Short-link expansion: when a link you clean is an allow-listed short or share link (for example Facebook, Threads, bit.ly), the app contacts that service directly from your phone to find the original URL. It sends a HEAD request first and falls back to GET only if the service does not support HEAD (page content is then downloaded but never parsed or executed). Further redirects are chosen by that service. You can turn this off in Settings.", "p4": "History is kept only in the app's local storage and is never sent to any server by the app. Android system backup is disabled; on iOS it may be included, like other app data, in your own iCloud or computer backups. History can be turned off and cleared at any time.", "p5": "The clipboard is used only when you tap Paste or Copy, or when automatic copying of clean links is on."},
+  "nav": { "history": "History", "settings": "Settings" }
+}
