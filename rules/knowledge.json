@@ -945,5 +945,55 @@
       "en": "ID of the video's uploader, i.e. the content's author, not the sharer.",
       "ja": "動画投稿者の ID。コンテンツの作者で、共有した人ではありません。"
     }
+  },
+  "xhslink.com:share-id": {
+    "owner": "Xiaohongshu",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "小紅書分享短網址裡的代碼，綁定這次分享，可追蹤是誰分享的。已展開成原始網址並移除。",
+      "en": "Code in the Xiaohongshu share short link, tied to this share so it can be traced to the sharer. Expanded to the original URL and removed.",
+      "ja": "小紅書の共有短縮リンクのコード。この共有に紐付き、共有者を追跡できます。元の URL に展開して除去しました。"
+    }
+  },
+  "xiaohongshu.com:appuid": {
+    "owner": "Xiaohongshu",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "分享者的小紅書使用者編號，會直接透露是誰分享的。",
+      "en": "The sharer's Xiaohongshu user ID, which directly reveals who shared the link.",
+      "ja": "共有した人の小紅書ユーザー ID。誰が共有したかが直接わかります。"
+    }
+  },
+  "xiaohongshu.com:app_version": {
+    "owner": "Xiaohongshu",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "分享者使用的小紅書 App 版本。",
+      "en": "Version of the Xiaohongshu app the sharer used.",
+      "ja": "共有した人が使った小紅書アプリのバージョン。"
+    }
+  },
+  "xiaohongshu.com:share_channel": {
+    "owner": "Xiaohongshu",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "分享管道（例如複製連結）。",
+      "en": "Share channel (for example copy link).",
+      "ja": "共有チャネル（リンクのコピーなど）。"
+    }
+  },
+  "xiaohongshu.com:xhsshare": {
+    "owner": "Xiaohongshu",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "分享方式標記（例如複製連結）。",
+      "en": "Share method marker (for example copy link).",
+      "ja": "共有方法のマーカー（リンクのコピーなど）。"
+    }
   }
 }

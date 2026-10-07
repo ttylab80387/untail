@@ -46,18 +46,30 @@ function normalizeHost(url: string, expanders: Record<string, Expander>): string
   return url;
 }
 
+// Resolves "/path" or "//host/path" Location values against the request URL.
+function absolute(location: string, base: string): string {
+  if (HTTP.test(location)) return location;
+  const origin = /^[a-z][a-z0-9+.-]*:\/\/[^/?#]+/i.exec(base)?.[0] ?? '';
+  if (location.startsWith('//')) return `${base.slice(0, base.indexOf(':') + 1)}${location}`;
+  return location.startsWith('/') ? `${origin}${location}` : location;
+}
+
 // Race the request against a hard deadline so a fetch that ignores abort cannot hang the caller.
-async function resolve(url: string, opts: ExpandOptions): Promise<string> {
+// With firstHop the redirect is not followed: the first Location is the answer.
+async function resolve(url: string, opts: ExpandOptions, firstHop: boolean): Promise<string> {
   const controller = new AbortController();
   const headers = { 'User-Agent': opts.userAgent };
+  const redirect = firstHop ? 'manual' : 'follow';
   const work = (async () => {
     try {
-      let res = await opts.fetch(url, { method: 'HEAD', headers, signal: controller.signal });
-      if (res.status === 405) {
+      let res = await opts.fetch(url, { method: 'HEAD', headers, signal: controller.signal, redirect });
+      // Some services reject HEAD outright (405) or answer it with 404; GET still redirects.
+      if (res.status === 405 || res.status === 404) {
         // Never start a follow-up request after the deadline has passed.
         if (controller.signal.aborted) throw new TimeoutError();
-        res = await opts.fetch(url, { method: 'GET', headers, signal: controller.signal });
+        res = await opts.fetch(url, { method: 'GET', headers, signal: controller.signal, redirect });
       }
+      if (firstHop && res.status >= 300 && res.status < 400 && res.location) return absolute(res.location, url);
       if (res.status >= 400) throw new HttpError(res.url || url);
       return res.url || url;
     } catch (e) {
@@ -87,7 +99,7 @@ export async function expandUrl(url: string, expanders: Record<string, Expander>
 
   let finalUrl: string;
   try {
-    finalUrl = await resolve(url, opts);
+    finalUrl = await resolve(url, opts, expander.firstHop === true);
   } catch (e) {
     if (e instanceof HttpError) return fail('network', e.finalUrl === url ? [url] : [url, e.finalUrl]);
     return fail(e instanceof TimeoutError ? 'expand_timeout' : 'network');

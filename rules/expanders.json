@@ -25,6 +25,11 @@
     "match": "^https?://(?:b23\\.tv|bili2233\\.cn)/",
     "shareId": "^/(?!(?:BV|av)[0-9A-Za-z])([^/?#]+)"
   },
+  "xiaohongshu": {
+    "match": "^https?://xhslink\\.com/",
+    "firstHop": true,
+    "shareId": "^/(?:[a-z]/)?([^/?#]+)"
+  },
   "generic": {
     "match": "^https?://(bit\\.ly|t\\.co|lnkd\\.in|amzn\\.to|shp\\.ee|fb\\.me)/"
   }

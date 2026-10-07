@@ -11,14 +11,15 @@ const expanders: Record<string, Expander> = {
   },
   threads: { match: '^https://www\\.threads\\.(com|net)/share/', shareId: '/share/([^/?#]+)' },
   generic: { match: '^https?://(bit\\.ly|t\\.co)/' },
+  xhs: { match: '^https?://xhslink\\.com/', firstHop: true, shareId: '^/(?:[a-z]/)?([^/?#]+)' },
 };
 
-type Reply = { url: string; status?: number } | Error | 'hang' | 'ignore-abort';
-interface Call { url: string; method: string; ua: string | undefined }
+type Reply = { url: string; status?: number; location?: string } | Error | 'hang' | 'ignore-abort';
+interface Call { url: string; method: string; ua: string | undefined; redirect?: string }
 
 function fakeFetch(map: Record<string, Reply>, calls: Call[] = []): FetchFn {
   return async (url, init) => {
-    calls.push({ url, method: init.method, ua: init.headers['User-Agent'] });
+    calls.push({ url, method: init.method, ua: init.headers['User-Agent'], redirect: init.redirect });
     const r = map[`${init.method} ${url}`] ?? map[url];
     if (r === undefined) throw new Error(`unexpected fetch ${init.method} ${url}`);
     if (r === 'hang') {
@@ -26,7 +27,7 @@ function fakeFetch(map: Record<string, Reply>, calls: Call[] = []): FetchFn {
     }
     if (r === 'ignore-abort') return new Promise(() => {});
     if (r instanceof Error) throw r;
-    return { url: r.url, status: r.status ?? 200 };
+    return { url: r.url, status: r.status ?? 200, ...(r.location ? { location: r.location } : {}) };
   };
 }
 
@@ -61,7 +62,7 @@ describe('expandUrl', () => {
       hops: [THREADS, THREADS_POST],
       removed: [{ key: 'share-id', value: 'BAAtest0001', host: 'www.threads.com' }],
     });
-    expect(calls).toEqual([{ url: THREADS, method: 'HEAD', ua: DEFAULT_USER_AGENT }]);
+    expect(calls).toEqual([{ url: THREADS, method: 'HEAD', ua: DEFAULT_USER_AGENT, redirect: 'follow' }]);
   });
 
   it('resolves a Facebook share link that redirects straight to the post', async () => {
@@ -167,5 +168,52 @@ describe('expandUrl', () => {
   it('is unresolved when redirected to a non-http URL', async () => {
     const r = await expandUrl('https://t.co/x', expanders, opts(fakeFetch({ 'https://t.co/x': { url: 'intent://x' } })));
     expect(r.reason).toBe('unresolved');
+  });
+
+  it('retries with GET when HEAD returns 404', async () => {
+    const calls: Call[] = [];
+    const r = await expandUrl(
+      'https://bit.ly/x',
+      expanders,
+      opts(fakeFetch({ 'HEAD https://bit.ly/x': { url: 'https://bit.ly/x', status: 404 }, 'GET https://bit.ly/x': { url: 'https://ex.com/a' } }, calls)),
+    );
+    expect(r.url).toBe('https://ex.com/a');
+    expect(calls.map((c) => c.method)).toEqual(['HEAD', 'GET']);
+  });
+
+  describe('firstHop expanders', () => {
+    const XHS = 'http://xhslink.com/o/TEST01';
+    const NOTE = 'https://www.xiaohongshu.com/discovery/item/abc?xsec_token=T&shareRedId=S';
+
+    it('reads the first redirect target without contacting it', async () => {
+      const calls: Call[] = [];
+      const r = await expandUrl(
+        XHS,
+        expanders,
+        opts(fakeFetch({ [`HEAD ${XHS}`]: { url: XHS, status: 404 }, [`GET ${XHS}`]: { url: XHS, status: 302, location: NOTE } }, calls)),
+      );
+      expect(r).toEqual({ url: NOTE, hops: [XHS, NOTE], removed: [{ key: 'share-id', value: 'TEST01', host: 'xhslink.com' }] });
+      expect(calls.map((c) => [c.method, c.url, c.redirect])).toEqual([
+        ['HEAD', XHS, 'manual'],
+        ['GET', XHS, 'manual'],
+      ]);
+    });
+
+    it('resolves a relative Location against the short link', async () => {
+      const r = await expandUrl(XHS, expanders, opts(fakeFetch({ [XHS]: { url: XHS, status: 301, location: '/next/path?a=1' } })));
+      expect(r.url).toBe('http://xhslink.com/next/path?a=1');
+    });
+
+    it('is unresolved when the short link does not redirect', async () => {
+      const r = await expandUrl(XHS, expanders, opts(fakeFetch({ [XHS]: { url: XHS, status: 200 } })));
+      expect(r.reason).toBe('unresolved');
+      expect(r.url).toBe(XHS);
+    });
+
+    it('lets other expanders keep following redirects', async () => {
+      const calls: Call[] = [];
+      await expandUrl(THREADS, expanders, opts(fakeFetch({ [THREADS]: { url: THREADS_POST } }, calls)));
+      expect(calls[0]!.redirect).toBe('follow');
+    });
   });
 });

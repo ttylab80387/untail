@@ -51,8 +51,13 @@ describe('validateBundle', () => {
   });
 
   it('rejects malformed optional expander fields', () => {
-    const b = { ...valid(), expanders: { x: { match: '^https://x/', loginWall: { match: '(' }, normalizeHost: { a: 1 }, shareId: 5 } } };
-    expect(validateBundle(b)).toEqual(['expanders.x.loginWall: invalid', 'expanders.x.normalizeHost: invalid', 'expanders.x.shareId: invalid']);
+    const b = { ...valid(), expanders: { x: { match: '^https://x/', loginWall: { match: '(' }, normalizeHost: { a: 1 }, shareId: 5, firstHop: 'yes' } } };
+    expect(validateBundle(b)).toEqual([
+      'expanders.x.loginWall: invalid',
+      'expanders.x.normalizeHost: invalid',
+      'expanders.x.shareId: invalid',
+      'expanders.x.firstHop: invalid',
+    ]);
   });
 
   it('rejects malformed knowledge entries', () => {

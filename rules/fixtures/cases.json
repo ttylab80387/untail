@@ -346,5 +346,32 @@
       "status": "clean",
       "removedKeys": []
     }
+  },
+  {
+    "name": "xiaohongshu short link stops at the first redirect",
+    "input": "http://xhslink.com/o/TEST01xhs",
+    "responses": {
+      "http://xhslink.com/o/TEST01xhs": "https://www.xiaohongshu.com/discovery/item/6a0000000000000000000001?app_platform=android&ignoreEngage=true&app_version=9.44.0&share_from_user_hidden=true&xsec_source=app_share&type=video&xsec_token=TOKEN&author_share=1&shareRedId=RED&apptime=1700000000&share_id=SID&share_channel=copy_link&appuid=UID&xhsshare=CopyLink"
+    },
+    "expected": {
+      "cleanUrl": "https://www.xiaohongshu.com/discovery/item/6a0000000000000000000001?xsec_token=TOKEN",
+      "status": "clean",
+      "removedKeys": [
+        "share-id",
+        "app_platform",
+        "ignoreEngage",
+        "app_version",
+        "share_from_user_hidden",
+        "xsec_source",
+        "type",
+        "author_share",
+        "shareRedId",
+        "apptime",
+        "share_id",
+        "share_channel",
+        "appuid",
+        "xhsshare"
+      ]
+    }
   }
 ]

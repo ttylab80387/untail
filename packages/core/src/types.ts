@@ -15,6 +15,7 @@ export interface Expander {
   loginWall?: { match: string; param: string }; // match: regex on the full URL of the login page
   normalizeHost?: Record<string, string>;
   shareId?: string; // regex on the path, capture group 1 = share ID
+  firstHop?: boolean; // take the first redirect target without contacting it (e.g. a host blocked by DNS)
 }
 
 export type Locale = 'zh-TW' | 'en' | 'ja';
@@ -69,11 +70,13 @@ export interface FetchInit {
   method: 'HEAD' | 'GET';
   headers: Record<string, string>;
   signal: AbortSignal;
+  redirect: 'follow' | 'manual'; // manual: return the 3xx response itself with its Location
 }
 
 export interface FetchResponse {
   url: string;
   status: number;
+  location?: string; // Location header of a 3xx response (manual redirect mode)
 }
 
 export type FetchFn = (url: string, init: FetchInit) => Promise<FetchResponse>;

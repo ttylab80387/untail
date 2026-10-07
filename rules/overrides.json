@@ -47,6 +47,11 @@
         "bbid",
         "ts"
       ]
+    },
+    "xiaohongshu.com": {
+      "rules": [
+        "share_channel"
+      ]
     }
   }
 }

@@ -3,8 +3,9 @@ import { fileURLToPath } from 'node:url';
 import type { FetchFn, RuleBundle } from '@linkclean/core';
 
 export const nodeFetch: FetchFn = async (url, init) => {
-  const res = await fetch(url, { ...init, redirect: 'follow' });
-  return { url: res.url, status: res.status };
+  const res = await fetch(url, init);
+  const location = res.headers.get('location');
+  return { url: res.url || url, status: res.status, ...(location ? { location } : {}) };
 };
 
 export async function loadRules(): Promise<RuleBundle> {

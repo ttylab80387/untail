@@ -45,6 +45,7 @@ export function validateBundle(data: unknown): string[] {
     }
     if (e.normalizeHost !== undefined && !isStrMap(e.normalizeHost)) errors.push(`expanders.${name}.normalizeHost: invalid`);
     if (e.shareId !== undefined && typeof e.shareId !== 'string') errors.push(`expanders.${name}.shareId: invalid`);
+    if (e.firstHop !== undefined && typeof e.firstHop !== 'boolean') errors.push(`expanders.${name}.firstHop: invalid`);
   }
 
   for (const [key, k] of Object.entries(data.knowledge as Record<string, unknown>)) {

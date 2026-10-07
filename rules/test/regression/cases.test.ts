@@ -10,9 +10,11 @@ if (!existsSync(rulesPath)) throw new Error('rules/dist/rules.json missing: run 
 const rules = JSON.parse(readFileSync(rulesPath, 'utf8')) as RuleBundle;
 
 function replay(responses: Record<string, string | undefined>): FetchFn {
-  return async (url) => {
+  return async (url, init) => {
     const final = responses[url];
     if (final === undefined) throw new Error(`no recorded response for ${url}`);
+    // Manual mode sees the redirect itself, as a firstHop expander requests it.
+    if (init.redirect === 'manual') return { url, status: 302, location: final };
     return { url: final, status: 200 };
   };
 }
