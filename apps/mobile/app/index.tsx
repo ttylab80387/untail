@@ -8,13 +8,41 @@ import { useColors } from '../src/theme';
 export default function Home() {
   const { t } = useTranslation();
   const c = useColors();
-  const { ready, input, setInput, busy, outcome, submit } = useApp();
+  const { ready, input, setInput, busy, outcome, submit, clipboardOffer, acceptClipboardOffer, dismissClipboardOffer } = useApp();
   const canClean = ready && !busy && input.trim().length > 0;
 
   const pasteFallback = async () => setInput(await Clipboard.getStringAsync());
 
   return (
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      {clipboardOffer && !busy && (
+        <View style={[styles.offer, { backgroundColor: c.card, borderColor: c.accent }]}>
+          <Text style={[styles.offerText, { color: c.text }]}>{t('home.clipboardOffer')}</Text>
+          <View style={styles.row}>
+            {clipboardOffer.kind === 'ios' && Clipboard.isPasteButtonAvailable ? (
+              // The system paste button reads the clipboard without the "Allow Paste" prompt.
+              <Clipboard.ClipboardPasteButton
+                onPress={(data) => {
+                  if (data.type === 'text') acceptClipboardOffer(data.text);
+                }}
+                acceptedContentTypes={['plain-text', 'url']}
+                displayMode="iconAndLabel"
+                style={styles.pasteButton}
+              />
+            ) : (
+              <Pressable
+                onPress={async () => acceptClipboardOffer(clipboardOffer.kind === 'ios' ? await Clipboard.getStringAsync() : undefined)}
+                style={[styles.button, { backgroundColor: c.accent }]}
+              >
+                <Text style={styles.buttonText}>{t('home.clipboardClean')}</Text>
+              </Pressable>
+            )}
+            <Pressable onPress={dismissClipboardOffer} style={styles.button}>
+              <Text style={{ color: c.muted, fontWeight: '600' }}>{t('home.dismiss')}</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
       <TextInput
         value={input}
         onChangeText={setInput}
@@ -61,4 +89,6 @@ const styles = StyleSheet.create({
   button: { paddingVertical: 10, paddingHorizontal: 18, borderRadius: 10 },
   buttonText: { color: '#ffffff', fontWeight: '600' },
   pasteButton: { width: 120, height: 40 },
+  offer: { borderWidth: 1, borderRadius: 12, padding: 12, gap: 8 },
+  offerText: { fontWeight: '600' },
 });

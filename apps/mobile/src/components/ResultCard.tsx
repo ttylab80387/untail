@@ -1,8 +1,8 @@
-import * as Clipboard from 'expo-clipboard';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Linking, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import type { AnalyzedParam, ProcessResult } from '@linkclean/core';
+import { useApp } from '../state/AppContext';
 import { useColors } from '../theme';
 import type { Colors } from '../theme';
 
@@ -37,6 +37,7 @@ function ParamRow({ p }: { p: AnalyzedParam }) {
 export function ResultCard({ result, copied }: { result: ProcessResult; copied: boolean }) {
   const { t } = useTranslation();
   const c = useColors();
+  const { copy } = useApp();
   const [showHops, setShowHops] = useState(false);
   const statusColor = result.status === 'clean' ? c.ok : result.status === 'partial' ? c.warn : c.danger;
 
@@ -57,7 +58,7 @@ export function ResultCard({ result, copied }: { result: ProcessResult; copied: 
       {copied && <Text style={{ color: c.ok }}>{t('result.copied')}</Text>}
 
       <View style={styles.actions}>
-        <Pressable onPress={() => void Clipboard.setStringAsync(result.cleanUrl)} style={[styles.button, { backgroundColor: c.accent }]}>
+        <Pressable onPress={() => void copy(result.cleanUrl)} style={[styles.button, { backgroundColor: c.accent }]}>
           <Text style={styles.buttonText}>{t('result.copy')}</Text>
         </Pressable>
         <Pressable onPress={() => void Share.share({ message: result.cleanUrl })} style={[styles.button, { backgroundColor: c.accent }]}>

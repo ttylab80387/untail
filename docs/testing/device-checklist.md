@@ -19,6 +19,14 @@ Use links from a test account; never paste real personal share links into issues
 - [ ] Android: Paste fills the input from the clipboard
 - [ ] Pasting plain text without a link shows "No valid link found" and adds no history entry
 
+## Clipboard detection
+- [ ] Copy a link with tracking params in another app, open LinkClean → banner offers to clean it
+- [ ] iOS: the banner's Paste button cleans the link without the "Allow Paste" prompt
+- [ ] Android: tapping Clean on the banner cleans the clipboard link (system "pasted" notice may appear)
+- [ ] After LinkClean copies a clean link, returning to the app does not offer it again
+- [ ] Android: an already-clean link on the clipboard is never offered, even after restarting the app
+- [ ] Settings → "Detect links on the clipboard" off → no banner
+
 ## Result
 - [ ] Clean result: green status, clean URL selectable, auto-copied (toast text shown) when the setting is on
 - [ ] FB / Threads share link: status is clean and the list shows share-id as high risk

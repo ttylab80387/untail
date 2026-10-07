@@ -42,6 +42,7 @@ export default function SettingsScreen() {
       {row('expand', t('settings.expand'), t('settings.expandHint'))}
       {row('autoCopy', t('settings.autoCopy'))}
       {row('history', t('settings.history'))}
+      {row('detectClipboard', t('settings.detectClipboard'), t('settings.detectClipboardHint'))}
 
       <View style={[styles.block, { backgroundColor: c.card, borderColor: c.border }]}>
         <Text style={{ color: c.text }}>{t('settings.rulesVersion', { version: rules.version })}</Text>

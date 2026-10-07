@@ -1,4 +1,5 @@
-import { extractUrl } from '@linkclean/core';
+import { cleanUrl, extractUrl, findExpander, unwrapUrl } from '@linkclean/core';
+import type { RuleBundle } from '@linkclean/core';
 
 // Decides whether to offer cleaning a link found on the clipboard.
 // State lives in memory only; nothing about the clipboard is ever persisted.
@@ -15,9 +16,20 @@ export function noteSelfWrite(_s: WatchState, text: string): WatchState {
   return { lastSeenText: text, selfWrote: true };
 }
 
-// Android can read the text in the foreground, so it can skip text it has already seen.
-export function decideAndroid(text: string, s: WatchState): { url: string | null; next: WatchState } {
-  const url = text && text !== s.lastSeenText ? extractUrl(text) : null;
+// Offline check: is there anything to clean? Tracking params, a redirect wrapper or a share link.
+export function needsCleaning(url: string, rules: RuleBundle): boolean {
+  return (
+    unwrapUrl(url, rules.providers).url !== url ||
+    findExpander(url, rules.expanders) !== undefined ||
+    cleanUrl(url, rules.providers).removed.length > 0
+  );
+}
+
+// Android can read the text in the foreground, so it skips text it has already seen and links
+// that are already clean (such as one the app copied in an earlier session).
+export function decideAndroid(text: string, s: WatchState, rules: RuleBundle): { url: string | null; next: WatchState } {
+  const found = text && text !== s.lastSeenText ? extractUrl(text) : null;
+  const url = found && needsCleaning(found, rules) ? found : null;
   return { url, next: { lastSeenText: text || s.lastSeenText, selfWrote: false } };
 }
 

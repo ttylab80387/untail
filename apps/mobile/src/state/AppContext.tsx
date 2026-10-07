@@ -4,7 +4,7 @@ import { useLocales } from 'expo-localization';
 import { useSQLiteContext } from 'expo-sqlite';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { AppState as RNAppState } from 'react-native';
+import { AppState as RNAppState, Platform } from 'react-native';
 import { resolveLocale } from '@linkclean/core';
 import type { Locale, RuleBundle } from '@linkclean/core';
 import bundledJson from '../../assets/rules.json';
@@ -12,6 +12,7 @@ import { SITE_BASE_URL, USER_AGENT } from '../config';
 import i18n from '../i18n';
 import { cleanInput } from '../lib/cleaner';
 import type { CleanOutcome } from '../lib/cleaner';
+import { decideAndroid, decideIos, initialWatchState, noteSelfWrite } from '../lib/clipboardWatch';
 import type { Db } from '../lib/db';
 import { loadRules, updateRules } from '../lib/rulesStore';
 import type { UpdateOutcome } from '../lib/rulesStore';
@@ -20,6 +21,9 @@ import { DEFAULT_SETTINGS, loadSettings, saveSettings } from '../lib/settings';
 import type { Settings } from '../lib/settings';
 
 const BUNDLED = bundledJson as unknown as RuleBundle;
+
+// iOS can only tell that a URL is present; Android hands us the URL itself.
+export type ClipboardOffer = { kind: 'ios' } | { kind: 'android'; url: string };
 
 export interface AppState {
   ready: boolean;
@@ -34,6 +38,10 @@ export interface AppState {
   submit(text: string): Promise<void>;
   setSettings(s: Settings): Promise<void>;
   refreshRules(): Promise<UpdateOutcome>;
+  copy(text: string): Promise<void>;
+  clipboardOffer: ClipboardOffer | null;
+  acceptClipboardOffer(text?: string): void;
+  dismissClipboardOffer(): void;
 }
 
 const Ctx = createContext<AppState | null>(null);
@@ -56,6 +64,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [input, setInput] = useState('');
   const [outcome, setOutcome] = useState<CleanOutcome | null>(null);
   const [pending, setPending] = useState(0);
+  const [clipboardOffer, setClipboardOffer] = useState<ClipboardOffer | null>(null);
+  const watch = useRef(initialWatchState());
 
   // Queued work reads these at run time, so it never uses stale rules, settings or locale.
   const latest = useRef({ rules, settings, locale });
@@ -86,6 +96,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [db],
   );
 
+  // Every clipboard write by the app goes through here, so its own links are not offered back.
+  const copy = useCallback(async (text: string) => {
+    watch.current = noteSelfWrite(watch.current, text);
+    await Clipboard.setStringAsync(text);
+  }, []);
+
+  const checkClipboard = useCallback(async (s: Settings) => {
+    if (!s.detectClipboard) return;
+    try {
+      if (Platform.OS === 'ios') {
+        // hasUrlAsync does not trigger the iOS paste prompt; reading the text would.
+        const d = decideIos(await Clipboard.hasUrlAsync(), watch.current);
+        watch.current = d.next;
+        setClipboardOffer(d.offer ? { kind: 'ios' } : null);
+      } else {
+        const d = decideAndroid(await Clipboard.getStringAsync(), watch.current, latest.current.rules);
+        watch.current = d.next;
+        setClipboardOffer(d.url ? { kind: 'android', url: d.url } : null);
+      }
+    } catch {
+      // Clipboard access is best-effort.
+    }
+  }, []);
+
   useEffect(() => {
     let alive = true;
     void (async () => {
@@ -101,15 +135,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setRules(r);
       setReady(true);
       void refresh(false);
+      void checkClipboard(s);
     })();
     const sub = RNAppState.addEventListener('change', (state) => {
-      if (state === 'active') void refresh(false);
+      if (state !== 'active') return;
+      void refresh(false);
+      void checkClipboard(latest.current.settings);
     });
     return () => {
       alive = false;
       sub.remove();
     };
-  }, [db, refresh]);
+  }, [db, refresh, checkClipboard]);
 
   const submit = useCallback(
     (text: string): Promise<void> => {
@@ -126,7 +163,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
               locale: l,
               fetch: rnFetch,
               userAgent: USER_AGENT,
-              copy: Clipboard.setStringAsync,
+              copy,
               now: Date.now,
             }),
           );
@@ -139,7 +176,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       queue.current = job;
       return job;
     },
-    [db],
+    [db, copy],
   );
 
   const value = useMemo<AppState>(
@@ -159,8 +196,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
         await saveSettings(db, s);
       },
       refreshRules: () => refresh(true),
+      copy,
+      clipboardOffer,
+      acceptClipboardOffer(text) {
+        const offered = clipboardOffer;
+        setClipboardOffer(null);
+        const target = offered?.kind === 'android' ? offered.url : text;
+        if (target) void submit(target);
+      },
+      dismissClipboardOffer: () => setClipboardOffer(null),
     }),
-    [ready, db, rules, settings, locale, input, outcome, pending, submit, refresh],
+    [ready, db, rules, settings, locale, input, outcome, pending, submit, refresh, copy, clipboardOffer],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
