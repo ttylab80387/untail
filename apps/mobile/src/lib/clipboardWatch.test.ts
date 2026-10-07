@@ -60,6 +60,14 @@ describe('decideText', () => {
     expect(decideText('https://other.example/b?fbclid=1', s, rules).url).toBe('https://other.example/b?fbclid=1');
   });
 
+  it('reports a new link that has nothing to clean', () => {
+    expect(decideText('https://www.threads.com/@a/post/B', initialWatchState(), rules).clean).toBe(true);
+    expect(decideText('https://ex.com/a?fbclid=1', initialWatchState(), rules).clean).toBe(false);
+    expect(decideText('just words', initialWatchState(), rules).clean).toBe(false);
+    const seen = decideText('https://www.threads.com/@a/post/B', initialWatchState(), rules).next;
+    expect(decideText('https://www.threads.com/@a/post/B', seen, rules).clean).toBe(false);
+  });
+
   it('marks new clipboard content as fresh even when there is nothing to clean', () => {
     const first = decideText('https://ex.com/a?fbclid=1', initialWatchState(), rules);
     expect(first.fresh).toBe(true);

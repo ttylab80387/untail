@@ -19,6 +19,7 @@ export default function Home() {
     acceptClipboardOffer,
     dismissClipboardOffer,
     autoCleaned,
+    clipboardHasCleanLink,
     undoAutoClean,
     dismissAutoClean,
   } = useApp();
@@ -28,6 +29,9 @@ export default function Home() {
 
   return (
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      {clipboardHasCleanLink && !clipboardOffer && !autoCleaned && !busy && (
+        <Text style={{ color: c.muted, fontSize: 13 }}>{t('home.clipboardNoTracking')}</Text>
+      )}
       {autoCleaned && !busy && (
         <View style={[styles.offer, { backgroundColor: c.card, borderColor: c.ok }]}>
           <Text style={[styles.offerText, { color: c.text }]}>{t('home.autoCleaned')}</Text>

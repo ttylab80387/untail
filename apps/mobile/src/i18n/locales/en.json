@@ -11,6 +11,7 @@
     "clipboardClean": "Get clean link",
     "autoCleaned": "The clipboard link was replaced with a clean link. You can paste it now.",
     "undo": "Undo",
+    "clipboardNoTracking": "No tracking codes found in the link on the clipboard.",
     "dismiss": "Dismiss"
   },
   "result": {

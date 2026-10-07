@@ -44,6 +44,7 @@ export interface AppState {
   dismissClipboardOffer(): void;
   // Set after an automatic clean replaced the clipboard; undo restores the original text.
   autoCleaned: { undo: string } | null;
+  clipboardHasCleanLink: boolean; // the newest clipboard link had nothing to clean
   undoAutoClean(): void;
   dismissAutoClean(): void;
 }
@@ -70,6 +71,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [pending, setPending] = useState(0);
   const [clipboardOffer, setClipboardOffer] = useState<ClipboardOffer | null>(null);
   const [autoCleaned, setAutoCleaned] = useState<{ undo: string } | null>(null);
+  const [clipboardHasCleanLink, setClipboardHasCleanLink] = useState(false);
   const watch = useRef(initialWatchState());
 
   // Queued work reads these at run time, so it never uses stale rules, settings or locale.
@@ -104,6 +106,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Every clipboard write by the app goes through here, so its own links are not offered back.
   const copy = useCallback(async (text: string) => {
     watch.current = noteSelfWrite(watch.current, text);
+    setClipboardHasCleanLink(false);
     await Clipboard.setStringAsync(text);
   }, []);
 
@@ -165,7 +168,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const d = decideText(raw, watch.current, latest.current.rules);
         watch.current = d.next;
         // New clipboard content makes an earlier "replaced" notice misleading.
-        if (d.fresh) setAutoCleaned(null);
+        if (d.fresh) {
+          setAutoCleaned(null);
+          setClipboardHasCleanLink(d.clean);
+        }
         if (!d.url || !s.autoClipboard) {
           setClipboardOffer(d.url ? { kind: 'android', url: d.url } : null);
           return;
@@ -236,6 +242,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       },
       dismissClipboardOffer: () => setClipboardOffer(null),
       autoCleaned,
+      clipboardHasCleanLink,
       undoAutoClean() {
         const undo = autoCleaned?.undo;
         setAutoCleaned(null);
@@ -244,7 +251,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       },
       dismissAutoClean: () => setAutoCleaned(null),
     }),
-    [ready, db, rules, settings, locale, input, outcome, pending, submit, refresh, copy, clipboardOffer, autoCleaned],
+    [ready, db, rules, settings, locale, input, outcome, pending, submit, refresh, copy, clipboardOffer, autoCleaned, clipboardHasCleanLink],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
