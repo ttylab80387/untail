@@ -1,17 +1,23 @@
 {
   "expo": {
-    "name": "LinkClean",
-    "slug": "linkclean",
-    "scheme": "linkclean",
+    "name": "Untail",
+    "slug": "untail",
+    "scheme": "untail",
     "version": "0.1.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "com.linkclean.app",
+      "bundleIdentifier": "app.untail",
       "supportsTablet": true
     },
     "android": {
-      "package": "com.linkclean.app",
+      "package": "app.untail",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-foreground.png",
+        "monochromeImage": "./assets/monochrome.png",
+        "backgroundColor": "#0f6b5f"
+      },
       "allowBackup": false
     },
     "plugins": [

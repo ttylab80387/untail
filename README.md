@@ -1,4 +1,4 @@
-# LinkClean
+# Untail
 
 Removes tracking parameters from shared links and explains what each one does.
 

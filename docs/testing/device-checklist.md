@@ -1,13 +1,13 @@
-# LinkClean device checklist
+# Untail device checklist
 
 Run on a real iPhone and a real Android phone, on mobile data (not Wi-Fi) at least once.
 Use links from a test account; never paste real personal share links into issues or commits.
 
 ## Share in
-- [ ] iOS: Safari → Share → LinkClean opens and shows the cleaned result
-- [ ] iOS: Threads app → Share → Copy link is NOT needed; Share → LinkClean works directly
-- [ ] Android: Chrome → Share → LinkClean opens and shows the cleaned result
-- [ ] Android: Facebook app → Share → LinkClean (FB share link expands to the post URL)
+- [ ] iOS: Safari → Share → Untail opens and shows the cleaned result
+- [ ] iOS: Threads app → Share → Copy link is NOT needed; Share → Untail works directly
+- [ ] Android: Chrome → Share → Untail opens and shows the cleaned result
+- [ ] Android: Facebook app → Share → Untail (FB share link expands to the post URL)
 - [ ] Sharing the same link twice in a row creates exactly two history entries (no duplicates per share)
 - [ ] Sharing while the app is already open replaces the current result
 - [ ] Sharing while the Settings screen is open returns to Home and shows the result
@@ -20,10 +20,10 @@ Use links from a test account; never paste real personal share links into issues
 - [ ] Pasting plain text without a link shows "No valid link found" and adds no history entry
 
 ## Clipboard detection
-- [ ] Copy a link with tracking params in another app, open LinkClean → banner offers to clean it
+- [ ] Copy a link with tracking params in another app, open Untail → banner offers to clean it
 - [ ] iOS: the banner's Paste button cleans the link without the "Allow Paste" prompt
 - [ ] Android: tapping Clean on the banner cleans the clipboard link (system "pasted" notice may appear)
-- [ ] After LinkClean copies a clean link, returning to the app does not offer it again
+- [ ] After Untail copies a clean link, returning to the app does not offer it again
 - [ ] Android: an already-clean link on the clipboard is never offered, even after restarting the app
 - [ ] Settings → "Detect links on the clipboard" off → no banner
 
@@ -50,6 +50,6 @@ Use links from a test account; never paste real personal share links into issues
 
 ## Languages
 - [ ] Device language Traditional Chinese / English / Japanese → UI and parameter explanations follow
-- [ ] iOS: Settings → LinkClean → Language can switch the app language
-- [ ] Android 13+: Settings → Apps → LinkClean → Language can switch the app language
+- [ ] iOS: Settings → Untail → Language can switch the app language
+- [ ] Android 13+: Settings → Apps → Untail → Language can switch the app language
 - [ ] Changing the system language while the app is running updates the UI

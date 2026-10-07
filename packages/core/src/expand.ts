@@ -2,7 +2,7 @@ import type { Expander, ExpandFailure, FetchFn, RemovedItem } from './types';
 import { compile, matches } from './regex';
 import { getHost, getPath, getParam } from './query';
 
-export const DEFAULT_USER_AGENT = 'LinkClean/0.1';
+export const DEFAULT_USER_AGENT = 'Untail/0.1';
 export const DEFAULT_TIMEOUT_MS = 5000;
 
 const HTTP = /^https?:\/\//i;
