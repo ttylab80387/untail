@@ -54,21 +54,25 @@ export async function updateRules(deps: UpdateDeps, opts: { force?: boolean } = 
     if (!opts.force && now - last < CHECK_INTERVAL_MS) return 'throttled';
 
     const meta = JSON.parse(await deps.fetchText(`${baseUrl}rules.meta.json`)) as Record<string, unknown>;
-    if (meta.schemaVersion !== 1 || typeof meta.sha256 !== 'string') return 'failed';
+    // The site answered: record the check, so even a definite failure (unsupported schema,
+    // hash mismatch, invalid bundle) waits 24 hours. Only network errors retry sooner.
+    const checked = async (outcome: UpdateOutcome): Promise<UpdateOutcome> => {
+      await setKv(db, K_CHECKED, String(now));
+      return outcome;
+    };
+    if (meta.schemaVersion !== 1 || typeof meta.sha256 !== 'string') return checked('failed');
 
     const cached = await readCache(db);
     if (cached && cached.sha256 === meta.sha256 && (await deps.sha256(cached.text)) === meta.sha256) {
-      await setKv(db, K_CHECKED, String(now));
-      return 'up-to-date';
+      return checked('up-to-date');
     }
 
     const text = await deps.fetchText(`${baseUrl}rules.json`);
-    if ((await deps.sha256(text)) !== meta.sha256) return 'failed';
-    if (validateBundle(JSON.parse(text)).length) return 'failed';
+    if ((await deps.sha256(text)) !== meta.sha256) return checked('failed');
+    if (validateBundle(JSON.parse(text)).length) return checked('failed');
 
     await setKv(db, K_CACHE, JSON.stringify({ sha256: meta.sha256, text }));
-    await setKv(db, K_CHECKED, String(now));
-    return 'updated';
+    return checked('updated');
   } catch {
     return 'failed';
   }

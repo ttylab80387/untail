@@ -120,6 +120,14 @@ describe('updateRules', () => {
     expect(await updateRules(deps(site(bundle('remote')).fetchText))).toBe('updated');
   });
 
+  it('throttles after a definite failure so a broken site is not polled on every launch', async () => {
+    const s = site(bundle('remote'), { schemaVersion: 2, version: 'remote', sha256: 'x' });
+    expect(await updateRules(deps(s.fetchText))).toBe('failed');
+    s.calls.length = 0;
+    expect(await updateRules(deps(s.fetchText, NOW + 1))).toBe('throttled');
+    expect(s.calls).toEqual([]);
+  });
+
   it('reports storage errors as failed instead of throwing', async () => {
     const broken: Db = {
       ...db,
