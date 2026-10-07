@@ -6,9 +6,16 @@ export interface Settings {
   autoCopy: boolean;
   history: boolean;
   detectClipboard: boolean;
+  autoClipboard: boolean; // clean and copy a clipboard link without asking (needs detectClipboard)
 }
 
-export const DEFAULT_SETTINGS: Settings = { expand: true, autoCopy: true, history: true, detectClipboard: true };
+export const DEFAULT_SETTINGS: Settings = {
+  expand: true,
+  autoCopy: true,
+  history: true,
+  detectClipboard: true,
+  autoClipboard: false,
+};
 
 const KEY = 'settings';
 

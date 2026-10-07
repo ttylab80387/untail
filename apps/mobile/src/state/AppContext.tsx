@@ -12,7 +12,7 @@ import { SITE_BASE_URL, USER_AGENT } from '../config';
 import i18n from '../i18n';
 import { cleanInput } from '../lib/cleaner';
 import type { CleanOutcome } from '../lib/cleaner';
-import { decideAndroid, decideIos, initialWatchState, noteSelfWrite } from '../lib/clipboardWatch';
+import { decideIos, decideText, initialWatchState, noteSelfWrite, undoTarget } from '../lib/clipboardWatch';
 import type { Db } from '../lib/db';
 import { loadRules, updateRules } from '../lib/rulesStore';
 import type { UpdateOutcome } from '../lib/rulesStore';
@@ -42,6 +42,10 @@ export interface AppState {
   clipboardOffer: ClipboardOffer | null;
   acceptClipboardOffer(text?: string): void;
   dismissClipboardOffer(): void;
+  // Set after an automatic clean replaced the clipboard; undo restores the original text.
+  autoCleaned: { undo: string } | null;
+  undoAutoClean(): void;
+  dismissAutoClean(): void;
 }
 
 const Ctx = createContext<AppState | null>(null);
@@ -65,6 +69,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [outcome, setOutcome] = useState<CleanOutcome | null>(null);
   const [pending, setPending] = useState(0);
   const [clipboardOffer, setClipboardOffer] = useState<ClipboardOffer | null>(null);
+  const [autoCleaned, setAutoCleaned] = useState<{ undo: string } | null>(null);
   const watch = useRef(initialWatchState());
 
   // Queued work reads these at run time, so it never uses stale rules, settings or locale.
@@ -102,23 +107,77 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await Clipboard.setStringAsync(text);
   }, []);
 
-  const checkClipboard = useCallback(async (s: Settings) => {
-    if (!s.detectClipboard) return;
-    try {
-      if (Platform.OS === 'ios') {
-        // hasUrlAsync does not trigger the iOS paste prompt; reading the text would.
-        const d = decideIos(await Clipboard.hasUrlAsync(), watch.current);
+  // Jobs run one at a time; forceCopy copies the clean link even when automatic copying is off.
+  // `settings` lets a caller pass settings it just loaded, before React has applied them.
+  const enqueue = useCallback(
+    (text: string, forceCopy: boolean, settings?: Settings): Promise<CleanOutcome | null> => {
+      setInput(text);
+      setPending((n) => n + 1);
+      const job = queue.current.then(async () => {
+        try {
+          const { rules: r, locale: l } = latest.current;
+          const s = settings ?? latest.current.settings;
+          const out = await cleanInput(text, {
+            db,
+            rules: r,
+            settings: forceCopy ? { ...s, autoCopy: true } : s,
+            locale: l,
+            fetch: rnFetch,
+            userAgent: USER_AGENT,
+            copy,
+            now: Date.now,
+          });
+          setOutcome(out);
+          return out;
+        } catch {
+          // cleanInput handles expected failures itself; never let one job stall the queue.
+          return null;
+        } finally {
+          setPending((n) => n - 1);
+        }
+      });
+      queue.current = job.then(() => undefined);
+      return job;
+    },
+    [db, copy],
+  );
+
+  const submit = useCallback((text: string) => enqueue(text, false).then(() => undefined), [enqueue]);
+
+  const checkClipboard = useCallback(
+    async (s: Settings) => {
+      if (!s.detectClipboard) return;
+      try {
+        let raw: string;
+        if (Platform.OS === 'ios') {
+          // hasUrlAsync does not trigger the iOS paste prompt; reading the text would.
+          const d = decideIos(await Clipboard.hasUrlAsync(), watch.current);
+          watch.current = d.next;
+          if (!d.offer || !s.autoClipboard) {
+            setClipboardOffer(d.offer ? { kind: 'ios' } : null);
+            return;
+          }
+          // Automatic mode reads anyway; iOS asks unless "Paste from Other Apps" is set to Allow.
+          raw = await Clipboard.getStringAsync();
+        } else {
+          raw = await Clipboard.getStringAsync();
+        }
+        const d = decideText(raw, watch.current, latest.current.rules);
         watch.current = d.next;
-        setClipboardOffer(d.offer ? { kind: 'ios' } : null);
-      } else {
-        const d = decideAndroid(await Clipboard.getStringAsync(), watch.current, latest.current.rules);
-        watch.current = d.next;
-        setClipboardOffer(d.url ? { kind: 'android', url: d.url } : null);
+        if (!d.url || !s.autoClipboard) {
+          setClipboardOffer(d.url ? { kind: 'android', url: d.url } : null);
+          return;
+        }
+        setClipboardOffer(null);
+        const out = await enqueue(d.url, true, s);
+        const undo = out ? undoTarget(raw, out) : null;
+        setAutoCleaned(undo === null ? null : { undo });
+      } catch {
+        // Clipboard access is best-effort.
       }
-    } catch {
-      // Clipboard access is best-effort.
-    }
-  }, []);
+    },
+    [enqueue],
+  );
 
   useEffect(() => {
     let alive = true;
@@ -148,37 +207,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
   }, [db, refresh, checkClipboard]);
 
-  const submit = useCallback(
-    (text: string): Promise<void> => {
-      setInput(text);
-      setPending((n) => n + 1);
-      const job = queue.current.then(async () => {
-        try {
-          const { rules: r, settings: s, locale: l } = latest.current;
-          setOutcome(
-            await cleanInput(text, {
-              db,
-              rules: r,
-              settings: s,
-              locale: l,
-              fetch: rnFetch,
-              userAgent: USER_AGENT,
-              copy,
-              now: Date.now,
-            }),
-          );
-        } catch {
-          // cleanInput handles expected failures itself; never let one job stall the queue.
-        } finally {
-          setPending((n) => n - 1);
-        }
-      });
-      queue.current = job;
-      return job;
-    },
-    [db, copy],
-  );
-
   const value = useMemo<AppState>(
     () => ({
       ready,
@@ -205,8 +233,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (target) void submit(target);
       },
       dismissClipboardOffer: () => setClipboardOffer(null),
+      autoCleaned,
+      undoAutoClean() {
+        const undo = autoCleaned?.undo;
+        setAutoCleaned(null);
+        // Through copy(), so the restored text is not cleaned again on the next foreground.
+        if (undo !== undefined) void copy(undo).catch(() => undefined);
+      },
+      dismissAutoClean: () => setAutoCleaned(null),
     }),
-    [ready, db, rules, settings, locale, input, outcome, pending, submit, refresh, copy, clipboardOffer],
+    [ready, db, rules, settings, locale, input, outcome, pending, submit, refresh, copy, clipboardOffer, autoCleaned],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

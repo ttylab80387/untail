@@ -27,6 +27,14 @@ Use links from a test account; never paste real personal share links into issues
 - [ ] Android: an already-clean link on the clipboard is never offered, even after restarting the app
 - [ ] Settings → "Detect links on the clipboard" off → no banner
 
+## Automatic clipboard cleaning (Settings → "Clean clipboard links automatically" on)
+- [ ] Copy a link with tracking params, open Untail → no banner to tap; the clean link is copied and the "replaced" notice shows
+- [ ] Paste in LINE / Teams / Discord → the clean link is pasted
+- [ ] Undo → the original text is back on the clipboard, and reopening the app does not clean it again
+- [ ] An already-clean link or plain text on the clipboard → nothing happens
+- [ ] "Expand short links" off + a Threads share link → warning shown, clipboard NOT replaced, no short-link request made
+- [ ] iOS: with Paste from Other Apps = Ask, iOS asks once per open; with Allow, no prompt
+
 ## Result
 - [ ] Clean result: green status, clean URL selectable, auto-copied (toast text shown) when the setting is on
 - [ ] FB / Threads share link: status is clean and the list shows share-id as high risk

@@ -8,13 +8,39 @@ import { useColors } from '../src/theme';
 export default function Home() {
   const { t } = useTranslation();
   const c = useColors();
-  const { ready, input, setInput, busy, outcome, submit, clipboardOffer, acceptClipboardOffer, dismissClipboardOffer } = useApp();
+  const {
+    ready,
+    input,
+    setInput,
+    busy,
+    outcome,
+    submit,
+    clipboardOffer,
+    acceptClipboardOffer,
+    dismissClipboardOffer,
+    autoCleaned,
+    undoAutoClean,
+    dismissAutoClean,
+  } = useApp();
   const canClean = ready && !busy && input.trim().length > 0;
 
   const pasteFallback = async () => setInput(await Clipboard.getStringAsync());
 
   return (
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      {autoCleaned && !busy && (
+        <View style={[styles.offer, { backgroundColor: c.card, borderColor: c.ok }]}>
+          <Text style={[styles.offerText, { color: c.text }]}>{t('home.autoCleaned')}</Text>
+          <View style={styles.row}>
+            <Pressable onPress={undoAutoClean} style={[styles.button, { borderColor: c.accent, borderWidth: 1 }]}>
+              <Text style={{ color: c.accent, fontWeight: '600' }}>{t('home.undo')}</Text>
+            </Pressable>
+            <Pressable onPress={dismissAutoClean} style={styles.button}>
+              <Text style={{ color: c.muted, fontWeight: '600' }}>{t('home.dismiss')}</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
       {clipboardOffer && !busy && (
         <View style={[styles.offer, { backgroundColor: c.card, borderColor: c.accent }]}>
           <Text style={[styles.offerText, { color: c.text }]}>{t('home.clipboardOffer')}</Text>

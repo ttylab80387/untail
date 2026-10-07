@@ -11,14 +11,16 @@ beforeEach(async () => {
 });
 
 describe('settings', () => {
-  it('defaults to everything on', async () => {
-    expect(await loadSettings(db)).toEqual({ expand: true, autoCopy: true, history: true, detectClipboard: true });
-    expect(DEFAULT_SETTINGS).toEqual({ expand: true, autoCopy: true, history: true, detectClipboard: true });
+  it('defaults to everything on except automatic clipboard cleaning', async () => {
+    const want = { expand: true, autoCopy: true, history: true, detectClipboard: true, autoClipboard: false };
+    expect(await loadSettings(db)).toEqual(want);
+    expect(DEFAULT_SETTINGS).toEqual(want);
   });
 
   it('saves and loads', async () => {
-    await saveSettings(db, { expand: false, autoCopy: true, history: false, detectClipboard: false });
-    expect(await loadSettings(db)).toEqual({ expand: false, autoCopy: true, history: false, detectClipboard: false });
+    const s = { expand: false, autoCopy: true, history: false, detectClipboard: false, autoClipboard: true };
+    await saveSettings(db, s);
+    expect(await loadSettings(db)).toEqual(s);
   });
 
   it('falls back to defaults on corrupted JSON', async () => {
@@ -28,6 +30,6 @@ describe('settings', () => {
 
   it('fills missing or non-boolean fields with defaults', async () => {
     await setKv(db, 'settings', JSON.stringify({ expand: false, autoCopy: 'no' }));
-    expect(await loadSettings(db)).toEqual({ expand: false, autoCopy: true, history: true, detectClipboard: true });
+    expect(await loadSettings(db)).toEqual({ ...DEFAULT_SETTINGS, expand: false });
   });
 });

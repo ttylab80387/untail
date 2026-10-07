@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { RuleBundle } from '@linkclean/core';
-import { decideAndroid, decideIos, initialWatchState, needsCleaning, noteSelfWrite } from './clipboardWatch';
+import type { ProcessResult } from '@linkclean/core';
+import type { CleanOutcome } from './cleaner';
+import { decideText, decideIos, initialWatchState, needsCleaning, noteSelfWrite, undoTarget } from './clipboardWatch';
 
 const rules: RuleBundle = {
   schemaVersion: 1,
@@ -28,34 +30,34 @@ describe('needsCleaning', () => {
   });
 });
 
-describe('decideAndroid', () => {
+describe('decideText', () => {
   it('offers the URL found in new clipboard text', () => {
-    const r = decideAndroid('看這個 https://ex.com/a?utm_source=x', initialWatchState(), rules);
+    const r = decideText('看這個 https://ex.com/a?utm_source=x', initialWatchState(), rules);
     expect(r.url).toBe('https://ex.com/a?utm_source=x');
   });
 
   it('does not offer the same text twice', () => {
-    const first = decideAndroid('https://ex.com/a?fbclid=1', initialWatchState(), rules);
-    expect(decideAndroid('https://ex.com/a?fbclid=1', first.next, rules).url).toBeNull();
+    const first = decideText('https://ex.com/a?fbclid=1', initialWatchState(), rules);
+    expect(decideText('https://ex.com/a?fbclid=1', first.next, rules).url).toBeNull();
   });
 
   it('does not offer a link that is already clean, e.g. one copied in an earlier session', () => {
-    expect(decideAndroid('https://www.threads.com/@a/post/B', initialWatchState(), rules).url).toBeNull();
+    expect(decideText('https://www.threads.com/@a/post/B', initialWatchState(), rules).url).toBeNull();
   });
 
   it('ignores text without a URL', () => {
-    expect(decideAndroid('just words', initialWatchState(), rules).url).toBeNull();
-    expect(decideAndroid('', initialWatchState(), rules).url).toBeNull();
+    expect(decideText('just words', initialWatchState(), rules).url).toBeNull();
+    expect(decideText('', initialWatchState(), rules).url).toBeNull();
   });
 
   it('does not offer a link the app copied itself', () => {
     const s = noteSelfWrite(initialWatchState(), 'https://ex.com/clean');
-    expect(decideAndroid('https://ex.com/clean', s, rules).url).toBeNull();
+    expect(decideText('https://ex.com/clean', s, rules).url).toBeNull();
   });
 
   it('offers a different link copied after the app wrote its own', () => {
     const s = noteSelfWrite(initialWatchState(), 'https://ex.com/clean');
-    expect(decideAndroid('https://other.example/b?fbclid=1', s, rules).url).toBe('https://other.example/b?fbclid=1');
+    expect(decideText('https://other.example/b?fbclid=1', s, rules).url).toBe('https://other.example/b?fbclid=1');
   });
 });
 
@@ -70,5 +72,25 @@ describe('decideIos', () => {
     const first = decideIos(true, s);
     expect(first.offer).toBe(false);
     expect(decideIos(true, first.next).offer).toBe(true);
+  });
+});
+
+describe('undoTarget', () => {
+  const outcome = (cleanUrl: string, copied: boolean): CleanOutcome => ({
+    result: { cleanUrl, status: copied ? 'clean' : 'partial' } as ProcessResult,
+    copied,
+  });
+  const original = 'look https://ex.com/a?utm_source=x';
+
+  it('returns the original clipboard text when a different clean link was copied', () => {
+    expect(undoTarget(original, outcome('https://ex.com/a', true))).toBe(original);
+  });
+
+  it('returns null when nothing was copied', () => {
+    expect(undoTarget(original, outcome('https://ex.com/a', false))).toBeNull();
+  });
+
+  it('returns null when the copied text equals the original', () => {
+    expect(undoTarget('https://ex.com/a', outcome('https://ex.com/a', true))).toBeNull();
   });
 });
