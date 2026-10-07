@@ -9,6 +9,7 @@ on:
       - 'rules/**'
       - 'packages/core/**'
       - '.github/workflows/rules.yml'
+      - 'docs/site/**'
   workflow_dispatch:
 
 permissions:
@@ -36,7 +37,7 @@ jobs:
       - run: pnpm build:rules
       # Offline regression gates publishing.
       - run: pnpm test:regression
-      - run: mkdir -p site && cp rules/dist/rules.json rules/dist/rules.meta.json site/
+      - run: mkdir -p site && cp rules/dist/rules.json rules/dist/rules.meta.json docs/site/* site/
       - uses: actions/upload-pages-artifact@v5
         with:
           path: site
