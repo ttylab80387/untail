@@ -19,6 +19,19 @@ pnpm test:live          # live checks for links in rules/regression.json
 pnpm clean-url "<url>"  # clean one link using rules/dist/rules.json
 ```
 
+## Mobile app
+
+```bash
+pnpm build:rules && pnpm mobile sync-rules   # refresh the bundled rule snapshot
+pnpm mobile test                             # logic tests (Vitest, node:sqlite)
+pnpm mobile typecheck
+pnpm mobile ios                              # build and run on the iOS simulator
+pnpm mobile android                          # build and run on the Android emulator
+```
+
+Set `SITE_BASE_URL` in `apps/mobile/src/config.ts` once the GitHub Pages site exists.
+Manual checks before a release: `docs/testing/device-checklist.md`.
+
 ## Rule data
 
 - `rules/overrides.json` — extra rules in ClearURLs provider format

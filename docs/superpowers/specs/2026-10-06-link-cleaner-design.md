@@ -39,8 +39,8 @@
 | 接收分享 | `expo-share-intent`（Android intent filter、iOS Share Extension 透過 config plugin） |
 | 歷史紀錄 | `expo-sqlite` |
 | 剪貼簿 / 分享 | `expo-clipboard`、RN `Share` |
-| 規則快取 | `expo-file-system` |
-| 多語系 | `expo-localization` + `i18next` |
+| 規則快取 | `expo-sqlite`（`kv` 表） |
+| 多語系 | `expo-localization`（含 `supportedLocales` 設定，產生 iOS / Android 單一 App 語言設定）+ `i18next` |
 | Monorepo | pnpm workspaces |
 | 測試 | Vitest（core 與規則建置）|
 | 規則發佈 | GitHub Actions → GitHub Pages |
@@ -211,9 +211,9 @@ ClearURLs 規則為 **LGPL-3.0**。repo 與 App 的「開源授權」頁都要�
 | 畫面 | 內容 |
 |---|---|
 | 首頁 | 輸入框 + 貼上按鈕（iOS 用系統 PasteButton 避免跳出貼上提示）+ 清理結果卡片 |
-| 結果卡片 | 乾淨網址、`複製` / `分享` / `開啟`；「移除了 N 個追蹤碼」清單，每項顯示風險標籤，點開 bottom sheet 看說明；可展開檢視跳轉鏈 |
-| 歷史 | 清單（時間、乾淨網址、移除數量），點進去看結果卡片；左滑刪除；全部清空 |
-| 設定 | 展開短網址（預設開）、自動複製（預設開）、歷史紀錄（預設開）、規則版本 + 立即更新、隱私政策、開源授權 |
+| 結果卡片 | 乾淨網址、`複製` / `分享` / `開啟`；「移除了 N 個追蹤碼」清單，每項顯示風險標籤，點擊就地展開說明；可展開檢視跳轉鏈 |
+| 歷史 | 清單（時間、乾淨網址、移除數量），點進去看結果卡片；長按刪除；全部清空 |
+| 設定 | 展開短網址（預設開）、自動複製（預設開）、歷史紀錄（預設開）、規則版本 + 立即更新、隱私政策（App 內建頁面）、開源授權 |
 
 ### 6.2 分享進來的流程
 其他 App 分享 → 開啟 LinkClean → 自動處理 → 顯示結果卡片；開啟「自動複製」時直接把乾淨網址複製到剪貼簿，並顯示 toast「已複製乾淨連結」。
@@ -239,7 +239,9 @@ CREATE TABLE history (
   original_url TEXT NOT NULL,
   clean_url TEXT NOT NULL,
   status TEXT NOT NULL,
-  removed_json TEXT NOT NULL
+  reason TEXT,
+  removed_json TEXT NOT NULL,
+  hops_json TEXT NOT NULL
 );
 ```
 
