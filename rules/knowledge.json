@@ -265,5 +265,15 @@
       "en": "Amazon in-site navigation marker recording which page or section you came from. It does not identify the sharer.",
       "ja": "Amazon サイト内のナビゲーション記録。どのページや枠から来たかを示し、共有者の情報は含みません。"
     }
+  },
+  "facebook.com:mibextid": {
+    "owner": "Meta",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "Meta 用來標記這個連結是從哪個 App 或介面分享出來的（例如 Facebook Android App）。值通常是固定代碼，不是你個人的識別碼。",
+      "en": "Meta's label for which app or surface the link was shared from (for example the Facebook Android app). The value is usually a fixed code, not a personal identifier.",
+      "ja": "Meta がリンクの共有元のアプリや画面（例：Facebook Android アプリ）を示すラベル。値は通常固定のコードで、個人の識別子ではありません。"
+    }
   }
 }

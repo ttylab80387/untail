@@ -28,4 +28,10 @@ describe('checked-in rule data', () => {
       for (const key of ['ref', 'ref_']) expect(explain(key, host).category).toBe('session');
     }
   });
+
+  it('explains Facebook mibextid as a share-source label', () => {
+    const p = explain('mibextid', 'www.facebook.com');
+    expect(p.category).toBe('campaign');
+    expect(p.owner).toBe('Meta');
+  });
 });
