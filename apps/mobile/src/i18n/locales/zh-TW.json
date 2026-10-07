@@ -33,7 +33,8 @@
     "noneRemoved": "沒有發現追蹤碼",
     "owner": "來自：{{owner}}",
     "noDesc": "這個參數的用途未知。",
-    "hops": "跳轉紀錄"
+    "hops": "跳轉紀錄",
+    "referralCode": "連結中的推薦／推廣代碼：{{code}}"
   },
   "risk": {
     "high": "高風險",
@@ -43,7 +44,7 @@
   "category": {
     "sharer_id": "分享者識別",
     "ad_click": "廣告點擊追蹤",
-    "affiliate": "聯盟行銷",
+    "affiliate": "推薦／聯盟行銷",
     "campaign": "行銷活動",
     "session": "工作階段",
     "unknown": "未知"

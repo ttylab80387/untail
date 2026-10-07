@@ -33,7 +33,8 @@
     "noneRemoved": "トラッキングコードは見つかりませんでした",
     "owner": "提供元：{{owner}}",
     "noDesc": "このパラメータの用途は不明です。",
-    "hops": "リダイレクト履歴"
+    "hops": "リダイレクト履歴",
+    "referralCode": "リンク内の紹介・アフィリエイトコード：{{code}}"
   },
   "risk": {
     "high": "高リスク",
@@ -43,7 +44,7 @@
   "category": {
     "sharer_id": "共有者の識別",
     "ad_click": "広告クリック計測",
-    "affiliate": "アフィリエイト",
+    "affiliate": "紹介・アフィリエイト",
     "campaign": "キャンペーン",
     "session": "セッション",
     "unknown": "不明"

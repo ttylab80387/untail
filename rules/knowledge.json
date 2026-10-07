@@ -207,5 +207,63 @@
       "en": "Amazon affiliate tag: the sharer earns a commission if you buy through this link.",
       "ja": "Amazon アソシエイトのタグ。このリンク経由で購入すると共有者に報酬が入ります。"
     }
+  },
+  "ref": {
+    "category": "affiliate",
+    "risk": "medium",
+    "desc": {
+      "zh-TW": "推薦來源代碼：值可能是推薦人的帳號、邀請碼或推廣者代碼，網站用它記錄是誰帶你來的；也可能只是網站內部的來源標記。",
+      "en": "Referral code: the value may be the referrer's username, an invite code or a promoter ID that the site uses to credit whoever sent you. It can also be just an internal source label.",
+      "ja": "紹介コード。値は紹介者のユーザー名・招待コード・紹介者 ID の場合があり、サイトは誰があなたを連れてきたかの記録に使います。サイト内部の参照元ラベルにすぎないこともあります。"
+    }
+  },
+  "referrer": {
+    "category": "affiliate",
+    "risk": "medium",
+    "desc": {
+      "zh-TW": "推薦來源代碼：值可能是推薦人的帳號、邀請碼或推廣者代碼，網站用它記錄是誰帶你來的；也可能只是網站內部的來源標記。",
+      "en": "Referral code: the value may be the referrer's username, an invite code or a promoter ID that the site uses to credit whoever sent you. It can also be just an internal source label.",
+      "ja": "紹介コード。値は紹介者のユーザー名・招待コード・紹介者 ID の場合があり、サイトは誰があなたを連れてきたかの記録に使います。サイト内部の参照元ラベルにすぎないこともあります。"
+    }
+  },
+  "amazon.com:ref": {
+    "owner": "Amazon",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "Amazon 站內導覽標記，記錄你是從哪個頁面或區塊點進來的，不含分享者資訊。",
+      "en": "Amazon in-site navigation marker recording which page or section you came from. It does not identify the sharer.",
+      "ja": "Amazon サイト内のナビゲーション記録。どのページや枠から来たかを示し、共有者の情報は含みません。"
+    }
+  },
+  "amazon.com:ref_": {
+    "owner": "Amazon",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "Amazon 站內導覽標記，記錄你是從哪個頁面或區塊點進來的，不含分享者資訊。",
+      "en": "Amazon in-site navigation marker recording which page or section you came from. It does not identify the sharer.",
+      "ja": "Amazon サイト内のナビゲーション記録。どのページや枠から来たかを示し、共有者の情報は含みません。"
+    }
+  },
+  "amazon.co.jp:ref": {
+    "owner": "Amazon",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "Amazon 站內導覽標記，記錄你是從哪個頁面或區塊點進來的，不含分享者資訊。",
+      "en": "Amazon in-site navigation marker recording which page or section you came from. It does not identify the sharer.",
+      "ja": "Amazon サイト内のナビゲーション記録。どのページや枠から来たかを示し、共有者の情報は含みません。"
+    }
+  },
+  "amazon.co.jp:ref_": {
+    "owner": "Amazon",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "Amazon 站內導覽標記，記錄你是從哪個頁面或區塊點進來的，不含分享者資訊。",
+      "en": "Amazon in-site navigation marker recording which page or section you came from. It does not identify the sharer.",
+      "ja": "Amazon サイト内のナビゲーション記録。どのページや枠から来たかを示し、共有者の情報は含みません。"
+    }
   }
 }

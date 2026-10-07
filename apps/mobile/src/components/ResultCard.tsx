@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Linking, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import type { AnalyzedParam, ProcessResult } from '@linkclean/core';
+import { referralCode } from '../lib/referral';
 import { useApp } from '../state/AppContext';
 import { useColors } from '../theme';
 import type { Colors } from '../theme';
@@ -14,6 +15,7 @@ function ParamRow({ p }: { p: AnalyzedParam }) {
   const { t } = useTranslation();
   const c = useColors();
   const [open, setOpen] = useState(false);
+  const code = referralCode(p);
   return (
     <Pressable onPress={() => setOpen(!open)} style={[styles.param, { borderColor: c.border }]}>
       <View style={styles.paramHead}>
@@ -24,6 +26,11 @@ function ParamRow({ p }: { p: AnalyzedParam }) {
         {t(`category.${p.category}`)}
         {p.owner ? ` · ${t('result.owner', { owner: p.owner })}` : ''}
       </Text>
+      {code && (
+        <Text selectable style={{ color: c.warn }}>
+          {t('result.referralCode', { code })}
+        </Text>
+      )}
       {open && (
         <View style={styles.paramBody}>
           <Text style={{ color: c.text }}>{p.desc ?? t('result.noDesc')}</Text>

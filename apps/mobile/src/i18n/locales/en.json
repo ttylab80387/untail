@@ -33,7 +33,8 @@
     "noneRemoved": "No tracking codes found",
     "owner": "From: {{owner}}",
     "noDesc": "The purpose of this parameter is unknown.",
-    "hops": "Redirects"
+    "hops": "Redirects",
+    "referralCode": "Referral / promoter code in the link: {{code}}"
   },
   "risk": {
     "high": "High risk",
@@ -43,7 +44,7 @@
   "category": {
     "sharer_id": "Sharer identity",
     "ad_click": "Ad click tracking",
-    "affiliate": "Affiliate",
+    "affiliate": "Referral / affiliate",
     "campaign": "Campaign",
     "session": "Session",
     "unknown": "Unknown"
