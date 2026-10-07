@@ -183,6 +183,7 @@ describe('expandUrl', () => {
 
   describe('firstHop expanders', () => {
     const XHS = 'http://xhslink.com/o/TEST01';
+    const XHS_REQ = 'https://xhslink.com/o/TEST01'; // requested over https
     const NOTE = 'https://www.xiaohongshu.com/discovery/item/abc?xsec_token=T&shareRedId=S';
 
     it('reads the first redirect target without contacting it', async () => {
@@ -190,22 +191,22 @@ describe('expandUrl', () => {
       const r = await expandUrl(
         XHS,
         expanders,
-        opts(fakeFetch({ [`HEAD ${XHS}`]: { url: XHS, status: 404 }, [`GET ${XHS}`]: { url: XHS, status: 302, location: NOTE } }, calls)),
+        opts(fakeFetch({ [`HEAD ${XHS_REQ}`]: { url: XHS_REQ, status: 404 }, [`GET ${XHS_REQ}`]: { url: XHS_REQ, status: 302, location: NOTE } }, calls)),
       );
       expect(r).toEqual({ url: NOTE, hops: [XHS, NOTE], removed: [{ key: 'share-id', value: 'TEST01', host: 'xhslink.com' }] });
       expect(calls.map((c) => [c.method, c.url, c.redirect])).toEqual([
-        ['HEAD', XHS, 'manual'],
-        ['GET', XHS, 'manual'],
+        ['HEAD', XHS_REQ, 'manual'],
+        ['GET', XHS_REQ, 'manual'],
       ]);
     });
 
     it('resolves a relative Location against the short link', async () => {
-      const r = await expandUrl(XHS, expanders, opts(fakeFetch({ [XHS]: { url: XHS, status: 301, location: '/next/path?a=1' } })));
-      expect(r.url).toBe('http://xhslink.com/next/path?a=1');
+      const r = await expandUrl(XHS, expanders, opts(fakeFetch({ [XHS_REQ]: { url: XHS_REQ, status: 301, location: '/next/path?a=1' } })));
+      expect(r.url).toBe('https://xhslink.com/next/path?a=1');
     });
 
     it('is unresolved when the short link does not redirect', async () => {
-      const r = await expandUrl(XHS, expanders, opts(fakeFetch({ [XHS]: { url: XHS, status: 200 } })));
+      const r = await expandUrl(XHS, expanders, opts(fakeFetch({ [XHS_REQ]: { url: XHS_REQ, status: 200 } })));
       expect(r.reason).toBe('unresolved');
       expect(r.url).toBe(XHS);
     });
@@ -215,5 +216,13 @@ describe('expandUrl', () => {
       await expandUrl(THREADS, expanders, opts(fakeFetch({ [THREADS]: { url: THREADS_POST } }, calls)));
       expect(calls[0]!.redirect).toBe('follow');
     });
+  });
+
+  it('requests http short links over https, keeping the original as the first hop', async () => {
+    const calls: Call[] = [];
+    const r = await expandUrl('http://bit.ly/x', expanders, opts(fakeFetch({ 'https://bit.ly/x': { url: 'https://ex.com/a' } }, calls)));
+    expect(calls.map((c) => c.url)).toEqual(['https://bit.ly/x']);
+    expect(r.url).toBe('https://ex.com/a');
+    expect(r.hops).toEqual(['http://bit.ly/x', 'https://ex.com/a']);
   });
 });

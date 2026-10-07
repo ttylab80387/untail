@@ -97,11 +97,14 @@ export async function expandUrl(url: string, expanders: Record<string, Expander>
   if (!expander) return { url, hops: [url], removed: [] };
   const fail = (reason: ExpandFailure, hops: string[] = [url]): ExpandResult => ({ url, hops, removed: [], reason });
 
+  // Always ask over https: it hides the link from the network, and Android release builds
+  // refuse cleartext requests (Xiaohongshu shares http://xhslink.com links).
+  const requestUrl = url.replace(/^http:\/\//i, 'https://');
   let finalUrl: string;
   try {
-    finalUrl = await resolve(url, opts, expander.firstHop === true);
+    finalUrl = await resolve(requestUrl, opts, expander.firstHop === true);
   } catch (e) {
-    if (e instanceof HttpError) return fail('network', e.finalUrl === url ? [url] : [url, e.finalUrl]);
+    if (e instanceof HttpError) return fail('network', e.finalUrl === url || e.finalUrl === requestUrl ? [url] : [url, e.finalUrl]);
     return fail(e instanceof TimeoutError ? 'expand_timeout' : 'network');
   }
 
@@ -115,7 +118,7 @@ export async function expandUrl(url: string, expanders: Record<string, Expander>
     hops.push(resolved);
   }
   // A different URL that is again a short/share link is handed back to processUrl's loop.
-  if (!HTTP.test(resolved) || resolved === url) return fail('unresolved', hops);
+  if (!HTTP.test(resolved) || resolved === url || resolved === requestUrl) return fail('unresolved', hops);
 
   const normalized = normalizeHost(resolved, expanders);
   if (normalized !== resolved) hops.push(normalized);
