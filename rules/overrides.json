@@ -52,6 +52,11 @@
       "rules": [
         "share_channel"
       ]
+    },
+    "instagram": {
+      "rules": [
+        "stkn"
+      ]
     }
   }
 }

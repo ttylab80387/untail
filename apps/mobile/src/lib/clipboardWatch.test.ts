@@ -59,6 +59,14 @@ describe('decideText', () => {
     const s = noteSelfWrite(initialWatchState(), 'https://ex.com/clean');
     expect(decideText('https://other.example/b?fbclid=1', s, rules).url).toBe('https://other.example/b?fbclid=1');
   });
+
+  it('marks new clipboard content as fresh even when there is nothing to clean', () => {
+    const first = decideText('https://ex.com/a?fbclid=1', initialWatchState(), rules);
+    expect(first.fresh).toBe(true);
+    expect(decideText('https://www.threads.com/@a/post/B', first.next, rules).fresh).toBe(true);
+    expect(decideText('https://ex.com/a?fbclid=1', first.next, rules).fresh).toBe(false);
+    expect(decideText('', first.next, rules).fresh).toBe(false);
+  });
 });
 
 describe('decideIos', () => {

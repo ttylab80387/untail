@@ -164,6 +164,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
         const d = decideText(raw, watch.current, latest.current.rules);
         watch.current = d.next;
+        // New clipboard content makes an earlier "replaced" notice misleading.
+        if (d.fresh) setAutoCleaned(null);
         if (!d.url || !s.autoClipboard) {
           setClipboardOffer(d.url ? { kind: 'android', url: d.url } : null);
           return;

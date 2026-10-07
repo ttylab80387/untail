@@ -995,5 +995,15 @@
       "en": "Share method marker (for example copy link).",
       "ja": "共有方法のマーカー（リンクのコピーなど）。"
     }
+  },
+  "instagram.com:stkn": {
+    "owner": "Meta",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "Instagram 的分享代碼，複製連結時產生、綁定這次分享，可把點擊連回分享的人。作用和 igsh 相同。",
+      "en": "Instagram share token created when you copy a link, tied to this share so clicks can be traced back to the sharer. Works like igsh.",
+      "ja": "リンクをコピーしたときに作られる Instagram の共有トークン。この共有に紐付き、クリックを共有者と結び付けられます。igsh と同じ役割です。"
+    }
   }
 }

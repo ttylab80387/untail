@@ -75,6 +75,7 @@ describe('checked-in rule data', () => {
       ['www.linkedin.com', 'rcm', 'sharer_id'],
       ['www.bilibili.com', 'bbid', 'sharer_id'],
       ['www.bilibili.com', 'ts', 'session'],
+      ['www.instagram.com', 'stkn', 'sharer_id'],
     ];
     for (const [host, key, category] of cases) {
       const p = explain(key, host);

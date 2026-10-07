@@ -373,5 +373,17 @@
         "xhsshare"
       ]
     }
+  },
+  {
+    "name": "instagram stkn share token",
+    "input": "https://www.instagram.com/reel/TESTreel01/?stkn=TESTtoken",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.instagram.com/reel/TESTreel01/",
+      "status": "clean",
+      "removedKeys": [
+        "stkn"
+      ]
+    }
   }
 ]
