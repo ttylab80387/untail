@@ -1,0 +1,40 @@
+{
+  "name": "@linkclean/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "ios": "expo run:ios",
+    "android": "expo run:android",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc --noEmit -p .",
+    "sync-rules": "node scripts/sync-rules.mjs",
+    "bundle-check": "expo export --platform ios --platform android --output-dir .expo-export-check"
+  },
+  "dependencies": {
+    "@linkclean/core": "workspace:*",
+    "expo": "~57.0.26",
+    "expo-clipboard": "~57.0.2",
+    "expo-constants": "~57.0.20",
+    "expo-crypto": "~57.0.3",
+    "expo-linking": "~57.0.11",
+    "expo-localization": "~57.0.2",
+    "expo-router": "~57.0.24",
+    "expo-share-intent": "^8.0.1",
+    "expo-sqlite": "~57.0.3",
+    "expo-status-bar": "~57.0.1",
+    "i18next": "^26.4.2",
+    "react": "19.2.3",
+    "react-i18next": "^17.0.15",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "@types/react": "~19.2.18",
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.3"
+  }
+}

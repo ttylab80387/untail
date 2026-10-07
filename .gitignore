@@ -4,3 +4,8 @@ site/
 *.log
 .DS_Store
 .superpowers/
+apps/mobile/ios/
+apps/mobile/android/
+apps/mobile/.expo/
+apps/mobile/.expo-export-check/
+apps/mobile/expo-env.d.ts

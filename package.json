@@ -8,6 +8,7 @@
     "build:rules": "pnpm --filter @linkclean/rules build",
     "test:regression": "pnpm --filter @linkclean/rules test:regression",
     "test:live": "pnpm --filter @linkclean/rules test:live",
-    "clean-url": "pnpm --filter @linkclean/rules clean-url"
+    "clean-url": "pnpm --filter @linkclean/rules clean-url",
+    "mobile": "pnpm --filter @linkclean/mobile"
   }
 }

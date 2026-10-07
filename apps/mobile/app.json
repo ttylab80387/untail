@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "LinkClean",
+    "slug": "linkclean",
+    "scheme": "linkclean",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "bundleIdentifier": "com.linkclean.app",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.linkclean.app",
+      "allowBackup": false
+    },
+    "plugins": [
+      "expo-router",
+      ["expo-localization", { "supportedLocales": ["zh-Hant", "en", "ja"] }],
+      [
+        "expo-share-intent",
+        {
+          "iosActivationRules": {
+            "NSExtensionActivationSupportsWebURLWithMaxCount": 1,
+            "NSExtensionActivationSupportsWebPageWithMaxCount": 1,
+            "NSExtensionActivationSupportsText": true
+          },
+          "androidIntentFilters": ["text/*"]
+        }
+      ]
+    ]
+  }
+}
