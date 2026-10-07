@@ -34,4 +34,38 @@ describe('checked-in rule data', () => {
     expect(p.category).toBe('campaign');
     expect(p.owner).toBe('Meta');
   });
+
+  it('explains share params of common social and video platforms', () => {
+    const cases: [string, string, string][] = [
+      ['x.com', 't', 'sharer_id'],
+      ['x.com', 's', 'campaign'],
+      ['twitter.com', 't', 'sharer_id'],
+      ['twitter.com', 's', 'campaign'],
+      ['www.reddit.com', 'share_id', 'sharer_id'],
+      ['www.tiktok.com', '_t', 'sharer_id'],
+      ['www.tiktok.com', 'u_code', 'sharer_id'],
+      ['www.tiktok.com', '_r', 'campaign'],
+      ['www.xiaohongshu.com', 'shareRedId', 'sharer_id'],
+      ['www.xiaohongshu.com', 'share_id', 'sharer_id'],
+      ['www.xiaohongshu.com', 'author_share', 'session'],
+      ['www.xiaohongshu.com', 'share_from_user_hidden', 'session'],
+      ['www.xiaohongshu.com', 'app_platform', 'campaign'],
+      ['www.xiaohongshu.com', 'apptime', 'session'],
+      ['www.xiaohongshu.com', 'xsec_source', 'campaign'],
+      ['www.xiaohongshu.com', 'ignoreEngage', 'session'],
+      ['www.xiaohongshu.com', 'type', 'session'],
+      ['www.bilibili.com', 'vd_source', 'sharer_id'],
+      ['www.bilibili.com', 'share_source', 'campaign'],
+      ['www.bilibili.com', 'share_medium', 'campaign'],
+      ['www.bilibili.com', 'spm_id_from', 'session'],
+      ['www.youtube.com', 'pp', 'session'],
+      ['www.youtube.com', 'feature', 'campaign'],
+      ['youtu.be', 'feature', 'campaign'],
+    ];
+    for (const [host, key, category] of cases) {
+      const p = explain(key, host);
+      expect([host, key, p.category]).toEqual([host, key, category]);
+      expect(p.desc).toBeDefined();
+    }
+  });
 });
