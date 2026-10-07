@@ -197,5 +197,81 @@
         "slof"
       ]
     }
+  },
+  {
+    "name": "tiktok video share params",
+    "input": "https://www.tiktok.com/@someone/video/7000000000000000001?is_from_webapp=1&sender_device=pc&share_app_id=1233&share_item_id=7000000000000000001&share_link_id=abc&social_share_type=0&_r=1&_t=ZStest&u_code=test",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.tiktok.com/@someone/video/7000000000000000001",
+      "status": "clean",
+      "removedKeys": [
+        "is_from_webapp",
+        "sender_device",
+        "share_app_id",
+        "share_item_id",
+        "share_link_id",
+        "social_share_type",
+        "_r",
+        "_t",
+        "u_code"
+      ]
+    }
+  },
+  {
+    "name": "pinterest pin share params",
+    "input": "https://www.pinterest.com/pin/123456789/?invite_code=abc123&sender=987654321&sfo=1&mt=login",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.pinterest.com/pin/123456789/",
+      "status": "clean",
+      "removedKeys": [
+        "invite_code",
+        "sender",
+        "sfo",
+        "mt"
+      ]
+    }
+  },
+  {
+    "name": "snapchat share id keeps locale",
+    "input": "https://www.snapchat.com/add/someone?share_id=abcTEST&locale=zh-TW",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.snapchat.com/add/someone?locale=zh-TW",
+      "status": "clean",
+      "removedKeys": [
+        "share_id"
+      ]
+    }
+  },
+  {
+    "name": "linkedin post sharer id",
+    "input": "https://www.linkedin.com/posts/someone_activity-7000000000000000000-abcd?utm_source=share&utm_medium=member_android&rcm=ACoAAtest",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.linkedin.com/posts/someone_activity-7000000000000000000-abcd",
+      "status": "clean",
+      "removedKeys": [
+        "utm_source",
+        "utm_medium",
+        "rcm"
+      ]
+    }
+  },
+  {
+    "name": "bilibili desktop share keeps page number",
+    "input": "https://www.bilibili.com/video/BV1test?p=2&share_source=copy_web&vd_source=abc&bbid=XYZ&ts=1700000000",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.bilibili.com/video/BV1test?p=2",
+      "status": "clean",
+      "removedKeys": [
+        "share_source",
+        "vd_source",
+        "bbid",
+        "ts"
+      ]
+    }
   }
 ]

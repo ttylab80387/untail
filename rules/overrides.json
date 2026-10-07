@@ -2,10 +2,51 @@
   "providers": {
     "threads": {
       "urlPattern": "^https?:\\/\\/(?:[a-z0-9-]+\\.)*?threads\\.(?:com|net)(?:[/:?#]|$)",
-      "rules": ["xmt", "slof"]
+      "rules": [
+        "xmt",
+        "slof"
+      ]
     },
     "facebook": {
-      "rules": ["rdid", "share_url"]
+      "rules": [
+        "rdid",
+        "share_url"
+      ]
+    },
+    "tiktok.com": {
+      "rules": [
+        "share_item_id",
+        "share_app_id",
+        "sender_device",
+        "is_from_webapp",
+        "share_link_id",
+        "social_share_type"
+      ]
+    },
+    "pinterest": {
+      "urlPattern": "^https?:\\/\\/(?:[a-z0-9-]+\\.)*?pinterest\\.(?:com|[a-z]{2}|co\\.[a-z]{2}|com\\.[a-z]{2})(?:[/:?#]|$)",
+      "rules": [
+        "invite_code",
+        "sender",
+        "sfo",
+        "mt"
+      ]
+    },
+    "snapchat.com": {
+      "rules": [
+        "share_id"
+      ]
+    },
+    "LinkedIn": {
+      "rules": [
+        "rcm"
+      ]
+    },
+    "bilibili.com": {
+      "rules": [
+        "bbid",
+        "ts"
+      ]
     }
   }
 }

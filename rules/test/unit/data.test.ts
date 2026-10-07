@@ -61,6 +61,20 @@ describe('checked-in rule data', () => {
       ['www.youtube.com', 'pp', 'session'],
       ['www.youtube.com', 'feature', 'campaign'],
       ['youtu.be', 'feature', 'campaign'],
+      ['www.tiktok.com', 'share_item_id', 'session'],
+      ['www.tiktok.com', 'share_app_id', 'campaign'],
+      ['www.tiktok.com', 'sender_device', 'campaign'],
+      ['www.tiktok.com', 'is_from_webapp', 'campaign'],
+      ['www.tiktok.com', 'share_link_id', 'sharer_id'],
+      ['www.tiktok.com', 'social_share_type', 'campaign'],
+      ['www.pinterest.com', 'invite_code', 'sharer_id'],
+      ['www.pinterest.com', 'sender', 'sharer_id'],
+      ['www.pinterest.com', 'sfo', 'campaign'],
+      ['www.pinterest.com', 'mt', 'session'],
+      ['www.snapchat.com', 'share_id', 'sharer_id'],
+      ['www.linkedin.com', 'rcm', 'sharer_id'],
+      ['www.bilibili.com', 'bbid', 'sharer_id'],
+      ['www.bilibili.com', 'ts', 'session'],
     ];
     for (const [host, key, category] of cases) {
       const p = explain(key, host);
