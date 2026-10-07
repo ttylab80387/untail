@@ -197,5 +197,154 @@
         "slof"
       ]
     }
+  },
+  {
+    "name": "tiktok video share params",
+    "input": "https://www.tiktok.com/@someone/video/7000000000000000001?is_from_webapp=1&sender_device=pc&share_app_id=1233&share_item_id=7000000000000000001&share_link_id=abc&social_share_type=0&_r=1&_t=ZStest&u_code=test",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.tiktok.com/@someone/video/7000000000000000001",
+      "status": "clean",
+      "removedKeys": [
+        "is_from_webapp",
+        "sender_device",
+        "share_app_id",
+        "share_item_id",
+        "share_link_id",
+        "social_share_type",
+        "_r",
+        "_t",
+        "u_code"
+      ]
+    }
+  },
+  {
+    "name": "pinterest pin share params",
+    "input": "https://www.pinterest.com/pin/123456789/?invite_code=abc123&sender=987654321&sfo=1&mt=login",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.pinterest.com/pin/123456789/",
+      "status": "clean",
+      "removedKeys": [
+        "invite_code",
+        "sender",
+        "sfo",
+        "mt"
+      ]
+    }
+  },
+  {
+    "name": "snapchat share id keeps locale",
+    "input": "https://www.snapchat.com/add/someone?share_id=abcTEST&locale=zh-TW",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.snapchat.com/add/someone?locale=zh-TW",
+      "status": "clean",
+      "removedKeys": [
+        "share_id"
+      ]
+    }
+  },
+  {
+    "name": "linkedin post sharer id",
+    "input": "https://www.linkedin.com/posts/someone_activity-7000000000000000000-abcd?utm_source=share&utm_medium=member_android&rcm=ACoAAtest",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.linkedin.com/posts/someone_activity-7000000000000000000-abcd",
+      "status": "clean",
+      "removedKeys": [
+        "utm_source",
+        "utm_medium",
+        "rcm"
+      ]
+    }
+  },
+  {
+    "name": "bilibili desktop share keeps page number",
+    "input": "https://www.bilibili.com/video/BV1test?p=2&share_source=copy_web&vd_source=abc&bbid=XYZ&ts=1700000000",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.bilibili.com/video/BV1test?p=2",
+      "status": "clean",
+      "removedKeys": [
+        "share_source",
+        "vd_source",
+        "bbid",
+        "ts"
+      ]
+    }
+  },
+  {
+    "name": "tiktok short link",
+    "input": "https://vt.tiktok.com/ZStest001/",
+    "responses": {
+      "https://vt.tiktok.com/ZStest001/": "https://www.tiktok.com/@/video/7000000000000000001?_r=1&_d=secTEST&u_code=test&share_item_id=7000000000000000001&timestamp=1700000000&utm_campaign=client_share&utm_source=copy&share_app_id=1233"
+    },
+    "expected": {
+      "cleanUrl": "https://www.tiktok.com/@/video/7000000000000000001",
+      "status": "clean",
+      "removedKeys": [
+        "share-id",
+        "_r",
+        "_d",
+        "u_code",
+        "share_item_id",
+        "timestamp",
+        "utm_campaign",
+        "utm_source",
+        "share_app_id"
+      ]
+    }
+  },
+  {
+    "name": "tiktok www /t/ short link",
+    "input": "https://www.tiktok.com/t/ZTtest002/",
+    "responses": {
+      "https://www.tiktok.com/t/ZTtest002/": "https://www.tiktok.com/@someone/video/7000000000000000002?_r=1&_t=ZTtest&share_app_id=1233"
+    },
+    "expected": {
+      "cleanUrl": "https://www.tiktok.com/@someone/video/7000000000000000002",
+      "status": "clean",
+      "removedKeys": [
+        "share-id",
+        "_r",
+        "_t",
+        "share_app_id"
+      ]
+    }
+  },
+  {
+    "name": "bilibili b23 short link",
+    "input": "https://b23.tv/AbCdEf1",
+    "responses": {
+      "https://b23.tv/AbCdEf1": "https://www.bilibili.com/video/BV1test?share_medium=android&share_source=copy_link&bbid=XYZ&ts=1700000000&share_session_id=abc&unique_k=abc&up_id=1&vd_source=abc"
+    },
+    "expected": {
+      "cleanUrl": "https://www.bilibili.com/video/BV1test",
+      "status": "clean",
+      "removedKeys": [
+        "share-id",
+        "share_medium",
+        "share_source",
+        "bbid",
+        "ts",
+        "share_session_id",
+        "unique_k",
+        "up_id",
+        "vd_source"
+      ]
+    }
+  },
+  {
+    "name": "bilibili b23 BV link is not a share id",
+    "input": "https://b23.tv/BV1test0001",
+    "responses": {
+      "https://b23.tv/BV1test0001": "https://www.bilibili.com/video/BV1test0001"
+    },
+    "expected": {
+      "cleanUrl": "https://www.bilibili.com/video/BV1test0001",
+      "status": "clean",
+      "removedKeys": []
+    }
   }
 ]

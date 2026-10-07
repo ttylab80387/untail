@@ -275,5 +275,675 @@
       "en": "Meta's label for which app or surface the link was shared from (for example the Facebook Android app). The value is usually a fixed code, not a personal identifier.",
       "ja": "Meta がリンクの共有元のアプリや画面（例：Facebook Android アプリ）を示すラベル。値は通常固定のコードで、個人の識別子ではありません。"
     }
+  },
+  "x.com:t": {
+    "owner": "X",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "X 的分享識別碼，綁定這次分享，X 可藉此知道連結是誰分享出去、又被誰點開。",
+      "en": "X share token tied to this share, letting X see who shared the link and who opened it.",
+      "ja": "X の共有トークン。この共有に紐付き、X は誰がリンクを共有し誰が開いたかを把握できます。"
+    }
+  },
+  "x.com:s": {
+    "owner": "X",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "分享來源代碼，表示連結是從哪個 App 或平台分享的（例如 iPhone App 或網頁版）。",
+      "en": "Share-source code showing which app or platform the link was shared from (for example the iPhone app or the web).",
+      "ja": "共有元コード。リンクがどのアプリや環境（iPhone アプリ、Web など）から共有されたかを示します。"
+    }
+  },
+  "twitter.com:t": {
+    "owner": "X",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "X 的分享識別碼，綁定這次分享，X 可藉此知道連結是誰分享出去、又被誰點開。",
+      "en": "X share token tied to this share, letting X see who shared the link and who opened it.",
+      "ja": "X の共有トークン。この共有に紐付き、X は誰がリンクを共有し誰が開いたかを把握できます。"
+    }
+  },
+  "twitter.com:s": {
+    "owner": "X",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "分享來源代碼，表示連結是從哪個 App 或平台分享的（例如 iPhone App 或網頁版）。",
+      "en": "Share-source code showing which app or platform the link was shared from (for example the iPhone app or the web).",
+      "ja": "共有元コード。リンクがどのアプリや環境（iPhone アプリ、Web など）から共有されたかを示します。"
+    }
+  },
+  "reddit.com:share_id": {
+    "owner": "Reddit",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "Reddit 的分享識別碼，可讓 Reddit 把這次點擊連回分享的人。",
+      "en": "Reddit share ID that lets Reddit link this click back to the person who shared it.",
+      "ja": "Reddit の共有 ID。このクリックを共有した人と結び付けられます。"
+    }
+  },
+  "tiktok.com:_t": {
+    "owner": "TikTok",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "TikTok 的分享識別碼，綁定這次分享，可追蹤是誰分享、被誰點開。",
+      "en": "TikTok share token tied to this share, used to track who shared the link and who opened it.",
+      "ja": "TikTok の共有トークン。この共有に紐付き、誰が共有し誰が開いたかを追跡できます。"
+    }
+  },
+  "tiktok.com:u_code": {
+    "owner": "TikTok",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "分享者的 TikTok 使用者代碼，會直接透露是誰分享的。",
+      "en": "The sharer's TikTok user code, which directly reveals who shared the link.",
+      "ja": "共有した人の TikTok ユーザーコード。誰が共有したかが直接わかります。"
+    }
+  },
+  "tiktok.com:_r": {
+    "owner": "TikTok",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "TikTok 分享流程的來源標記。",
+      "en": "Source marker added by TikTok's share flow.",
+      "ja": "TikTok の共有機能が付ける参照元マーカー。"
+    }
+  },
+  "xiaohongshu.com:shareredid": {
+    "owner": "Xiaohongshu",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "分享者的小紅書帳號識別碼，會透露是誰分享的。",
+      "en": "The sharer's Xiaohongshu (RED) account identifier, which reveals who shared the link.",
+      "ja": "共有した人の小紅書（RED）アカウント識別子。誰が共有したかがわかります。"
+    }
+  },
+  "xiaohongshu.com:share_id": {
+    "owner": "Xiaohongshu",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "小紅書的分享識別碼，可把這次點擊連回分享的人。",
+      "en": "Xiaohongshu share ID that links this click back to the person who shared it.",
+      "ja": "小紅書の共有 ID。このクリックを共有した人と結び付けられます。"
+    }
+  },
+  "xiaohongshu.com:author_share": {
+    "owner": "Xiaohongshu",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "標記這則筆記是不是作者本人分享的。",
+      "en": "Marks whether the note was shared by its author.",
+      "ja": "投稿者本人による共有かどうかを示します。"
+    }
+  },
+  "xiaohongshu.com:share_from_user_hidden": {
+    "owner": "Xiaohongshu",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "分享介面的顯示設定，與內容無關。",
+      "en": "Display setting of the share screen, unrelated to the content.",
+      "ja": "共有画面の表示設定で、内容とは関係ありません。"
+    }
+  },
+  "xiaohongshu.com:app_platform": {
+    "owner": "Xiaohongshu",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "分享時使用的系統（例如 Android 或 iOS）。",
+      "en": "The platform the link was shared from (for example Android or iOS).",
+      "ja": "共有に使われた OS（Android、iOS など）。"
+    }
+  },
+  "xiaohongshu.com:apptime": {
+    "owner": "Xiaohongshu",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "分享當下的時間戳記。",
+      "en": "Timestamp of when the link was shared.",
+      "ja": "共有した時刻のタイムスタンプ。"
+    }
+  },
+  "xiaohongshu.com:xsec_source": {
+    "owner": "Xiaohongshu",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "連結來源標記（例如來自 App 分享）。",
+      "en": "Source label for the link (for example an in-app share).",
+      "ja": "リンクの参照元ラベル（アプリからの共有など）。"
+    }
+  },
+  "xiaohongshu.com:ignoreengage": {
+    "owner": "Xiaohongshu",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "小紅書頁面的顯示參數，與內容無關。",
+      "en": "Xiaohongshu page display flag, unrelated to the content.",
+      "ja": "小紅書ページの表示用フラグで、内容とは関係ありません。"
+    }
+  },
+  "xiaohongshu.com:type": {
+    "owner": "Xiaohongshu",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "筆記類型標記，不影響開啟內容。",
+      "en": "Note-type marker that does not affect opening the content.",
+      "ja": "投稿タイプのマーカーで、内容の表示には影響しません。"
+    }
+  },
+  "bilibili.com:vd_source": {
+    "owner": "Bilibili",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "由分享者帳號或裝置產生的識別碼，可把連結連回分享的人。",
+      "en": "Identifier derived from the sharer's account or device that ties the link back to them.",
+      "ja": "共有した人のアカウントや端末から生成される識別子。リンクを共有者と結び付けます。"
+    }
+  },
+  "bilibili.com:share_source": {
+    "owner": "Bilibili",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "分享方式（例如複製連結、分享到某個 App）。",
+      "en": "How the link was shared (for example copied or sent to another app).",
+      "ja": "共有方法（リンクのコピー、他アプリへの共有など）。"
+    }
+  },
+  "bilibili.com:share_medium": {
+    "owner": "Bilibili",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "分享時使用的平台（例如 Android App）。",
+      "en": "The platform the link was shared from (for example the Android app).",
+      "ja": "共有に使われた環境（Android アプリなど）。"
+    }
+  },
+  "bilibili.com:spm_id_from": {
+    "owner": "Bilibili",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "站內位置標記，記錄你是從哪個頁面或區塊點進來的。",
+      "en": "In-site position marker recording which page or section you came from.",
+      "ja": "サイト内の位置マーカー。どのページや枠から来たかを記録します。"
+    }
+  },
+  "youtube.com:pp": {
+    "owner": "Google",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "YouTube 內部的推薦或搜尋來源編碼，記錄你是從哪裡看到這部影片。",
+      "en": "YouTube's internal recommendation or search-source code recording where you found the video.",
+      "ja": "YouTube 内部のおすすめ・検索元コード。動画をどこで見つけたかを記録します。"
+    }
+  },
+  "youtube.com:feature": {
+    "owner": "Google",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "分享或來源方式標記（例如 shared 表示是分享出來的連結）。",
+      "en": "Share or source marker (for example \"shared\" means the link came from a share).",
+      "ja": "共有・参照元のマーカー（たとえば shared は共有されたリンクを示します）。"
+    }
+  },
+  "youtu.be:feature": {
+    "owner": "Google",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "分享或來源方式標記（例如 shared 表示是分享出來的連結）。",
+      "en": "Share or source marker (for example \"shared\" means the link came from a share).",
+      "ja": "共有・参照元のマーカー（たとえば shared は共有されたリンクを示します）。"
+    }
+  },
+  "tiktok.com:share_item_id": {
+    "owner": "TikTok",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "被分享影片的編號，網址本身已經有了，屬於重複資訊。",
+      "en": "ID of the shared video, already in the URL itself.",
+      "ja": "共有された動画の ID。URL 自体にすでに含まれています。"
+    }
+  },
+  "tiktok.com:share_app_id": {
+    "owner": "TikTok",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "分享時使用的 App 版本代碼（例如 TikTok 或抖音）。",
+      "en": "Code for the app the link was shared from (for example TikTok or Douyin).",
+      "ja": "共有に使われたアプリのコード（TikTok、抖音など）。"
+    }
+  },
+  "tiktok.com:sender_device": {
+    "owner": "TikTok",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "分享者使用的裝置類型（例如電腦或手機）。",
+      "en": "Type of device the sharer used (for example PC or phone).",
+      "ja": "共有した人の端末の種類（PC、スマートフォンなど）。"
+    }
+  },
+  "tiktok.com:is_from_webapp": {
+    "owner": "TikTok",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "標記連結是從網頁版分享的。",
+      "en": "Marks that the link was shared from the web app.",
+      "ja": "Web 版から共有されたことを示します。"
+    }
+  },
+  "tiktok.com:share_link_id": {
+    "owner": "TikTok",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "這次分享的專屬識別碼，可把點擊連回分享的人。",
+      "en": "ID unique to this share that links clicks back to the sharer.",
+      "ja": "この共有固有の ID。クリックを共有した人と結び付けられます。"
+    }
+  },
+  "tiktok.com:social_share_type": {
+    "owner": "TikTok",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "分享方式的分類代碼。",
+      "en": "Code for the kind of share.",
+      "ja": "共有方法の分類コード。"
+    }
+  },
+  "pinterest.com:invite_code": {
+    "owner": "Pinterest",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "分享者的邀請碼，可讓 Pinterest 知道是誰分享的。",
+      "en": "The sharer's invite code, which tells Pinterest who shared the link.",
+      "ja": "共有した人の招待コード。誰が共有したかを Pinterest が把握できます。"
+    }
+  },
+  "pinterest.jp:invite_code": {
+    "owner": "Pinterest",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "分享者的邀請碼，可讓 Pinterest 知道是誰分享的。",
+      "en": "The sharer's invite code, which tells Pinterest who shared the link.",
+      "ja": "共有した人の招待コード。誰が共有したかを Pinterest が把握できます。"
+    }
+  },
+  "pinterest.co.uk:invite_code": {
+    "owner": "Pinterest",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "分享者的邀請碼，可讓 Pinterest 知道是誰分享的。",
+      "en": "The sharer's invite code, which tells Pinterest who shared the link.",
+      "ja": "共有した人の招待コード。誰が共有したかを Pinterest が把握できます。"
+    }
+  },
+  "pinterest.ca:invite_code": {
+    "owner": "Pinterest",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "分享者的邀請碼，可讓 Pinterest 知道是誰分享的。",
+      "en": "The sharer's invite code, which tells Pinterest who shared the link.",
+      "ja": "共有した人の招待コード。誰が共有したかを Pinterest が把握できます。"
+    }
+  },
+  "pinterest.de:invite_code": {
+    "owner": "Pinterest",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "分享者的邀請碼，可讓 Pinterest 知道是誰分享的。",
+      "en": "The sharer's invite code, which tells Pinterest who shared the link.",
+      "ja": "共有した人の招待コード。誰が共有したかを Pinterest が把握できます。"
+    }
+  },
+  "pinterest.fr:invite_code": {
+    "owner": "Pinterest",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "分享者的邀請碼，可讓 Pinterest 知道是誰分享的。",
+      "en": "The sharer's invite code, which tells Pinterest who shared the link.",
+      "ja": "共有した人の招待コード。誰が共有したかを Pinterest が把握できます。"
+    }
+  },
+  "pinterest.com:sender": {
+    "owner": "Pinterest",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "分享者的 Pinterest 使用者編號，會直接透露是誰分享的。",
+      "en": "The sharer's Pinterest user ID, which directly reveals who shared the link.",
+      "ja": "共有した人の Pinterest ユーザー ID。誰が共有したかが直接わかります。"
+    }
+  },
+  "pinterest.jp:sender": {
+    "owner": "Pinterest",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "分享者的 Pinterest 使用者編號，會直接透露是誰分享的。",
+      "en": "The sharer's Pinterest user ID, which directly reveals who shared the link.",
+      "ja": "共有した人の Pinterest ユーザー ID。誰が共有したかが直接わかります。"
+    }
+  },
+  "pinterest.co.uk:sender": {
+    "owner": "Pinterest",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "分享者的 Pinterest 使用者編號，會直接透露是誰分享的。",
+      "en": "The sharer's Pinterest user ID, which directly reveals who shared the link.",
+      "ja": "共有した人の Pinterest ユーザー ID。誰が共有したかが直接わかります。"
+    }
+  },
+  "pinterest.ca:sender": {
+    "owner": "Pinterest",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "分享者的 Pinterest 使用者編號，會直接透露是誰分享的。",
+      "en": "The sharer's Pinterest user ID, which directly reveals who shared the link.",
+      "ja": "共有した人の Pinterest ユーザー ID。誰が共有したかが直接わかります。"
+    }
+  },
+  "pinterest.de:sender": {
+    "owner": "Pinterest",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "分享者的 Pinterest 使用者編號，會直接透露是誰分享的。",
+      "en": "The sharer's Pinterest user ID, which directly reveals who shared the link.",
+      "ja": "共有した人の Pinterest ユーザー ID。誰が共有したかが直接わかります。"
+    }
+  },
+  "pinterest.fr:sender": {
+    "owner": "Pinterest",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "分享者的 Pinterest 使用者編號，會直接透露是誰分享的。",
+      "en": "The sharer's Pinterest user ID, which directly reveals who shared the link.",
+      "ja": "共有した人の Pinterest ユーザー ID。誰が共有したかが直接わかります。"
+    }
+  },
+  "pinterest.com:sfo": {
+    "owner": "Pinterest",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "分享來源標記。",
+      "en": "Share-source marker.",
+      "ja": "共有元のマーカー。"
+    }
+  },
+  "pinterest.jp:sfo": {
+    "owner": "Pinterest",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "分享來源標記。",
+      "en": "Share-source marker.",
+      "ja": "共有元のマーカー。"
+    }
+  },
+  "pinterest.co.uk:sfo": {
+    "owner": "Pinterest",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "分享來源標記。",
+      "en": "Share-source marker.",
+      "ja": "共有元のマーカー。"
+    }
+  },
+  "pinterest.ca:sfo": {
+    "owner": "Pinterest",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "分享來源標記。",
+      "en": "Share-source marker.",
+      "ja": "共有元のマーカー。"
+    }
+  },
+  "pinterest.de:sfo": {
+    "owner": "Pinterest",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "分享來源標記。",
+      "en": "Share-source marker.",
+      "ja": "共有元のマーカー。"
+    }
+  },
+  "pinterest.fr:sfo": {
+    "owner": "Pinterest",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "分享來源標記。",
+      "en": "Share-source marker.",
+      "ja": "共有元のマーカー。"
+    }
+  },
+  "pinterest.com:mt": {
+    "owner": "Pinterest",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "頁面顯示用的參數（例如提示登入）。",
+      "en": "Page display parameter (for example a login prompt).",
+      "ja": "ページ表示用のパラメータ（ログイン案内など）。"
+    }
+  },
+  "pinterest.jp:mt": {
+    "owner": "Pinterest",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "頁面顯示用的參數（例如提示登入）。",
+      "en": "Page display parameter (for example a login prompt).",
+      "ja": "ページ表示用のパラメータ（ログイン案内など）。"
+    }
+  },
+  "pinterest.co.uk:mt": {
+    "owner": "Pinterest",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "頁面顯示用的參數（例如提示登入）。",
+      "en": "Page display parameter (for example a login prompt).",
+      "ja": "ページ表示用のパラメータ（ログイン案内など）。"
+    }
+  },
+  "pinterest.ca:mt": {
+    "owner": "Pinterest",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "頁面顯示用的參數（例如提示登入）。",
+      "en": "Page display parameter (for example a login prompt).",
+      "ja": "ページ表示用のパラメータ（ログイン案内など）。"
+    }
+  },
+  "pinterest.de:mt": {
+    "owner": "Pinterest",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "頁面顯示用的參數（例如提示登入）。",
+      "en": "Page display parameter (for example a login prompt).",
+      "ja": "ページ表示用のパラメータ（ログイン案内など）。"
+    }
+  },
+  "pinterest.fr:mt": {
+    "owner": "Pinterest",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "頁面顯示用的參數（例如提示登入）。",
+      "en": "Page display parameter (for example a login prompt).",
+      "ja": "ページ表示用のパラメータ（ログイン案内など）。"
+    }
+  },
+  "snapchat.com:share_id": {
+    "owner": "Snap",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "Snapchat 的分享識別碼，可把點擊連回分享的人。",
+      "en": "Snapchat share ID that links clicks back to the sharer.",
+      "ja": "Snapchat の共有 ID。クリックを共有した人と結び付けられます。"
+    }
+  },
+  "linkedin.com:rcm": {
+    "owner": "LinkedIn",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "分享者的 LinkedIn 會員識別碼，會透露是誰分享的。",
+      "en": "The sharer's LinkedIn member identifier, which reveals who shared the link.",
+      "ja": "共有した人の LinkedIn メンバー識別子。誰が共有したかがわかります。"
+    }
+  },
+  "bilibili.com:bbid": {
+    "owner": "Bilibili",
+    "category": "sharer_id",
+    "risk": "medium",
+    "desc": {
+      "zh-TW": "分享時附上的裝置識別碼，可能用來辨識是哪台裝置分享的。",
+      "en": "Device identifier attached when sharing, which may be used to recognise the sharing device.",
+      "ja": "共有時に付く端末識別子。共有した端末の識別に使われる可能性があります。"
+    }
+  },
+  "bilibili.com:ts": {
+    "owner": "Bilibili",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "分享當下的時間戳記。",
+      "en": "Timestamp of when the link was shared.",
+      "ja": "共有した時刻のタイムスタンプ。"
+    }
+  },
+  "tiktok.com:share-id": {
+    "owner": "TikTok",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "TikTok 分享短網址裡的代碼，綁定這次分享，可追蹤是誰分享的。已展開成原始網址並移除。",
+      "en": "Code in the TikTok share short link, tied to this share so it can be traced to the sharer. Expanded to the original URL and removed.",
+      "ja": "TikTok 共有短縮リンクのコード。この共有に紐付き、共有者を追跡できます。元の URL に展開して除去しました。"
+    }
+  },
+  "tiktok.com:_d": {
+    "owner": "TikTok",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "加密的分享資料，可能包含分享者與裝置的資訊。",
+      "en": "Encrypted share data that may include information about the sharer and their device.",
+      "ja": "暗号化された共有データ。共有者や端末の情報を含む可能性があります。"
+    }
+  },
+  "tiktok.com:timestamp": {
+    "owner": "TikTok",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "分享當下的時間戳記。",
+      "en": "Timestamp of when the link was shared.",
+      "ja": "共有した時刻のタイムスタンプ。"
+    }
+  },
+  "b23.tv:share-id": {
+    "owner": "Bilibili",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "Bilibili 分享短網址裡的代碼，綁定這次分享，可追蹤是誰分享的。已展開成原始網址並移除。",
+      "en": "Code in the Bilibili share short link, tied to this share so it can be traced to the sharer. Expanded to the original URL and removed.",
+      "ja": "Bilibili 共有短縮リンクのコード。この共有に紐付き、共有者を追跡できます。元の URL に展開して除去しました。"
+    }
+  },
+  "bilibili.com:share_session_id": {
+    "owner": "Bilibili",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "這次分享的工作階段識別碼，可把點擊連回分享的人。",
+      "en": "Session ID of this share that links clicks back to the sharer.",
+      "ja": "この共有のセッション ID。クリックを共有した人と結び付けられます。"
+    }
+  },
+  "bilibili.com:mid": {
+    "owner": "Bilibili",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "分享者的 Bilibili 使用者編號，會直接透露是誰分享的。",
+      "en": "The sharer's Bilibili user ID, which directly reveals who shared the link.",
+      "ja": "共有した人の Bilibili ユーザー ID。誰が共有したかが直接わかります。"
+    }
+  },
+  "bilibili.com:buvid": {
+    "owner": "Bilibili",
+    "category": "sharer_id",
+    "risk": "medium",
+    "desc": {
+      "zh-TW": "分享者的裝置識別碼。",
+      "en": "Device identifier of the sharer.",
+      "ja": "共有した人の端末識別子。"
+    }
+  },
+  "bilibili.com:unique_k": {
+    "owner": "Bilibili",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "短網址系統用的內部代碼。",
+      "en": "Internal code used by the short-link system.",
+      "ja": "短縮リンクの内部コード。"
+    }
+  },
+  "bilibili.com:up_id": {
+    "owner": "Bilibili",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "影片上傳者（UP 主）的編號，是內容的作者，不是分享者。",
+      "en": "ID of the video's uploader, i.e. the content's author, not the sharer.",
+      "ja": "動画投稿者の ID。コンテンツの作者で、共有した人ではありません。"
+    }
   }
 }
