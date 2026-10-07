@@ -855,5 +855,95 @@
       "en": "Timestamp of when the link was shared.",
       "ja": "共有した時刻のタイムスタンプ。"
     }
+  },
+  "tiktok.com:share-id": {
+    "owner": "TikTok",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "TikTok 分享短網址裡的代碼，綁定這次分享，可追蹤是誰分享的。已展開成原始網址並移除。",
+      "en": "Code in the TikTok share short link, tied to this share so it can be traced to the sharer. Expanded to the original URL and removed.",
+      "ja": "TikTok 共有短縮リンクのコード。この共有に紐付き、共有者を追跡できます。元の URL に展開して除去しました。"
+    }
+  },
+  "tiktok.com:_d": {
+    "owner": "TikTok",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "加密的分享資料，可能包含分享者與裝置的資訊。",
+      "en": "Encrypted share data that may include information about the sharer and their device.",
+      "ja": "暗号化された共有データ。共有者や端末の情報を含む可能性があります。"
+    }
+  },
+  "tiktok.com:timestamp": {
+    "owner": "TikTok",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "分享當下的時間戳記。",
+      "en": "Timestamp of when the link was shared.",
+      "ja": "共有した時刻のタイムスタンプ。"
+    }
+  },
+  "b23.tv:share-id": {
+    "owner": "Bilibili",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "Bilibili 分享短網址裡的代碼，綁定這次分享，可追蹤是誰分享的。已展開成原始網址並移除。",
+      "en": "Code in the Bilibili share short link, tied to this share so it can be traced to the sharer. Expanded to the original URL and removed.",
+      "ja": "Bilibili 共有短縮リンクのコード。この共有に紐付き、共有者を追跡できます。元の URL に展開して除去しました。"
+    }
+  },
+  "bilibili.com:share_session_id": {
+    "owner": "Bilibili",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "這次分享的工作階段識別碼，可把點擊連回分享的人。",
+      "en": "Session ID of this share that links clicks back to the sharer.",
+      "ja": "この共有のセッション ID。クリックを共有した人と結び付けられます。"
+    }
+  },
+  "bilibili.com:mid": {
+    "owner": "Bilibili",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "分享者的 Bilibili 使用者編號，會直接透露是誰分享的。",
+      "en": "The sharer's Bilibili user ID, which directly reveals who shared the link.",
+      "ja": "共有した人の Bilibili ユーザー ID。誰が共有したかが直接わかります。"
+    }
+  },
+  "bilibili.com:buvid": {
+    "owner": "Bilibili",
+    "category": "sharer_id",
+    "risk": "medium",
+    "desc": {
+      "zh-TW": "分享者的裝置識別碼。",
+      "en": "Device identifier of the sharer.",
+      "ja": "共有した人の端末識別子。"
+    }
+  },
+  "bilibili.com:unique_k": {
+    "owner": "Bilibili",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "短網址系統用的內部代碼。",
+      "en": "Internal code used by the short-link system.",
+      "ja": "短縮リンクの内部コード。"
+    }
+  },
+  "bilibili.com:up_id": {
+    "owner": "Bilibili",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "影片上傳者（UP 主）的編號，是內容的作者，不是分享者。",
+      "en": "ID of the video's uploader, i.e. the content's author, not the sharer.",
+      "ja": "動画投稿者の ID。コンテンツの作者で、共有した人ではありません。"
+    }
   }
 }

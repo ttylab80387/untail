@@ -17,6 +17,14 @@
     "match": "^https?://(?:www\\.)?threads\\.(com|net)/share/",
     "shareId": "/share/([^/?#]+)"
   },
+  "tiktok": {
+    "match": "^https?://(?:(?:vt|vm)\\.tiktok\\.com/|(?:www\\.)?tiktok\\.com/t/)",
+    "shareId": "^/(?:t/)?([^/?#]+)"
+  },
+  "bilibili": {
+    "match": "^https?://(?:b23\\.tv|bili2233\\.cn)/",
+    "shareId": "^/(?!(?:BV|av)[0-9A-Za-z])([^/?#]+)"
+  },
   "generic": {
     "match": "^https?://(bit\\.ly|t\\.co|lnkd\\.in|amzn\\.to|shp\\.ee|fb\\.me)/"
   }

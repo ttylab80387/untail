@@ -273,5 +273,78 @@
         "ts"
       ]
     }
+  },
+  {
+    "name": "tiktok short link",
+    "input": "https://vt.tiktok.com/ZStest001/",
+    "responses": {
+      "https://vt.tiktok.com/ZStest001/": "https://www.tiktok.com/@/video/7000000000000000001?_r=1&_d=secTEST&u_code=test&share_item_id=7000000000000000001&timestamp=1700000000&utm_campaign=client_share&utm_source=copy&share_app_id=1233"
+    },
+    "expected": {
+      "cleanUrl": "https://www.tiktok.com/@/video/7000000000000000001",
+      "status": "clean",
+      "removedKeys": [
+        "share-id",
+        "_r",
+        "_d",
+        "u_code",
+        "share_item_id",
+        "timestamp",
+        "utm_campaign",
+        "utm_source",
+        "share_app_id"
+      ]
+    }
+  },
+  {
+    "name": "tiktok www /t/ short link",
+    "input": "https://www.tiktok.com/t/ZTtest002/",
+    "responses": {
+      "https://www.tiktok.com/t/ZTtest002/": "https://www.tiktok.com/@someone/video/7000000000000000002?_r=1&_t=ZTtest&share_app_id=1233"
+    },
+    "expected": {
+      "cleanUrl": "https://www.tiktok.com/@someone/video/7000000000000000002",
+      "status": "clean",
+      "removedKeys": [
+        "share-id",
+        "_r",
+        "_t",
+        "share_app_id"
+      ]
+    }
+  },
+  {
+    "name": "bilibili b23 short link",
+    "input": "https://b23.tv/AbCdEf1",
+    "responses": {
+      "https://b23.tv/AbCdEf1": "https://www.bilibili.com/video/BV1test?share_medium=android&share_source=copy_link&bbid=XYZ&ts=1700000000&share_session_id=abc&unique_k=abc&up_id=1&vd_source=abc"
+    },
+    "expected": {
+      "cleanUrl": "https://www.bilibili.com/video/BV1test",
+      "status": "clean",
+      "removedKeys": [
+        "share-id",
+        "share_medium",
+        "share_source",
+        "bbid",
+        "ts",
+        "share_session_id",
+        "unique_k",
+        "up_id",
+        "vd_source"
+      ]
+    }
+  },
+  {
+    "name": "bilibili b23 BV link is not a share id",
+    "input": "https://b23.tv/BV1test0001",
+    "responses": {
+      "https://b23.tv/BV1test0001": "https://www.bilibili.com/video/BV1test0001"
+    },
+    "expected": {
+      "cleanUrl": "https://www.bilibili.com/video/BV1test0001",
+      "status": "clean",
+      "removedKeys": []
+    }
   }
 ]
