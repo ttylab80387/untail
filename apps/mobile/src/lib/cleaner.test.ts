@@ -96,7 +96,7 @@ describe('cleanInput', () => {
   });
 
   it('respects the history and auto-copy switches', async () => {
-    const out = await cleanInput('https://ex.com/a?utm_source=x', deps({ settings: { expand: true, autoCopy: false, history: false } }));
+    const out = await cleanInput('https://ex.com/a?utm_source=x', deps({ settings: { ...DEFAULT_SETTINGS, autoCopy: false, history: false } }));
     expect(out.copied).toBe(false);
     expect(copied).toEqual([]);
     expect(await listHistory(db)).toEqual([]);

@@ -5,9 +5,10 @@ export interface Settings {
   expand: boolean;
   autoCopy: boolean;
   history: boolean;
+  detectClipboard: boolean;
 }
 
-export const DEFAULT_SETTINGS: Settings = { expand: true, autoCopy: true, history: true };
+export const DEFAULT_SETTINGS: Settings = { expand: true, autoCopy: true, history: true, detectClipboard: true };
 
 const KEY = 'settings';
 
