@@ -35,7 +35,12 @@ export default function SettingsScreen() {
         <Text style={{ color: c.text }}>{label}</Text>
         {hint && <Text style={{ color: c.muted, fontSize: 12 }}>{hint}</Text>}
       </View>
-      <Switch value={settings[key]} onValueChange={toggle(key)} />
+      <Switch
+        value={settings[key]}
+        onValueChange={toggle(key)}
+        trackColor={{ false: c.border, true: c.accent }}
+        thumbColor={settings[key] ? c.text : c.muted}
+      />
     </View>
   );
 
@@ -67,8 +72,8 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   container: { padding: 16, gap: 10 },
-  row: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 10, padding: 12, gap: 12 },
+  row: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, padding: 14, gap: 12 },
   rowText: { flex: 1, gap: 2 },
-  block: { borderWidth: 1, borderRadius: 10, padding: 12, gap: 8 },
+  block: { borderRadius: 12, padding: 14, gap: 8 },
   link: { paddingVertical: 8 },
 });

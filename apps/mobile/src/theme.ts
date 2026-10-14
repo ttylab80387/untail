@@ -1,4 +1,4 @@
-import { useColorScheme } from 'react-native';
+import { Platform } from 'react-native';
 
 export interface Colors {
   bg: string;
@@ -7,35 +7,29 @@ export interface Colors {
   muted: string;
   border: string;
   accent: string;
+  onAccent: string; // text on an accent-filled button
   ok: string;
   warn: string;
   danger: string;
 }
 
-const light: Colors = {
-  bg: '#f6f7f9',
-  card: '#ffffff',
-  text: '#16181d',
-  muted: '#5d6470',
-  border: '#d9dde3',
-  accent: '#2563eb',
-  ok: '#15803d',
-  warn: '#b45309',
-  danger: '#b91c1c',
-};
-
+// "Night utility" look. The app is dark only for now; a light palette could come back later (e.g. as a Pro option).
 const dark: Colors = {
-  bg: '#0f1115',
-  card: '#181b21',
-  text: '#eceef2',
-  muted: '#9aa1ad',
-  border: '#2b3038',
-  accent: '#60a5fa',
-  ok: '#4ade80',
-  warn: '#fbbf24',
+  bg: '#0d1714',
+  card: '#14211d',
+  text: '#e6efe9',
+  muted: '#7f9c92',
+  border: '#2b5a4e',
+  accent: '#5eead4',
+  onAccent: '#0d1714',
+  ok: '#5eead4',
+  warn: '#fb923c',
   danger: '#f87171',
 };
 
 export function useColors(): Colors {
-  return useColorScheme() === 'dark' ? dark : light;
+  return dark;
 }
+
+// System monospace font for URLs, parameter names and the input box.
+export const MONO = Platform.select({ ios: 'Menlo', default: 'monospace' });

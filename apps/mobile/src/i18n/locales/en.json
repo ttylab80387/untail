@@ -38,7 +38,8 @@
     "noDesc": "The purpose of this parameter is unknown.",
     "hops": "Redirects",
     "referralCode": "Referral / promoter code in the link: {{code}}",
-    "report": "Report a problem"
+    "report": "Report a problem",
+    "copiedTag": "Copied"
   },
   "risk": {
     "high": "High risk",

@@ -5,7 +5,7 @@ import { Alert, FlatList, Pressable, StyleSheet, Text } from 'react-native';
 import { clearHistory, deleteHistory, listHistory } from '../src/lib/db';
 import type { HistoryEntry } from '../src/lib/db';
 import { useApp } from '../src/state/AppContext';
-import { useColors } from '../src/theme';
+import { MONO, useColors } from '../src/theme';
 import { useBottomPadding } from '../src/bottomPadding';
 
 export default function History() {
@@ -50,7 +50,7 @@ export default function History() {
             style={[styles.row, { backgroundColor: c.card, borderColor: c.border }]}
           >
             <Text style={{ color: c.muted, fontSize: 12 }}>{new Date(item.createdAt).toLocaleString(i18n.language)}</Text>
-            <Text numberOfLines={2} style={{ color: c.text }}>
+            <Text numberOfLines={2} style={{ color: c.text, fontFamily: MONO, fontSize: 13 }}>
               {item.result.cleanUrl}
             </Text>
             <Text style={{ color: item.result.status === 'clean' ? c.ok : c.warn, fontSize: 12 }}>
@@ -65,5 +65,5 @@ export default function History() {
 
 const styles = StyleSheet.create({
   list: { padding: 16, gap: 8 },
-  row: { borderWidth: 1, borderRadius: 10, padding: 12, gap: 4 },
+  row: { borderRadius: 12, padding: 14, gap: 5 },
 });

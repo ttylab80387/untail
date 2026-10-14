@@ -1,11 +1,13 @@
 import '../src/i18n';
+import { Ionicons } from '@expo/vector-icons';
 import { Link, router, Stack } from 'expo-router';
 import { ShareIntentProvider, useShareIntentContext } from 'expo-share-intent';
+import { StatusBar } from 'expo-status-bar';
 import { SQLiteProvider } from 'expo-sqlite';
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Text } from 'react-native';
+import { Image, Pressable, Text, View } from 'react-native';
 import { migrate } from '../src/lib/db';
 import type { Db } from '../src/lib/db';
 import { AppProvider, useApp } from '../src/state/AppContext';
@@ -29,15 +31,32 @@ function ShareWatcher() {
   return null;
 }
 
+function HeaderTitle() {
+  const c = useColors();
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+      <Image source={require('../assets/icon.png')} style={{ width: 26, height: 26, borderRadius: 7 }} />
+      <Text style={{ color: c.text, fontSize: 19, fontWeight: '700' }}>untail</Text>
+    </View>
+  );
+}
+
 function HeaderLinks() {
   const { t } = useTranslation();
   const c = useColors();
   return (
-    <Text style={{ color: c.accent }}>
-      <Link href="/history">{t('nav.history')}</Link>
-      {'   '}
-      <Link href="/settings">{t('nav.settings')}</Link>
-    </Text>
+    <View style={{ flexDirection: 'row', gap: 18 }}>
+      <Link href="/history" asChild>
+        <Pressable accessibilityLabel={t('nav.history')} hitSlop={10}>
+          <Ionicons name="time-outline" size={23} color={c.muted} />
+        </Pressable>
+      </Link>
+      <Link href="/settings" asChild>
+        <Pressable accessibilityLabel={t('nav.settings')} hitSlop={10}>
+          <Ionicons name="settings-outline" size={22} color={c.muted} />
+        </Pressable>
+      </Link>
+    </View>
   );
 }
 
@@ -49,8 +68,19 @@ export default function RootLayout() {
       <SQLiteProvider databaseName="linkclean.db" onInit={initDb}>
         <AppProvider>
           <ShareWatcher />
-          <Stack screenOptions={{ contentStyle: { backgroundColor: c.bg }, headerStyle: { backgroundColor: c.card }, headerTintColor: c.text }}>
-            <Stack.Screen name="index" options={{ title: t('app.title'), headerRight: () => <HeaderLinks /> }} />
+          <StatusBar style="light" />
+          <Stack
+            screenOptions={{
+              contentStyle: { backgroundColor: c.bg },
+              headerStyle: { backgroundColor: c.bg },
+              headerShadowVisible: false,
+              headerTintColor: c.text,
+            }}
+          >
+            <Stack.Screen
+              name="index"
+              options={{ title: t('app.title'), headerTitle: () => <HeaderTitle />, headerRight: () => <HeaderLinks /> }}
+            />
             <Stack.Screen name="history" options={{ title: t('history.title') }} />
             <Stack.Screen name="result/[id]" options={{ title: t('result.title') }} />
             <Stack.Screen name="settings" options={{ title: t('settings.title') }} />

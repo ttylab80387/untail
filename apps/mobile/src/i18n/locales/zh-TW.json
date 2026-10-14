@@ -38,7 +38,8 @@
     "noDesc": "這個參數的用途未知。",
     "hops": "跳轉紀錄",
     "referralCode": "連結中的推薦／推廣代碼：{{code}}",
-    "report": "回報問題"
+    "report": "回報問題",
+    "copiedTag": "已複製"
   },
   "risk": {
     "high": "高風險",

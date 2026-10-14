@@ -1,9 +1,11 @@
+import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { ResultCard } from '../src/components/ResultCard';
 import { useApp } from '../src/state/AppContext';
-import { useColors } from '../src/theme';
+import { MONO, useColors } from '../src/theme';
 import { useBottomPadding } from '../src/bottomPadding';
 
 export default function Home() {
@@ -33,58 +35,36 @@ export default function Home() {
   return (
     <ScrollView contentContainerStyle={[styles.container, bottomPadding]} keyboardShouldPersistTaps="handled">
       {clipboardHasCleanLink && !clipboardOffer && !autoCleaned && !busy && (
-        <View style={[styles.offer, { backgroundColor: c.card, borderColor: c.ok }]}>
-          <Text style={[styles.offerText, { color: c.text }]}>
-            <Text style={{ color: c.ok }}>✓ </Text>
-            {t('home.clipboardNoTracking')}
-          </Text>
-          <View style={styles.row}>
-            <Pressable onPress={dismissCleanLinkNotice} style={styles.button}>
-              <Text style={{ color: c.muted, fontWeight: '600' }}>{t('home.dismiss')}</Text>
-            </Pressable>
-          </View>
-        </View>
+        <Notice icon="checkmark-circle" text={t('home.clipboardNoTracking')}>
+          <TextButton label={t('home.dismiss')} onPress={dismissCleanLinkNotice} muted />
+        </Notice>
       )}
       {autoCleaned && !busy && (
-        <View style={[styles.offer, { backgroundColor: c.card, borderColor: c.ok }]}>
-          <Text style={[styles.offerText, { color: c.text }]}>{t('home.autoCleaned')}</Text>
-          <View style={styles.row}>
-            <Pressable onPress={undoAutoClean} style={[styles.button, { borderColor: c.accent, borderWidth: 1 }]}>
-              <Text style={{ color: c.accent, fontWeight: '600' }}>{t('home.undo')}</Text>
-            </Pressable>
-            <Pressable onPress={dismissAutoClean} style={styles.button}>
-              <Text style={{ color: c.muted, fontWeight: '600' }}>{t('home.dismiss')}</Text>
-            </Pressable>
-          </View>
-        </View>
+        <Notice icon="checkmark-circle" text={t('home.autoCleaned')}>
+          <TextButton label={t('home.undo')} onPress={undoAutoClean} />
+          <TextButton label={t('home.dismiss')} onPress={dismissAutoClean} muted />
+        </Notice>
       )}
       {clipboardOffer && !busy && (
-        <View style={[styles.offer, { backgroundColor: c.card, borderColor: c.accent }]}>
-          <Text style={[styles.offerText, { color: c.text }]}>{t('home.clipboardOffer')}</Text>
-          <View style={styles.row}>
-            {clipboardOffer.kind === 'ios' && Clipboard.isPasteButtonAvailable ? (
-              // The system paste button reads the clipboard without the "Allow Paste" prompt.
-              <Clipboard.ClipboardPasteButton
-                onPress={(data) => {
-                  if (data.type === 'text') acceptClipboardOffer(data.text);
-                }}
-                acceptedContentTypes={['plain-text', 'url']}
-                displayMode="iconAndLabel"
-                style={styles.pasteButton}
-              />
-            ) : (
-              <Pressable
-                onPress={async () => acceptClipboardOffer(clipboardOffer.kind === 'ios' ? await Clipboard.getStringAsync() : undefined)}
-                style={[styles.button, { backgroundColor: c.accent }]}
-              >
-                <Text style={styles.buttonText}>{t('home.clipboardClean')}</Text>
-              </Pressable>
-            )}
-            <Pressable onPress={dismissClipboardOffer} style={styles.button}>
-              <Text style={{ color: c.muted, fontWeight: '600' }}>{t('home.dismiss')}</Text>
-            </Pressable>
-          </View>
-        </View>
+        <Notice icon="clipboard-outline" text={t('home.clipboardOffer')}>
+          {clipboardOffer.kind === 'ios' && Clipboard.isPasteButtonAvailable ? (
+            // The system paste button reads the clipboard without the "Allow Paste" prompt.
+            <Clipboard.ClipboardPasteButton
+              onPress={(data) => {
+                if (data.type === 'text') acceptClipboardOffer(data.text);
+              }}
+              acceptedContentTypes={['plain-text', 'url']}
+              displayMode="iconAndLabel"
+              style={styles.pasteButton}
+            />
+          ) : (
+            <TextButton
+              label={t('home.clipboardClean')}
+              onPress={async () => acceptClipboardOffer(clipboardOffer.kind === 'ios' ? await Clipboard.getStringAsync() : undefined)}
+            />
+          )}
+          <TextButton label={t('home.dismiss')} onPress={dismissClipboardOffer} muted />
+        </Notice>
       )}
       <TextInput
         value={input}
@@ -94,7 +74,7 @@ export default function Home() {
         multiline
         autoCapitalize="none"
         autoCorrect={false}
-        style={[styles.input, { color: c.text, borderColor: c.border, backgroundColor: c.card }]}
+        style={[styles.input, { color: c.text, backgroundColor: c.card }]}
       />
       <View style={styles.row}>
         {Platform.OS === 'ios' && Clipboard.isPasteButtonAvailable ? (
@@ -107,31 +87,59 @@ export default function Home() {
             style={styles.pasteButton}
           />
         ) : (
-          <Pressable onPress={() => void pasteFallback()} style={[styles.button, { borderColor: c.accent, borderWidth: 1 }]}>
-            <Text style={{ color: c.accent, fontWeight: '600' }}>{t('home.paste')}</Text>
+          <Pressable onPress={() => void pasteFallback()} style={[styles.button, styles.outline, { borderColor: c.border }]}>
+            <Ionicons name="clipboard-outline" size={16} color={c.text} />
+            <Text style={{ color: c.text, fontWeight: '600' }}>{t('home.paste')}</Text>
           </Pressable>
         )}
         <Pressable
           disabled={!canClean}
           onPress={() => void submit(input)}
-          style={[styles.button, { backgroundColor: c.accent, opacity: canClean ? 1 : 0.5 }]}
+          style={[styles.button, styles.primary, { backgroundColor: c.accent, opacity: canClean ? 1 : 0.4 }]}
         >
-          <Text style={styles.buttonText}>{busy ? t('home.cleaning') : t('home.clean')}</Text>
+          <Text style={[styles.primaryText, { color: c.onAccent }]}>{busy ? t('home.cleaning') : `${t('home.clean')} →`}</Text>
         </Pressable>
       </View>
-      {(busy || !ready) && <ActivityIndicator />}
+      {(busy || !ready) && <ActivityIndicator color={c.accent} />}
       {outcome && !busy && <ResultCard result={outcome.result} copied={outcome.copied} />}
     </ScrollView>
   );
 }
 
+// Outlined notice row used for every clipboard message.
+function Notice({ icon, text, children }: { icon: keyof typeof Ionicons.glyphMap; text: string; children: ReactNode }) {
+  const c = useColors();
+  return (
+    <View style={[styles.notice, { borderColor: c.border }]}>
+      <View style={styles.noticeHead}>
+        <Ionicons name={icon} size={18} color={c.accent} />
+        <Text style={[styles.noticeText, { color: c.text }]}>{text}</Text>
+      </View>
+      <View style={styles.noticeActions}>{children}</View>
+    </View>
+  );
+}
+
+function TextButton({ label, onPress, muted }: { label: string; onPress(): void; muted?: boolean }) {
+  const c = useColors();
+  return (
+    <Pressable onPress={onPress} hitSlop={8}>
+      <Text style={{ color: muted ? c.muted : c.accent, fontWeight: '700' }}>{label}</Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { padding: 16, gap: 12 },
-  input: { minHeight: 96, borderWidth: 1, borderRadius: 12, padding: 12, fontSize: 15, textAlignVertical: 'top' },
-  row: { flexDirection: 'row', gap: 8, alignItems: 'center' },
-  button: { paddingVertical: 10, paddingHorizontal: 18, borderRadius: 10 },
-  buttonText: { color: '#ffffff', fontWeight: '600' },
-  pasteButton: { width: 120, height: 40 },
-  offer: { borderWidth: 1, borderRadius: 12, padding: 12, gap: 8 },
-  offerText: { fontWeight: '600' },
+  input: { minHeight: 96, borderRadius: 12, padding: 14, fontSize: 14, fontFamily: MONO, textAlignVertical: 'top' },
+  row: { flexDirection: 'row', gap: 10, alignItems: 'center' },
+  button: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10 },
+  outline: { borderWidth: 1 },
+  primary: { flex: 1 },
+  primaryText: { fontWeight: '800', fontSize: 15 },
+  pasteButton: { width: 120, height: 44 },
+  notice: { borderWidth: 1, borderRadius: 12, padding: 12, gap: 10 },
+  noticeHead: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
+  noticeText: { flex: 1, fontWeight: '600', lineHeight: 20 },
+  noticeActions: { flexDirection: 'row', gap: 20, alignItems: 'center', paddingLeft: 26 },
 });

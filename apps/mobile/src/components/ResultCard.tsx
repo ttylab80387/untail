@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -7,36 +8,45 @@ import { SUPPORT_EMAIL } from '../config';
 import { referralCode } from '../lib/referral';
 import { reportMailto } from '../lib/report';
 import { useApp } from '../state/AppContext';
-import { useColors } from '../theme';
+import { MONO, useColors } from '../theme';
 import type { Colors } from '../theme';
 
 function riskColor(c: Colors, risk: AnalyzedParam['risk']): string {
-  return risk === 'high' ? c.danger : risk === 'medium' ? c.warn : c.muted;
+  return risk === 'low' ? c.muted : c.warn;
 }
 
+const short = (v: string) => (v.length > 18 ? `${v.slice(0, 16)}…` : v);
+
+// One removed parameter as a diff-style line; tap to show the explanation.
 function ParamRow({ p }: { p: AnalyzedParam }) {
   const { t } = useTranslation();
   const c = useColors();
   const [open, setOpen] = useState(false);
   const code = referralCode(p);
   return (
-    <Pressable onPress={() => setOpen(!open)} style={[styles.param, { borderColor: c.border }]}>
+    <Pressable onPress={() => setOpen(!open)} style={styles.param}>
       <View style={styles.paramHead}>
-        <Text style={[styles.paramKey, { color: c.text }]}>{p.key}</Text>
-        <Text style={[styles.badge, { color: riskColor(c, p.risk), borderColor: riskColor(c, p.risk) }]}>{t(`risk.${p.risk}`)}</Text>
+        <Text style={[styles.mono, { color: c.muted, flex: 1 }]} numberOfLines={1}>
+          <Text style={{ color: c.danger }}>- </Text>
+          <Text style={{ color: c.text, fontWeight: '700' }}>{p.key}</Text>
+          {`=${short(p.value)}`}
+        </Text>
+        <Text style={[styles.tag, { color: riskColor(c, p.risk) }]}>
+          [{t(`category.${p.category}`)}]
+        </Text>
       </View>
-      <Text style={{ color: c.muted }}>
-        {t(`category.${p.category}`)}
-        {p.owner ? ` · ${t('result.owner', { owner: p.owner })}` : ''}
-      </Text>
       {code && (
-        <Text selectable style={{ color: c.warn }}>
+        <Text selectable style={{ color: c.warn, paddingLeft: 14, fontSize: 13 }}>
           {t('result.referralCode', { code })}
         </Text>
       )}
       {open && (
         <View style={styles.paramBody}>
-          <Text style={{ color: c.text }}>{p.desc ?? t('result.noDesc')}</Text>
+          <Text style={{ color: c.text, lineHeight: 19 }}>{p.desc ?? t('result.noDesc')}</Text>
+          <Text style={{ color: c.muted, fontSize: 12 }}>
+            {t(`risk.${p.risk}`)}
+            {p.owner ? ` · ${t('result.owner', { owner: p.owner })}` : ''}
+          </Text>
           <Text selectable style={[styles.mono, { color: c.muted }]}>{`${p.key}=${p.value}`}</Text>
         </View>
       )}
@@ -67,7 +77,7 @@ export function ResultCard({ result, copied }: { result: ProcessResult; copied: 
 
   if (result.status === 'failed') {
     return (
-      <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
+      <View style={[styles.card, { backgroundColor: c.card }]}>
         <Text style={[styles.status, { color: statusColor }]}>{t('result.status.failed')}</Text>
         <Text style={{ color: c.muted }}>{t('result.reason.invalid_input')}</Text>
       </View>
@@ -75,25 +85,23 @@ export function ResultCard({ result, copied }: { result: ProcessResult; copied: 
   }
 
   return (
-    <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
-      <Text style={[styles.status, { color: statusColor }]}>{t(`result.status.${result.status}`)}</Text>
-      {result.reason && <Text style={{ color: c.warn }}>{t(`result.reason.${result.reason}`)}</Text>}
-      <Text selectable style={[styles.url, { color: c.text }]}>{result.cleanUrl}</Text>
-      {copied && <Text style={{ color: c.ok }}>{t('result.copied')}</Text>}
+    <View style={[styles.card, { backgroundColor: c.card }]}>
+      <Text style={[styles.status, { color: statusColor }]}>
+        {t(`result.status.${result.status}`)}
+        {copied ? <Text style={{ color: c.muted, fontWeight: '600' }}>{`  ·  ${t('result.copiedTag')}`}</Text> : null}
+      </Text>
+      {result.reason && <Text style={{ color: c.warn, lineHeight: 19 }}>{t(`result.reason.${result.reason}`)}</Text>}
+      <Text selectable style={[styles.url, { color: c.text, backgroundColor: c.bg }]}>
+        {result.cleanUrl}
+      </Text>
 
       <View style={styles.actions}>
-        <Pressable onPress={() => void copy(result.cleanUrl)} style={[styles.button, { backgroundColor: c.accent }]}>
-          <Text style={styles.buttonText}>{t('result.copy')}</Text>
-        </Pressable>
-        <Pressable onPress={() => void Share.share({ message: result.cleanUrl })} style={[styles.button, { backgroundColor: c.accent }]}>
-          <Text style={styles.buttonText}>{t('result.share')}</Text>
-        </Pressable>
-        <Pressable onPress={() => void Linking.openURL(result.cleanUrl)} style={[styles.button, { backgroundColor: c.accent }]}>
-          <Text style={styles.buttonText}>{t('result.open')}</Text>
-        </Pressable>
+        <ActionButton icon="copy-outline" label={t('result.copy')} onPress={() => void copy(result.cleanUrl)} />
+        <ActionButton icon="share-outline" label={t('result.share')} onPress={() => void Share.share({ message: result.cleanUrl })} />
+        <ActionButton icon="open-outline" label={t('result.open')} onPress={() => void Linking.openURL(result.cleanUrl)} />
       </View>
 
-      <Text style={[styles.section, { color: c.text }]}>
+      <Text style={[styles.section, { color: c.muted }]}>
         {result.removed.length ? t('result.removedCount', { count: result.removed.length }) : t('result.noneRemoved')}
       </Text>
       {result.removed.map((p, i) => (
@@ -102,7 +110,10 @@ export function ResultCard({ result, copied }: { result: ProcessResult; copied: 
 
       {result.hops.length > 1 && (
         <Pressable onPress={() => setShowHops(!showHops)}>
-          <Text style={[styles.section, { color: c.accent }]}>{t('result.hops')}</Text>
+          <Text style={[styles.section, { color: c.accent }]}>
+            {showHops ? '▾ ' : '▸ '}
+            {t('result.hops')}
+          </Text>
           {showHops &&
             result.hops.map((h, i) => (
               <Text key={`${i}-${h}`} selectable style={[styles.mono, { color: c.muted }]}>
@@ -112,26 +123,34 @@ export function ResultCard({ result, copied }: { result: ProcessResult; copied: 
         </Pressable>
       )}
 
-      <Pressable onPress={report} style={styles.report}>
+      <Pressable onPress={report} style={styles.report} hitSlop={8}>
         <Text style={{ color: c.muted, textDecorationLine: 'underline' }}>{t('result.report')}</Text>
       </Pressable>
     </View>
   );
 }
 
+function ActionButton({ icon, label, onPress }: { icon: keyof typeof Ionicons.glyphMap; label: string; onPress(): void }) {
+  const c = useColors();
+  return (
+    <Pressable onPress={onPress} style={[styles.button, { borderColor: c.border }]}>
+      <Ionicons name={icon} size={15} color={c.text} />
+      <Text style={{ color: c.text, fontWeight: '600' }}>{label}</Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
-  card: { borderWidth: 1, borderRadius: 12, padding: 16, gap: 8 },
-  status: { fontSize: 18, fontWeight: '700' },
-  url: { fontSize: 15 },
-  actions: { flexDirection: 'row', gap: 8, marginTop: 4 },
-  button: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 8 },
-  buttonText: { color: '#ffffff', fontWeight: '600' },
-  section: { marginTop: 8, fontWeight: '600' },
-  param: { borderWidth: 1, borderRadius: 8, padding: 10, gap: 4 },
-  paramHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  paramKey: { fontWeight: '600', fontFamily: 'Courier' },
-  paramBody: { gap: 4, marginTop: 4 },
-  badge: { borderWidth: 1, borderRadius: 6, paddingHorizontal: 6, fontSize: 12 },
-  mono: { fontFamily: 'Courier', fontSize: 12 },
+  card: { borderRadius: 14, padding: 16, gap: 10 },
+  status: { fontSize: 15, fontWeight: '800' },
+  url: { fontFamily: MONO, fontSize: 13, lineHeight: 19, padding: 10, borderRadius: 8 },
+  actions: { flexDirection: 'row', gap: 8 },
+  button: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, borderWidth: 1, borderRadius: 8, paddingVertical: 9 },
+  section: { marginTop: 4, fontWeight: '600', fontSize: 13 },
+  param: { paddingVertical: 4, gap: 4 },
+  paramHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  paramBody: { gap: 4, paddingLeft: 14, paddingBottom: 4 },
+  tag: { fontSize: 12, fontWeight: '600' },
+  mono: { fontFamily: MONO, fontSize: 12 },
   report: { alignSelf: 'flex-end', marginTop: 4 },
 });
