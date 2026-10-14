@@ -22,6 +22,7 @@ export default function Home() {
     clipboardHasCleanLink,
     undoAutoClean,
     dismissAutoClean,
+    dismissCleanLinkNotice,
   } = useApp();
   const canClean = ready && !busy && input.trim().length > 0;
 
@@ -30,7 +31,17 @@ export default function Home() {
   return (
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       {clipboardHasCleanLink && !clipboardOffer && !autoCleaned && !busy && (
-        <Text style={{ color: c.muted, fontSize: 13 }}>{t('home.clipboardNoTracking')}</Text>
+        <View style={[styles.offer, { backgroundColor: c.card, borderColor: c.ok }]}>
+          <Text style={[styles.offerText, { color: c.text }]}>
+            <Text style={{ color: c.ok }}>✓ </Text>
+            {t('home.clipboardNoTracking')}
+          </Text>
+          <View style={styles.row}>
+            <Pressable onPress={dismissCleanLinkNotice} style={styles.button}>
+              <Text style={{ color: c.muted, fontWeight: '600' }}>{t('home.dismiss')}</Text>
+            </Pressable>
+          </View>
+        </View>
       )}
       {autoCleaned && !busy && (
         <View style={[styles.offer, { backgroundColor: c.card, borderColor: c.ok }]}>

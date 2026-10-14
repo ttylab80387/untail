@@ -11,7 +11,7 @@
     "clipboardClean": "クリーンなリンクを取得",
     "autoCleaned": "クリップボードのリンクをクリーンなリンクに置き換えました。そのまま貼り付けできます。",
     "undo": "元に戻す",
-    "clipboardNoTracking": "クリップボードのリンクに追跡コードは見つかりませんでした。",
+    "clipboardNoTracking": "このリンクはもともときれいです。そのまま共有できます。",
     "dismiss": "閉じる"
   },
   "result": {

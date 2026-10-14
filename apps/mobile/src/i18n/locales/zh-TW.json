@@ -11,7 +11,7 @@
     "clipboardClean": "取得乾淨連結",
     "autoCleaned": "已把剪貼簿裡的連結換成乾淨連結，可以直接貼上。",
     "undo": "復原",
-    "clipboardNoTracking": "剪貼簿裡的連結沒有發現追蹤碼。",
+    "clipboardNoTracking": "這個連結本來就是乾淨的，可以直接分享。",
     "dismiss": "略過"
   },
   "result": {

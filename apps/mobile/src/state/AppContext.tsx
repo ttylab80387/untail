@@ -47,6 +47,7 @@ export interface AppState {
   clipboardHasCleanLink: boolean; // the newest clipboard link had nothing to clean
   undoAutoClean(): void;
   dismissAutoClean(): void;
+  dismissCleanLinkNotice(): void;
 }
 
 const Ctx = createContext<AppState | null>(null);
@@ -250,6 +251,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (undo !== undefined) void copy(undo).catch(() => undefined);
       },
       dismissAutoClean: () => setAutoCleaned(null),
+      dismissCleanLinkNotice: () => setClipboardHasCleanLink(false),
     }),
     [ready, db, rules, settings, locale, input, outcome, pending, submit, refresh, copy, clipboardOffer, autoCleaned, clipboardHasCleanLink],
   );
