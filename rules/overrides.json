@@ -13,6 +13,14 @@
         "share_url"
       ]
     },
+    "facebook photo": {
+      "urlPattern": "^https?:\\/\\/(?:[a-z0-9-]+\\.)*?facebook\\.com\\/photo\\.php\\?",
+      "rules": [
+        "mibextid",
+        "rdid",
+        "share_url"
+      ]
+    },
     "tiktok.com": {
       "rules": [
         "share_item_id",
