@@ -35,6 +35,11 @@ describe('checked-in rule data', () => {
     expect(p.owner).toBe('Meta');
   });
 
+  it('explains the share code of every expanded share-link host', () => {
+    const hosts = ['www.facebook.com', 'www.threads.com', 'vt.tiktok.com', 'b23.tv', 'bili2233.cn', 'xhslink.com', 'www.reddit.com'];
+    for (const host of hosts) expect(explain('share-id', host).category, host).toBe('sharer_id');
+  });
+
   it('explains share params of common social and video platforms', () => {
     const cases: [string, string, string][] = [
       ['x.com', 't', 'sharer_id'],

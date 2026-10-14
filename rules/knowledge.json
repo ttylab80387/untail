@@ -906,6 +906,16 @@
       "ja": "Bilibili 共有短縮リンクのコード。この共有に紐付き、共有者を追跡できます。元の URL に展開して除去しました。"
     }
   },
+  "bili2233.cn:share-id": {
+    "owner": "Bilibili",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "Bilibili 分享短網址裡的代碼，綁定這次分享，可追蹤是誰分享的。已展開成原始網址並移除。",
+      "en": "Code in the Bilibili share short link, tied to this share so it can be traced to the sharer. Expanded to the original URL and removed.",
+      "ja": "Bilibili 共有短縮リンクのコード。この共有に紐付き、共有者を追跡できます。元の URL に展開して除去しました。"
+    }
+  },
   "bilibili.com:share_session_id": {
     "owner": "Bilibili",
     "category": "sharer_id",
