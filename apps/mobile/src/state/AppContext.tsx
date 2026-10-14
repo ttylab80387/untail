@@ -74,6 +74,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [autoCleaned, setAutoCleaned] = useState<{ undo: string } | null>(null);
   const [clipboardHasCleanLink, setClipboardHasCleanLink] = useState(false);
   const watch = useRef(initialWatchState());
+  // Bumped whenever new clipboard content is seen; a job started before that is stale.
+  const clipboardGen = useRef(0);
 
   // Queued work reads these at run time, so it never uses stale rules, settings or locale.
   const latest = useRef({ rules, settings, locale });
@@ -108,6 +110,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const copy = useCallback(async (text: string) => {
     watch.current = noteSelfWrite(watch.current, text);
     setClipboardHasCleanLink(false);
+    // Any later write makes an earlier Undo restore over the wrong content.
+    setAutoCleaned(null);
     await Clipboard.setStringAsync(text);
   }, []);
 
@@ -116,7 +120,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const enqueue = useCallback(
     (text: string, forceCopy: boolean, settings?: Settings): Promise<CleanOutcome | null> => {
       setInput(text);
+      setClipboardHasCleanLink(false);
       setPending((n) => n + 1);
+      const gen = clipboardGen.current;
+      const isCurrent = () => gen === clipboardGen.current;
       const job = queue.current.then(async () => {
         try {
           const { rules: r, locale: l } = latest.current;
@@ -130,7 +137,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
             userAgent: USER_AGENT,
             copy,
             now: Date.now,
+            isCurrent,
           });
+          // Newer clipboard content took over the screen while this job ran; drop its result.
+          if (!isCurrent()) return null;
           setOutcome(out);
           return out;
         } catch {
@@ -155,7 +165,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         let raw: string;
         if (Platform.OS === 'ios') {
           // hasUrlAsync does not trigger the iOS paste prompt; reading the text would.
-          const d = decideIos(await Clipboard.hasUrlAsync(), watch.current);
+          const d = decideIos(await Clipboard.hasUrlAsync(), watch.current, s.autoClipboard);
           watch.current = d.next;
           if (!d.offer || !s.autoClipboard) {
             setClipboardOffer(d.offer ? { kind: 'ios' } : null);
@@ -170,6 +180,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         watch.current = d.next;
         // New clipboard content makes an earlier "replaced" notice misleading.
         if (d.fresh) {
+          clipboardGen.current += 1;
           setAutoCleaned(null);
           setClipboardHasCleanLink(d.clean !== null);
           // Show the clean link itself, so the notice is not read as being about the previous result.
@@ -252,6 +263,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       undoAutoClean() {
         const undo = autoCleaned?.undo;
         setAutoCleaned(null);
+        // The clipboard no longer holds the clean link, so the result card must not say it does.
+        setOutcome((o) => (o ? { ...o, copied: false } : o));
         // Through copy(), so the restored text is not cleaned again on the next foreground.
         if (undo !== undefined) void copy(undo).catch(() => undefined);
       },

@@ -13,6 +13,8 @@ export interface CleanDeps {
   userAgent: string;
   copy(text: string): Promise<unknown>;
   now(): number;
+  // False once newer clipboard content arrived; the clean link must then not replace it.
+  isCurrent?(): boolean;
 }
 
 export interface CleanOutcome {
@@ -39,7 +41,7 @@ export async function cleanInput(input: string, deps: CleanDeps): Promise<CleanO
   }
   let copied = false;
   // Only a fully clean URL is copied automatically (spec §6.3).
-  if (result.status === 'clean' && deps.settings.autoCopy) {
+  if (result.status === 'clean' && deps.settings.autoCopy && (deps.isCurrent?.() ?? true)) {
     try {
       await deps.copy(result.cleanUrl);
       copied = true;

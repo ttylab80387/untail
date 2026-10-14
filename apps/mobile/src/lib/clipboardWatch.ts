@@ -42,9 +42,10 @@ export function decideText(
 }
 
 // iOS only reveals whether a URL is present (reading it would prompt), so the best it can do
-// is skip the check right after the app copied its own clean link.
-export function decideIos(hasUrl: boolean, s: WatchState): { offer: boolean; next: WatchState } {
-  return { offer: hasUrl && !s.selfWrote, next: { ...s, selfWrote: false } };
+// is skip the check right after the app copied its own clean link. Automatic mode reads the text
+// anyway and lets decideText recognise the app's own link, so it never skips.
+export function decideIos(hasUrl: boolean, s: WatchState, auto = false): { offer: boolean; next: WatchState } {
+  return { offer: hasUrl && (auto || !s.selfWrote), next: { ...s, selfWrote: false } };
 }
 
 // After an automatic clean, the original clipboard text can be restored only if something else replaced it.

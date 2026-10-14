@@ -91,6 +91,12 @@ describe('decideIos', () => {
     expect(first.offer).toBe(false);
     expect(decideIos(true, first.next).offer).toBe(true);
   });
+
+  it('never skips in automatic mode, where decideText handles the app\'s own link', () => {
+    const s = noteSelfWrite(initialWatchState(), 'https://ex.com/clean');
+    expect(decideIos(true, s, true).offer).toBe(true);
+    expect(decideIos(false, s, true).offer).toBe(false);
+  });
 });
 
 describe('undoTarget', () => {

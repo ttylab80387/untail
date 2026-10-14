@@ -58,6 +58,12 @@ describe('cleanInput', () => {
     expect((await listHistory(db)).map((e) => e.createdAt)).toEqual([1234]);
   });
 
+  it('does not copy once the job is no longer current, e.g. the clipboard changed meanwhile', async () => {
+    const out = await cleanInput('https://ex.com/a?utm_source=x', deps({ isCurrent: () => false }));
+    expect(out.copied).toBe(false);
+    expect(copied).toEqual([]);
+  });
+
   it('records but never auto-copies a partial result', async () => {
     const out = await cleanInput(SHARE, deps({ settings: { ...DEFAULT_SETTINGS, expand: false } }));
     expect(out).toMatchObject({ copied: false, result: { status: 'partial', reason: 'expand_disabled' } });
