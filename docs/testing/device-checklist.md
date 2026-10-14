@@ -43,6 +43,7 @@ Use links from a test account; never paste real personal share links into issues
 - [ ] Tapping a removed parameter expands its explanation
 - [ ] Copy / Share / Open buttons work
 - [ ] Redirects section lists the hops for an expanded link
+- [ ] "Report a problem" opens the mail app addressed to the support email, with the privacy note, both links and versions; with no mail app it shows the address instead
 
 ## History
 - [ ] Entries are newest first; tapping one opens the full result

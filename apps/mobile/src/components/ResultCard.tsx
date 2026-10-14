@@ -1,8 +1,11 @@
+import Constants from 'expo-constants';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Linking, Pressable, Share, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import type { AnalyzedParam, ProcessResult } from '@linkclean/core';
+import { SUPPORT_EMAIL } from '../config';
 import { referralCode } from '../lib/referral';
+import { reportMailto } from '../lib/report';
 import { useApp } from '../state/AppContext';
 import { useColors } from '../theme';
 import type { Colors } from '../theme';
@@ -44,8 +47,22 @@ function ParamRow({ p }: { p: AnalyzedParam }) {
 export function ResultCard({ result, copied }: { result: ProcessResult; copied: boolean }) {
   const { t } = useTranslation();
   const c = useColors();
-  const { copy } = useApp();
+  const { copy, rules } = useApp();
   const [showHops, setShowHops] = useState(false);
+
+  const report = () => {
+    const url = reportMailto({
+      to: SUPPORT_EMAIL,
+      subject: t('report.subject'),
+      note: t('report.note'),
+      originalUrl: result.originalUrl,
+      cleanUrl: result.cleanUrl,
+      status: result.status,
+      appVersion: Constants.expoConfig?.version ?? '0',
+      rulesVersion: rules.version,
+    });
+    Linking.openURL(url).catch(() => Alert.alert(t('report.noMail')));
+  };
   const statusColor = result.status === 'clean' ? c.ok : result.status === 'partial' ? c.warn : c.danger;
 
   if (result.status === 'failed') {
@@ -94,6 +111,10 @@ export function ResultCard({ result, copied }: { result: ProcessResult; copied: 
             ))}
         </Pressable>
       )}
+
+      <Pressable onPress={report} style={styles.report}>
+        <Text style={{ color: c.muted, textDecorationLine: 'underline' }}>{t('result.report')}</Text>
+      </Pressable>
     </View>
   );
 }
@@ -112,4 +133,5 @@ const styles = StyleSheet.create({
   paramBody: { gap: 4, marginTop: 4 },
   badge: { borderWidth: 1, borderRadius: 6, paddingHorizontal: 6, fontSize: 12 },
   mono: { fontFamily: 'Courier', fontSize: 12 },
+  report: { alignSelf: 'flex-end', marginTop: 4 },
 });

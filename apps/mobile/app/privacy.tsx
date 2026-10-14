@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import { useColors } from '../src/theme';
 
-const PARAGRAPHS = ['p1', 'p2', 'p3', 'p4', 'p5'] as const;
+const PARAGRAPHS = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'] as const;
 
 export default function Privacy() {
   const { t } = useTranslation();
