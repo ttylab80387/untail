@@ -4,8 +4,10 @@ import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, T
 import { ResultCard } from '../src/components/ResultCard';
 import { useApp } from '../src/state/AppContext';
 import { useColors } from '../src/theme';
+import { useBottomPadding } from '../src/bottomPadding';
 
 export default function Home() {
+  const bottomPadding = useBottomPadding();
   const { t } = useTranslation();
   const c = useColors();
   const {
@@ -29,7 +31,7 @@ export default function Home() {
   const pasteFallback = async () => setInput(await Clipboard.getStringAsync());
 
   return (
-    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+    <ScrollView contentContainerStyle={[styles.container, bottomPadding]} keyboardShouldPersistTaps="handled">
       {clipboardHasCleanLink && !clipboardOffer && !autoCleaned && !busy && (
         <View style={[styles.offer, { backgroundColor: c.card, borderColor: c.ok }]}>
           <Text style={[styles.offerText, { color: c.text }]}>

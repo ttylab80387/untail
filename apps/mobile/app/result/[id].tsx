@@ -5,8 +5,10 @@ import { ResultCard } from '../../src/components/ResultCard';
 import { getHistory } from '../../src/lib/db';
 import type { HistoryEntry } from '../../src/lib/db';
 import { useApp } from '../../src/state/AppContext';
+import { useBottomPadding } from '../../src/bottomPadding';
 
 export default function HistoryResult() {
+  const bottomPadding = useBottomPadding();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { db } = useApp();
   const [entry, setEntry] = useState<HistoryEntry | null>(null);
@@ -16,7 +18,7 @@ export default function HistoryResult() {
   }, [db, id]);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>{entry && <ResultCard result={entry.result} copied={false} />}</ScrollView>
+    <ScrollView contentContainerStyle={[styles.container, bottomPadding]}>{entry && <ResultCard result={entry.result} copied={false} />}</ScrollView>
   );
 }
 

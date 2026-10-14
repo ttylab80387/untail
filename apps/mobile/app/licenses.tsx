@@ -1,12 +1,14 @@
 import { useTranslation } from 'react-i18next';
 import { Linking, Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 import { useColors } from '../src/theme';
+import { useBottomPadding } from '../src/bottomPadding';
 
 export default function Licenses() {
+  const bottomPadding = useBottomPadding();
   const { t } = useTranslation();
   const c = useColors();
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={[styles.container, bottomPadding]}>
       <Text style={{ color: c.text }}>{t('licenses.clearurls')}</Text>
       <Pressable onPress={() => void Linking.openURL('https://www.gnu.org/licenses/lgpl-3.0.html')}>
         <Text style={{ color: c.accent }}>GNU LGPL-3.0</Text>

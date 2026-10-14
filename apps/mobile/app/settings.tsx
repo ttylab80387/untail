@@ -6,8 +6,10 @@ import type { UpdateOutcome } from '../src/lib/rulesStore';
 import type { Settings } from '../src/lib/settings';
 import { useApp } from '../src/state/AppContext';
 import { useColors } from '../src/theme';
+import { useBottomPadding } from '../src/bottomPadding';
 
 export default function SettingsScreen() {
+  const bottomPadding = useBottomPadding();
   const { t } = useTranslation();
   const c = useColors();
   const { settings, setSettings, rules, refreshRules } = useApp();
@@ -38,7 +40,7 @@ export default function SettingsScreen() {
   );
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={[styles.container, bottomPadding]}>
       {row('expand', t('settings.expand'), t('settings.expandHint'))}
       {row('autoCopy', t('settings.autoCopy'))}
       {row('history', t('settings.history'))}

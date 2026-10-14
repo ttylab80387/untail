@@ -6,8 +6,10 @@ import { clearHistory, deleteHistory, listHistory } from '../src/lib/db';
 import type { HistoryEntry } from '../src/lib/db';
 import { useApp } from '../src/state/AppContext';
 import { useColors } from '../src/theme';
+import { useBottomPadding } from '../src/bottomPadding';
 
 export default function History() {
+  const bottomPadding = useBottomPadding();
   const { t, i18n } = useTranslation();
   const c = useColors();
   const { db } = useApp();
@@ -39,7 +41,7 @@ export default function History() {
       <FlatList
         data={items}
         keyExtractor={(e) => String(e.id)}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, bottomPadding]}
         ListEmptyComponent={<Text style={{ color: c.muted, textAlign: 'center' }}>{t('history.empty')}</Text>}
         renderItem={({ item }) => (
           <Pressable
