@@ -30,6 +30,11 @@
     "firstHop": true,
     "shareId": "^/(?:[a-z]/)?([^/?#]+)"
   },
+  "reddit": {
+    "match": "^https?://(?:(?:www|old|new|m)\\.)?reddit\\.com/(?:r|u|user)/[^/]+/s/",
+    "firstHop": true,
+    "shareId": "/s/([^/?#]+)"
+  },
   "generic": {
     "match": "^https?://(bit\\.ly|t\\.co|lnkd\\.in|amzn\\.to|shp\\.ee|fb\\.me)/"
   }

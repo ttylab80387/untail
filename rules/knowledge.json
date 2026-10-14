@@ -326,6 +326,16 @@
       "ja": "Reddit の共有 ID。このクリックを共有した人と結び付けられます。"
     }
   },
+  "reddit.com:share-id": {
+    "owner": "Reddit",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "Reddit 分享短網址（/s/）裡的代碼，綁定這次分享，可追蹤是誰分享的。已展開成原始網址並移除。",
+      "en": "Code in the Reddit share short link (/s/), tied to this share so it can be traced to the sharer. Expanded to the original URL and removed.",
+      "ja": "Reddit の共有短縮リンク（/s/）のコード。この共有に紐付き、共有者を追跡できます。元の URL に展開して除去しました。"
+    }
+  },
   "tiktok.com:_t": {
     "owner": "TikTok",
     "category": "sharer_id",

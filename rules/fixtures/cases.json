@@ -385,5 +385,24 @@
         "stkn"
       ]
     }
+  },
+  {
+    "name": "reddit /s/ share link stops at the first redirect",
+    "input": "https://www.reddit.com/r/TestSub/s/TEST01rdt",
+    "responses": {
+      "https://www.reddit.com/r/TestSub/s/TEST01rdt": "https://www.reddit.com/r/TestSub/comments/1abcdef/test_title/?share_id=TESTshare&utm_medium=android_app&utm_name=androidcss&utm_source=share&utm_term=1"
+    },
+    "expected": {
+      "cleanUrl": "https://www.reddit.com/r/TestSub/comments/1abcdef/test_title/",
+      "status": "clean",
+      "removedKeys": [
+        "share-id",
+        "share_id",
+        "utm_medium",
+        "utm_name",
+        "utm_source",
+        "utm_term"
+      ]
+    }
   }
 ]
