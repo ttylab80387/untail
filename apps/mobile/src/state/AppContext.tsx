@@ -171,7 +171,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // New clipboard content makes an earlier "replaced" notice misleading.
         if (d.fresh) {
           setAutoCleaned(null);
-          setClipboardHasCleanLink(d.clean);
+          setClipboardHasCleanLink(d.clean !== null);
+          // Show the clean link itself, so the notice is not read as being about the previous result.
+          if (d.clean !== null) {
+            setInput(d.clean);
+            setOutcome(null);
+          }
         }
         if (!d.url || !s.autoClipboard) {
           setClipboardOffer(d.url ? { kind: 'android', url: d.url } : null);

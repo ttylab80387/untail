@@ -29,16 +29,16 @@ export function needsCleaning(url: string, rules: RuleBundle): boolean {
 // For clipboard text the app can read (Android always; iOS in automatic mode), skip text it has
 // already seen and links that are already clean (such as one the app copied in an earlier session).
 // `fresh` means the clipboard changed since the last check, so notices about the old content are stale.
-// `clean` means it is a new link with nothing to clean, so the user can tell the check ran.
+// `clean` is a new link with nothing to clean, so the screen can show it and the user can tell the check ran.
 export function decideText(
   text: string,
   s: WatchState,
   rules: RuleBundle,
-): { url: string | null; fresh: boolean; clean: boolean; next: WatchState } {
+): { url: string | null; fresh: boolean; clean: string | null; next: WatchState } {
   const fresh = text !== '' && text !== s.lastSeenText;
   const found = fresh ? extractUrl(text) : null;
   const url = found && needsCleaning(found, rules) ? found : null;
-  return { url, fresh, clean: found !== null && url === null, next: { lastSeenText: text || s.lastSeenText, selfWrote: false } };
+  return { url, fresh, clean: url === null ? found : null, next: { lastSeenText: text || s.lastSeenText, selfWrote: false } };
 }
 
 // iOS only reveals whether a URL is present (reading it would prompt), so the best it can do
