@@ -29,7 +29,7 @@ pnpm mobile ios                              # build and run on the iOS simulato
 pnpm mobile android                          # build and run on the Android emulator
 ```
 
-Set `SITE_BASE_URL` in `apps/mobile/src/config.ts` once the GitHub Pages site exists.
+Rules and the privacy policy are published to https://ttylab80387.github.io/untail/ (`SITE_BASE_URL` in `apps/mobile/src/config.ts`).
 Manual checks before a release: `docs/testing/device-checklist.md`.
 
 ## Rule data
