@@ -1025,5 +1025,15 @@
       "en": "Instagram share token created when you copy a link, tied to this share so clicks can be traced back to the sharer. Works like igsh.",
       "ja": "リンクをコピーしたときに作られる Instagram の共有トークン。この共有に紐付き、クリックを共有者と結び付けられます。igsh と同じ役割です。"
     }
+  },
+  "instagram.com:exln": {
+    "owner": "Meta",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "Instagram 新的分享識別碼（base64 編碼的隨機代碼），綁定這次分享，可能讓 Instagram 得知是誰分享的。",
+      "en": "Newer Instagram share identifier (a base64-encoded random code) tied to this share, which may reveal to Instagram who shared the link.",
+      "ja": "Instagram の新しい共有識別子（base64 でエンコードされたランダムなコード）。この共有に紐付き、誰が共有したかを Instagram が把握できる可能性があります。"
+    }
   }
 }

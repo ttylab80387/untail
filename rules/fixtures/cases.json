@@ -421,5 +421,17 @@
         "share_url"
       ]
     }
+  },
+  {
+    "name": "instagram exln share token",
+    "input": "https://www.instagram.com/p/TESTpost01/?exln=VEVTVHRva2Vu",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.instagram.com/p/TESTpost01/",
+      "status": "clean",
+      "removedKeys": [
+        "exln"
+      ]
+    }
   }
 ]

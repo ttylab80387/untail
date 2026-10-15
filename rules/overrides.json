@@ -63,7 +63,8 @@
     },
     "instagram": {
       "rules": [
-        "stkn"
+        "stkn",
+        "exln"
       ]
     }
   }

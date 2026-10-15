@@ -78,6 +78,7 @@ describe('checked-in rule data', () => {
       ['www.pinterest.com', 'mt', 'session'],
       ['www.snapchat.com', 'share_id', 'sharer_id'],
       ['www.linkedin.com', 'rcm', 'sharer_id'],
+      ['www.instagram.com', 'exln', 'sharer_id'],
       ['www.bilibili.com', 'bbid', 'sharer_id'],
       ['www.bilibili.com', 'ts', 'session'],
       ['www.instagram.com', 'stkn', 'sharer_id'],
