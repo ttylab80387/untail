@@ -71,7 +71,13 @@ export function ResultCard({ result, copied }: { result: ProcessResult; copied: 
       appVersion: Constants.expoConfig?.version ?? '0',
       rulesVersion: rules.version,
     });
-    Linking.openURL(url).catch(() => Alert.alert(t('report.noMail')));
+    Linking.openURL(url).catch(() =>
+      // Alert text cannot be selected, so offer to copy the address.
+      Alert.alert(t('report.noMail'), undefined, [
+        { text: t('report.copyEmail'), onPress: () => void copy(SUPPORT_EMAIL) },
+        { text: t('report.ok'), style: 'cancel' },
+      ]),
+    );
   };
   const statusColor = result.status === 'clean' ? c.ok : result.status === 'partial' ? c.warn : c.danger;
 

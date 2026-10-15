@@ -11,12 +11,16 @@ export interface ReportInput {
   rulesVersion: string;
 }
 
+// Mail apps can refuse very long mailto: links, so each link is cut down.
+const MAX_LINK = 1000;
+const cap = (url: string) => (url.length > MAX_LINK ? `${url.slice(0, MAX_LINK)}…` : url);
+
 export function reportMailto(r: ReportInput): string {
   const body = [
     r.note,
     '',
-    `Original: ${r.originalUrl}`,
-    `Clean: ${r.cleanUrl}`,
+    `Original: ${cap(r.originalUrl)}`,
+    `Clean: ${cap(r.cleanUrl)}`,
     `Result: ${r.status}`,
     `App ${r.appVersion} / Rules ${r.rulesVersion}`,
   ].join('\n');

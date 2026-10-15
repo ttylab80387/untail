@@ -80,22 +80,32 @@ describe('decideText', () => {
 });
 
 describe('decideIos', () => {
-  it('offers when the clipboard has a URL', () => {
-    expect(decideIos(true, initialWatchState()).offer).toBe(true);
-    expect(decideIos(false, initialWatchState()).offer).toBe(false);
+  const clip = (hasUrl: boolean, changeCount: number) => ({ hasUrl, changeCount });
+
+  it('offers a link the first time it sees the clipboard', () => {
+    expect(decideIos(clip(true, 5), initialWatchState()).offer).toBe(true);
+    expect(decideIos(clip(false, 5), initialWatchState()).offer).toBe(false);
   });
 
-  it('skips once right after the app copied a clean link, then offers again', () => {
-    const s = noteSelfWrite(initialWatchState(), 'https://ex.com/clean');
-    const first = decideIos(true, s);
-    expect(first.offer).toBe(false);
-    expect(decideIos(true, first.next).offer).toBe(true);
+  it('stays quiet while the clipboard has not changed, so iOS never asks to paste again', () => {
+    const first = decideIos(clip(true, 5), initialWatchState());
+    const again = decideIos(clip(true, 5), first.next);
+    expect(again).toMatchObject({ fresh: false, offer: false });
   });
 
-  it('never skips in automatic mode, where decideText handles the app\'s own link', () => {
-    const s = noteSelfWrite(initialWatchState(), 'https://ex.com/clean');
-    expect(decideIos(true, s, true).offer).toBe(true);
-    expect(decideIos(false, s, true).offer).toBe(false);
+  it('never offers the link the app copied itself, however often the app comes back', () => {
+    let s = noteSelfWrite(initialWatchState(), 'https://ex.com/clean', 9);
+    for (let i = 0; i < 3; i++) {
+      const d = decideIos(clip(true, 9), s);
+      expect(d.offer).toBe(false);
+      s = d.next;
+    }
+  });
+
+  it('reports new content even without a link, so older work cannot overwrite it', () => {
+    const s = noteSelfWrite(initialWatchState(), 'https://ex.com/clean', 9);
+    expect(decideIos(clip(false, 10), s)).toMatchObject({ fresh: true, offer: false });
+    expect(decideIos(clip(true, 10), s)).toMatchObject({ fresh: true, offer: true });
   });
 });
 

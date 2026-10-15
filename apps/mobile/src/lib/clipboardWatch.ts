@@ -6,15 +6,16 @@ import type { CleanOutcome } from './cleaner';
 // State lives in memory only; nothing about the clipboard is ever persisted.
 export interface WatchState {
   lastSeenText: string | null; // last clipboard text we offered or wrote ourselves
-  selfWrote: boolean; // iOS: the app wrote the clipboard since the last check
+  lastChangeCount: number | null; // iOS: UIPasteboard.changeCount when we last looked or wrote
 }
 
 export function initialWatchState(): WatchState {
-  return { lastSeenText: null, selfWrote: false };
+  return { lastSeenText: null, lastChangeCount: null };
 }
 
-export function noteSelfWrite(_s: WatchState, text: string): WatchState {
-  return { lastSeenText: text, selfWrote: true };
+// changeCount is the iOS pasteboard count right after the app's own write (null on Android).
+export function noteSelfWrite(s: WatchState, text: string, changeCount: number | null = null): WatchState {
+  return { lastSeenText: text, lastChangeCount: changeCount ?? s.lastChangeCount };
 }
 
 // Offline check: is there anything to clean? Tracking params, a redirect wrapper or a share link.
@@ -38,14 +39,17 @@ export function decideText(
   const fresh = text !== '' && text !== s.lastSeenText;
   const found = fresh ? extractUrl(text) : null;
   const url = found && needsCleaning(found, rules) ? found : null;
-  return { url, fresh, clean: url === null ? found : null, next: { lastSeenText: text || s.lastSeenText, selfWrote: false } };
+  return { url, fresh, clean: url === null ? found : null, next: { ...s, lastSeenText: text || s.lastSeenText } };
 }
 
-// iOS only reveals whether a URL is present (reading it would prompt), so the best it can do
-// is skip the check right after the app copied its own clean link. Automatic mode reads the text
-// anyway and lets decideText recognise the app's own link, so it never skips.
-export function decideIos(hasUrl: boolean, s: WatchState, auto = false): { offer: boolean; next: WatchState } {
-  return { offer: hasUrl && (auto || !s.selfWrote), next: { ...s, selfWrote: false } };
+// iOS reading the text would prompt, so only the link check and the change count are used.
+// An unchanged count means nothing new (including the app's own copy), so nothing is offered or read.
+export function decideIos(
+  clip: { hasUrl: boolean; changeCount: number },
+  s: WatchState,
+): { fresh: boolean; offer: boolean; next: WatchState } {
+  const fresh = clip.changeCount !== s.lastChangeCount;
+  return { fresh, offer: fresh && clip.hasUrl, next: { ...s, lastChangeCount: clip.changeCount } };
 }
 
 // After an automatic clean, the original clipboard text can be restored only if something else replaced it.

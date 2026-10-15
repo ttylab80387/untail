@@ -32,6 +32,14 @@ describe('reportMailto', () => {
     );
   });
 
+  it('shortens very long links so the mail app can still open the draft', () => {
+    const long = `https://ex.com/a?x=${'y'.repeat(5000)}`;
+    const body = decodeURIComponent(reportMailto({ ...base, originalUrl: long }).split('&body=')[1]!);
+    const line = body.split('\n').find((l) => l.startsWith('Original: '))!;
+    expect(line.length).toBeLessThan(1100);
+    expect(line.endsWith('…')).toBe(true);
+  });
+
   it('keeps & and ? inside links from breaking the mailto query', () => {
     const query = reportMailto(base).split('?').slice(1).join('?');
     expect(query.split('&').map((p) => p.split('=')[0])).toEqual(['subject', 'body']);

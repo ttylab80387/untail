@@ -8,7 +8,7 @@ import { AppState as RNAppState, Platform } from 'react-native';
 import { resolveLocale } from '@linkclean/core';
 import type { Locale, RuleBundle } from '@linkclean/core';
 import bundledJson from '../../assets/rules.json';
-import { hasWebUrlAsync } from '../../modules/untail-clipboard';
+import { clipboardStateAsync } from '../../modules/untail-clipboard';
 import { SITE_BASE_URL, USER_AGENT } from '../config';
 import i18n from '../i18n';
 import { cleanInput } from '../lib/cleaner';
@@ -75,8 +75,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [autoCleaned, setAutoCleaned] = useState<{ undo: string } | null>(null);
   const [clipboardHasCleanLink, setClipboardHasCleanLink] = useState(false);
   const watch = useRef(initialWatchState());
-  // Bumped whenever new clipboard content is seen; a job started before that is stale.
+  // Bumped when the app goes to the background (another app may change the clipboard) and when
+  // the user copies something; a job started before that must not write the clipboard.
   const clipboardGen = useRef(0);
+  const pendingJobs = useRef(0);
 
   // Queued work reads these at run time, so it never uses stale rules, settings or locale.
   const latest = useRef({ rules, settings, locale });
@@ -108,20 +110,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   // Every clipboard write by the app goes through here, so its own links are not offered back.
-  const copy = useCallback(async (text: string) => {
+  const writeClipboard = useCallback(async (text: string) => {
     watch.current = noteSelfWrite(watch.current, text);
     setClipboardHasCleanLink(false);
     // Any later write makes an earlier Undo restore over the wrong content.
     setAutoCleaned(null);
     await Clipboard.setStringAsync(text);
+    if (Platform.OS === 'ios') {
+      // Remember the count after our own write, so coming back does not read (and prompt) again.
+      const state = await clipboardStateAsync();
+      watch.current = noteSelfWrite(watch.current, text, state?.changeCount ?? null);
+    }
   }, []);
 
-  // Jobs run one at a time; forceCopy copies the clean link even when automatic copying is off.
+  // A copy the user asked for: pending jobs must not overwrite it.
+  const copy = useCallback(
+    async (text: string) => {
+      clipboardGen.current += 1;
+      await writeClipboard(text);
+      setOutcome((o) => (o && o.result.cleanUrl === text ? { ...o, copied: true } : o));
+    },
+    [writeClipboard],
+  );
+
+  // Jobs run one at a time. An automatic job (from the clipboard) always copies its clean link,
+  // but is dropped once it is stale; a job the user asked for always shows its result.
   // `settings` lets a caller pass settings it just loaded, before React has applied them.
   const enqueue = useCallback(
-    (text: string, forceCopy: boolean, settings?: Settings): Promise<CleanOutcome | null> => {
+    (text: string, auto: boolean, settings?: Settings): Promise<CleanOutcome | null> => {
       setInput(text);
       setClipboardHasCleanLink(false);
+      setAutoCleaned(null);
+      pendingJobs.current += 1;
       setPending((n) => n + 1);
       const gen = clipboardGen.current;
       const isCurrent = () => gen === clipboardGen.current;
@@ -132,29 +152,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
           const out = await cleanInput(text, {
             db,
             rules: r,
-            settings: forceCopy ? { ...s, autoCopy: true } : s,
+            settings: auto ? { ...s, autoCopy: true } : s,
             locale: l,
             fetch: rnFetch,
             userAgent: USER_AGENT,
-            copy,
+            copy: writeClipboard,
             now: Date.now,
             isCurrent,
           });
-          // Newer clipboard content took over the screen while this job ran; drop its result.
-          if (!isCurrent()) return null;
+          if (!isCurrent()) {
+            if (auto) return null;
+            // The screen may show newer clipboard content by now; put the requested link back.
+            setInput(text);
+          }
           setOutcome(out);
           return out;
         } catch {
           // cleanInput handles expected failures itself; never let one job stall the queue.
           return null;
         } finally {
+          pendingJobs.current -= 1;
           setPending((n) => n - 1);
         }
       });
       queue.current = job.then(() => undefined);
       return job;
     },
-    [db, copy],
+    [db, writeClipboard],
   );
 
   const submit = useCallback((text: string) => enqueue(text, false).then(() => undefined), [enqueue]);
@@ -165,9 +189,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       try {
         let raw: string;
         if (Platform.OS === 'ios') {
-          // hasWebUrlAsync does not trigger the iOS paste prompt; reading the text would.
-          const d = decideIos(await hasWebUrlAsync(), watch.current, s.autoClipboard);
+          // clipboardStateAsync does not trigger the iOS paste prompt; reading the text would.
+          const state = await clipboardStateAsync();
+          if (!state) return;
+          const d = decideIos(state, watch.current);
           watch.current = d.next;
+          // Unchanged clipboard (including the app's own copy): keep the screen as it is, never read.
+          if (!d.fresh) return;
+          setAutoCleaned(null);
+          setClipboardHasCleanLink(false);
           if (!d.offer || !s.autoClipboard) {
             setClipboardOffer(d.offer ? { kind: 'ios' } : null);
             return;
@@ -181,12 +211,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         watch.current = d.next;
         // New clipboard content makes an earlier "replaced" notice misleading.
         if (d.fresh) {
-          clipboardGen.current += 1;
           setAutoCleaned(null);
-          setClipboardHasCleanLink(d.clean !== null);
-          // Show the clean link itself, so the notice is not read as being about the previous result.
-          if (d.clean !== null) {
-            setInput(d.clean);
+          // Show the clean link itself, so the notice is not read as being about the previous result,
+          // unless a link the user asked about (typed or shared) is still being worked on.
+          const clean = pendingJobs.current === 0 ? d.clean : null;
+          setClipboardHasCleanLink(clean !== null);
+          if (clean !== null) {
+            setInput(clean);
             setOutcome(null);
           }
         }
@@ -223,6 +254,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       void checkClipboard(s);
     })();
     const sub = RNAppState.addEventListener('change', (state) => {
+      // Another app may change the clipboard while we are away.
+      if (state === 'background') clipboardGen.current += 1;
       if (state !== 'active') return;
       void refresh(false);
       void checkClipboard(latest.current.settings);

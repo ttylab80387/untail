@@ -107,7 +107,9 @@
   "report": {
     "subject": "Untail report: link not cleaned well",
     "note": "Please describe the problem briefly (for example: a tracking code was left in, or the link does not open). Note: the original link below may identify the person who shared it; delete anything you do not want to send.",
-    "noMail": "No mail app found. Please email ttylab80387@gmail.com."
+    "noMail": "No mail app found. Please email ttylab80387@gmail.com.",
+    "copyEmail": "Copy address",
+    "ok": "OK"
   },
   "howto": {
     "title": "Three ways to use it",

@@ -107,7 +107,9 @@
   "report": {
     "subject": "Untail 回報：連結沒有處理好",
     "note": "請簡單說明問題（例如：還有追蹤碼沒移除、連結打不開）。注意：下面的原始連結可能含有分享者資訊，不想提供的部分可以先刪掉再寄出。",
-    "noMail": "找不到郵件 App。請寄信到 ttylab80387@gmail.com。"
+    "noMail": "找不到郵件 App。請寄信到 ttylab80387@gmail.com。",
+    "copyEmail": "複製信箱",
+    "ok": "好"
   },
   "howto": {
     "title": "三種用法",
