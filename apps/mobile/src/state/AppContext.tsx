@@ -45,7 +45,7 @@ export interface AppState {
   dismissClipboardOffer(): void;
   // Set after an automatic clean replaced the clipboard; undo restores the original text.
   autoCleaned: { undo: string } | null;
-  clipboardHasCleanLink: boolean; // the newest clipboard link had nothing to clean
+  cleanClipboardLink: string | null; // the newest clipboard link, when it had nothing to clean
   undoAutoClean(): void;
   dismissAutoClean(): void;
   dismissCleanLinkNotice(): void;
@@ -73,7 +73,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [pending, setPending] = useState(0);
   const [clipboardOffer, setClipboardOffer] = useState<ClipboardOffer | null>(null);
   const [autoCleaned, setAutoCleaned] = useState<{ undo: string } | null>(null);
-  const [clipboardHasCleanLink, setClipboardHasCleanLink] = useState(false);
+  const [cleanClipboardLink, setCleanClipboardLink] = useState<string | null>(null);
   const watch = useRef(initialWatchState());
   // Bumped when the app goes to the background (another app may change the clipboard) and when
   // the user copies something; a job started before that must not write the clipboard.
@@ -112,7 +112,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Every clipboard write by the app goes through here, so its own links are not offered back.
   const writeClipboard = useCallback(async (text: string) => {
     watch.current = noteSelfWrite(watch.current, text);
-    setClipboardHasCleanLink(false);
+    setCleanClipboardLink(null);
     // Any later write makes an earlier Undo restore over the wrong content.
     setAutoCleaned(null);
     await Clipboard.setStringAsync(text);
@@ -139,7 +139,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const enqueue = useCallback(
     (text: string, auto: boolean, settings?: Settings): Promise<CleanOutcome | null> => {
       setInput(text);
-      setClipboardHasCleanLink(false);
+      setCleanClipboardLink(null);
       setAutoCleaned(null);
       pendingJobs.current += 1;
       setPending((n) => n + 1);
@@ -197,7 +197,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           // Unchanged clipboard (including the app's own copy): keep the screen as it is, never read.
           if (!d.fresh) return;
           setAutoCleaned(null);
-          setClipboardHasCleanLink(false);
+          setCleanClipboardLink(null);
           if (!d.offer || !s.autoClipboard) {
             setClipboardOffer(d.offer ? { kind: 'ios' } : null);
             return;
@@ -215,7 +215,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           // Show the clean link itself, so the notice is not read as being about the previous result,
           // unless a link the user asked about (typed or shared) is still being worked on.
           const clean = pendingJobs.current === 0 ? d.clean : null;
-          setClipboardHasCleanLink(clean !== null);
+          setCleanClipboardLink(clean);
           if (clean !== null) {
             setInput(clean);
             setOutcome(null);
@@ -293,7 +293,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       },
       dismissClipboardOffer: () => setClipboardOffer(null),
       autoCleaned,
-      clipboardHasCleanLink,
+      cleanClipboardLink,
       undoAutoClean() {
         const undo = autoCleaned?.undo;
         setAutoCleaned(null);
@@ -303,9 +303,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (undo !== undefined) void copy(undo).catch(() => undefined);
       },
       dismissAutoClean: () => setAutoCleaned(null),
-      dismissCleanLinkNotice: () => setClipboardHasCleanLink(false),
+      dismissCleanLinkNotice: () => setCleanClipboardLink(null),
     }),
-    [ready, db, rules, settings, locale, input, outcome, pending, submit, refresh, copy, clipboardOffer, autoCleaned, clipboardHasCleanLink],
+    [ready, db, rules, settings, locale, input, outcome, pending, submit, refresh, copy, clipboardOffer, autoCleaned, cleanClipboardLink],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

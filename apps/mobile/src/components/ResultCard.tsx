@@ -1,13 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import Constants from 'expo-constants';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Linking, Pressable, Share, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import type { AnalyzedParam, ProcessResult } from '@linkclean/core';
-import { SUPPORT_EMAIL } from '../config';
 import { referralCode } from '../lib/referral';
-import { reportMailto } from '../lib/report';
 import { useApp } from '../state/AppContext';
+import { useReport } from './useReport';
 import { MONO, useColors } from '../theme';
 import type { Colors } from '../theme';
 
@@ -57,28 +55,11 @@ function ParamRow({ p }: { p: AnalyzedParam }) {
 export function ResultCard({ result, copied }: { result: ProcessResult; copied: boolean }) {
   const { t } = useTranslation();
   const c = useColors();
-  const { copy, rules } = useApp();
+  const { copy } = useApp();
+  const sendReport = useReport();
   const [showHops, setShowHops] = useState(false);
 
-  const report = () => {
-    const url = reportMailto({
-      to: SUPPORT_EMAIL,
-      subject: t('report.subject'),
-      note: t('report.note'),
-      originalUrl: result.originalUrl,
-      cleanUrl: result.cleanUrl,
-      status: result.status,
-      appVersion: Constants.expoConfig?.version ?? '0',
-      rulesVersion: rules.version,
-    });
-    Linking.openURL(url).catch(() =>
-      // Alert text cannot be selected, so offer to copy the address.
-      Alert.alert(t('report.noMail'), undefined, [
-        { text: t('report.copyEmail'), onPress: () => void copy(SUPPORT_EMAIL) },
-        { text: t('report.ok'), style: 'cancel' },
-      ]),
-    );
-  };
+  const report = () => sendReport(result.originalUrl, result.cleanUrl, result.status);
   const statusColor = result.status === 'clean' ? c.ok : result.status === 'partial' ? c.warn : c.danger;
 
   if (result.status === 'failed') {
@@ -107,9 +88,17 @@ export function ResultCard({ result, copied }: { result: ProcessResult; copied: 
         <ActionButton icon="open-outline" label={t('result.open')} onPress={() => void Linking.openURL(result.cleanUrl)} />
       </View>
 
-      <Text style={[styles.section, { color: c.muted }]}>
-        {result.removed.length ? t('result.removedCount', { count: result.removed.length }) : t('result.noneRemoved')}
-      </Text>
+      {result.removed.length ? (
+        <Text style={[styles.section, { color: c.muted }]}>{t('result.removedCount', { count: result.removed.length })}</Text>
+      ) : (
+        // "Nothing found" is exactly when an unknown tracking code may have slipped through.
+        <Text style={[styles.section, { color: c.muted }]}>
+          {`${t('result.noneRemoved')}  ·  `}
+          <Text onPress={report} style={{ color: c.accent, textDecorationLine: 'underline' }}>
+            {t('result.reportDoubt')}
+          </Text>
+        </Text>
+      )}
       {result.removed.map((p, i) => (
         <ParamRow key={`${p.key}-${i}`} p={p} />
       ))}
@@ -129,9 +118,11 @@ export function ResultCard({ result, copied }: { result: ProcessResult; copied: 
         </Pressable>
       )}
 
-      <Pressable onPress={report} style={styles.report} hitSlop={8}>
-        <Text style={{ color: c.muted, textDecorationLine: 'underline' }}>{t('result.report')}</Text>
-      </Pressable>
+      {result.removed.length > 0 && (
+        <Pressable onPress={report} style={styles.report} hitSlop={8}>
+          <Text style={{ color: c.muted, textDecorationLine: 'underline' }}>{t('result.report')}</Text>
+        </Pressable>
+      )}
     </View>
   );
 }

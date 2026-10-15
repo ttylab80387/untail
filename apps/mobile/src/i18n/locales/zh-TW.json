@@ -41,7 +41,8 @@
     "hops": "跳轉紀錄",
     "referralCode": "連結中的推薦／推廣代碼：{{code}}",
     "report": "回報問題",
-    "copiedTag": "已複製"
+    "copiedTag": "已複製",
+    "reportDoubt": "覺得不對？回報"
   },
   "risk": {
     "high": "高風險",

@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { HowTo } from '../src/components/HowTo';
+import { useReport } from '../src/components/useReport';
 import { ResultCard } from '../src/components/ResultCard';
 import { useApp } from '../src/state/AppContext';
 import { MONO, useColors } from '../src/theme';
@@ -24,20 +25,22 @@ export default function Home() {
     acceptClipboardOffer,
     dismissClipboardOffer,
     autoCleaned,
-    clipboardHasCleanLink,
+    cleanClipboardLink,
     undoAutoClean,
     dismissAutoClean,
     dismissCleanLinkNotice,
   } = useApp();
+  const sendReport = useReport();
   const canClean = ready && !busy && input.trim().length > 0;
 
   const pasteFallback = async () => setInput(await Clipboard.getStringAsync());
 
   return (
     <ScrollView contentContainerStyle={[styles.container, bottomPadding]} keyboardShouldPersistTaps="handled">
-      {clipboardHasCleanLink && !clipboardOffer && !autoCleaned && !busy && (
+      {cleanClipboardLink !== null && !clipboardOffer && !autoCleaned && !busy && (
         <Notice icon="checkmark-circle" text={t('home.clipboardNoTracking')}>
           <TextButton label={t('home.dismiss')} onPress={dismissCleanLinkNotice} muted />
+          <TextButton label={t('result.reportDoubt')} onPress={() => sendReport(cleanClipboardLink, cleanClipboardLink, 'clean (clipboard)')} muted />
         </Notice>
       )}
       {autoCleaned && !busy && (

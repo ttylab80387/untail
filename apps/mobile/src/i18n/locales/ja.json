@@ -41,7 +41,8 @@
     "hops": "リダイレクト履歴",
     "referralCode": "リンク内の紹介・アフィリエイトコード：{{code}}",
     "report": "問題を報告",
-    "copiedTag": "コピー済み"
+    "copiedTag": "コピー済み",
+    "reportDoubt": "おかしい？報告する"
   },
   "risk": {
     "high": "高リスク",

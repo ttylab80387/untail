@@ -41,7 +41,8 @@
     "hops": "Redirects",
     "referralCode": "Referral / promoter code in the link: {{code}}",
     "report": "Report a problem",
-    "copiedTag": "Copied"
+    "copiedTag": "Copied",
+    "reportDoubt": "Looks wrong? Report it"
   },
   "risk": {
     "high": "High risk",
