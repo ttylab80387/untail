@@ -13,7 +13,7 @@
     "undo": "復原",
     "clipboardNoTracking": "這個連結本來就是乾淨的，可以直接分享。",
     "dismiss": "略過",
-    "iosPasteHint": "不想每次都被詢問「允許貼上」？到設定把「從其他 App 貼上」改成「允許」。",
+    "iosPasteHint": "不想每次都被詢問「允許貼上」？到「設定 > App > Untail > 從其他 App 貼上」選擇「允許」。",
     "openSettings": "前往設定"
   },
   "result": {
@@ -85,7 +85,7 @@
     "detectClipboard": "偵測剪貼簿中的連結",
     "detectClipboardHint": "打開 App 時檢查剪貼簿裡有沒有連結。Android 會顯示系統的「已貼上」提示。",
     "autoClipboard": "自動處理剪貼簿連結",
-    "autoClipboardHint": "打開 App 時，若剪貼簿裡的連結有追蹤碼，直接換成乾淨連結，不再詢問。需要同時開啟「偵測剪貼簿中的連結」。iPhone 請到「設定 > Untail > 從其他 App 貼上」選擇「允許」，否則每次都會詢問。"
+    "autoClipboardHint": "打開 App 時，若剪貼簿裡的連結有追蹤碼，直接換成乾淨連結，不再詢問。需要同時開啟「偵測剪貼簿中的連結」。iPhone 請到「設定 > App > Untail > 從其他 App 貼上」選擇「允許」，否則每次都會詢問。"
   },
   "licenses": {
     "title": "開源授權",
@@ -117,6 +117,6 @@
     "auto": "打開 App 時直接換成乾淨連結，不用再按。",
     "enableAuto": "開啟自動處理",
     "autoOn": "已開啟自動處理",
-    "iosPaste": "iPhone 請到「設定 > Untail > 從其他 App 貼上」選擇「允許」，否則每次打開都會詢問。"
+    "iosPaste": "iPhone 請到「設定 > App > Untail > 從其他 App 貼上」選擇「允許」，否則每次打開都會詢問。"
   }
 }

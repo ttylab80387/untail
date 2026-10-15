@@ -13,7 +13,7 @@
     "undo": "Undo",
     "clipboardNoTracking": "This link is already clean. Share it as is.",
     "dismiss": "Dismiss",
-    "iosPasteHint": "Tired of the \"Allow Paste\" prompt? In Settings, set Paste from Other Apps to Allow.",
+    "iosPasteHint": "Tired of the \"Allow Paste\" prompt? Go to Settings > Apps > Untail > Paste from Other Apps and choose Allow.",
     "openSettings": "Open Settings"
   },
   "result": {
@@ -85,7 +85,7 @@
     "detectClipboard": "Detect links on the clipboard",
     "detectClipboardHint": "Checks the clipboard for a link when you open the app. Android shows its system \"pasted\" notice.",
     "autoClipboard": "Clean clipboard links automatically",
-    "autoClipboardHint": "When you open the app, a clipboard link with tracking codes is replaced with the clean link without asking. Needs \"Detect links on the clipboard\". On iPhone, set Settings > Untail > Paste from Other Apps to Allow, or iOS will ask every time."
+    "autoClipboardHint": "When you open the app, a clipboard link with tracking codes is replaced with the clean link without asking. Needs \"Detect links on the clipboard\". On iPhone, set Settings > Apps > Untail > Paste from Other Apps to Allow, or iOS will ask every time."
   },
   "licenses": {
     "title": "Open-source licenses",
@@ -117,6 +117,6 @@
     "auto": "Swap in the clean link as soon as you open the app, without tapping.",
     "enableAuto": "Turn on auto-clean",
     "autoOn": "Auto-clean is on",
-    "iosPaste": "On iPhone, set Settings > Untail > Paste from Other Apps to Allow, or iOS will ask every time you open the app."
+    "iosPaste": "On iPhone, set Settings > Apps > Untail > Paste from Other Apps to Allow, or iOS will ask every time you open the app."
   }
 }
