@@ -56,6 +56,9 @@ export default function Home() {
               }}
               acceptedContentTypes={['plain-text', 'url']}
               displayMode="iconAndLabel"
+              backgroundColor={c.card}
+              foregroundColor={c.text}
+              cornerStyle="medium"
               style={styles.pasteButton}
             />
           ) : (
@@ -85,6 +88,9 @@ export default function Home() {
             }}
             acceptedContentTypes={['plain-text', 'url']}
             displayMode="iconAndLabel"
+            backgroundColor={c.card}
+            foregroundColor={c.text}
+            cornerStyle="medium"
             style={styles.pasteButton}
           />
         ) : (

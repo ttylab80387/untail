@@ -8,6 +8,7 @@ import { AppState as RNAppState, Platform } from 'react-native';
 import { resolveLocale } from '@linkclean/core';
 import type { Locale, RuleBundle } from '@linkclean/core';
 import bundledJson from '../../assets/rules.json';
+import { hasWebUrlAsync } from '../../modules/untail-clipboard';
 import { SITE_BASE_URL, USER_AGENT } from '../config';
 import i18n from '../i18n';
 import { cleanInput } from '../lib/cleaner';
@@ -164,8 +165,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       try {
         let raw: string;
         if (Platform.OS === 'ios') {
-          // hasUrlAsync does not trigger the iOS paste prompt; reading the text would.
-          const d = decideIos(await Clipboard.hasUrlAsync(), watch.current, s.autoClipboard);
+          // hasWebUrlAsync does not trigger the iOS paste prompt; reading the text would.
+          const d = decideIos(await hasWebUrlAsync(), watch.current, s.autoClipboard);
           watch.current = d.next;
           if (!d.offer || !s.autoClipboard) {
             setClipboardOffer(d.offer ? { kind: 'ios' } : null);
