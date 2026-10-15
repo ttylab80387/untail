@@ -13,7 +13,7 @@ import { SITE_BASE_URL, USER_AGENT } from '../config';
 import i18n from '../i18n';
 import { cleanInput } from '../lib/cleaner';
 import type { CleanOutcome } from '../lib/cleaner';
-import { decideIos, decideText, initialWatchState, noteSelfWrite, undoTarget } from '../lib/clipboardWatch';
+import { decideIos, decideText, initialWatchState, noteSelfWrite, recheckAfterRules, undoTarget } from '../lib/clipboardWatch';
 import type { Db } from '../lib/db';
 import { loadRules, updateRules } from '../lib/rulesStore';
 import type { UpdateOutcome } from '../lib/rulesStore';
@@ -79,6 +79,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // the user copies something; a job started before that must not write the clipboard.
   const clipboardGen = useRef(0);
   const pendingJobs = useRef(0);
+  // The last clipboard link judged clean, re-checked when new rules arrive.
+  const lastCleanLink = useRef<string | null>(null);
+  const recheckClipboard = useRef<() => void>(() => undefined);
 
   // Queued work reads these at run time, so it never uses stale rules, settings or locale.
   const latest = useRef({ rules, settings, locale });
@@ -97,7 +100,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         refreshing.current = (async () => {
           try {
             const result = await updateRules({ db, baseUrl: SITE_BASE_URL, fetchText, sha256, now: Date.now() }, { force });
-            if (result === 'updated') setRules(await loadRules(db, BUNDLED));
+            if (result === 'updated') {
+              const next = await loadRules(db, BUNDLED);
+              setRules(next);
+              latest.current = { ...latest.current, rules: next };
+              // A clipboard link the old rules called clean may have tracking the new ones know about.
+              const before = watch.current;
+              watch.current = recheckAfterRules(before, lastCleanLink.current, next);
+              if (watch.current !== before && RNAppState.currentState === 'active') recheckClipboard.current();
+            }
             return result;
           } finally {
             refreshing.current = null;
@@ -196,6 +207,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           watch.current = d.next;
           // Unchanged clipboard (including the app's own copy): keep the screen as it is, never read.
           if (!d.fresh) return;
+          lastCleanLink.current = null;
           setAutoCleaned(null);
           setCleanClipboardLink(null);
           if (!d.offer || !s.autoClipboard) {
@@ -211,6 +223,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         watch.current = d.next;
         // New clipboard content makes an earlier "replaced" notice misleading.
         if (d.fresh) {
+          lastCleanLink.current = d.clean;
           setAutoCleaned(null);
           // Show the clean link itself, so the notice is not read as being about the previous result,
           // unless a link the user asked about (typed or shared) is still being worked on.
@@ -235,6 +248,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     },
     [enqueue],
   );
+  recheckClipboard.current = () => void checkClipboard(latest.current.settings);
 
   useEffect(() => {
     let alive = true;

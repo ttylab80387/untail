@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { RuleBundle } from '@linkclean/core';
 import type { ProcessResult } from '@linkclean/core';
 import type { CleanOutcome } from './cleaner';
-import { decideText, decideIos, initialWatchState, needsCleaning, noteSelfWrite, undoTarget } from './clipboardWatch';
+import { decideText, decideIos, initialWatchState, needsCleaning, noteSelfWrite, recheckAfterRules, undoTarget } from './clipboardWatch';
 
 const rules: RuleBundle = {
   schemaVersion: 1,
@@ -106,6 +106,26 @@ describe('decideIos', () => {
     const s = noteSelfWrite(initialWatchState(), 'https://ex.com/clean', 9);
     expect(decideIos(clip(false, 10), s)).toMatchObject({ fresh: true, offer: false });
     expect(decideIos(clip(true, 10), s)).toMatchObject({ fresh: true, offer: true });
+  });
+});
+
+describe('recheckAfterRules', () => {
+  const seen = { lastSeenText: 'https://ex.com/a?newtrack=1', lastChangeCount: 7 };
+  const newer: RuleBundle = {
+    ...rules,
+    providers: { ...rules.providers, globalRules: { urlPattern: '.*', rules: ['utm_source', 'fbclid', 'newtrack'] } },
+  };
+
+  it('forgets the clipboard when new rules find tracking in a link the old ones called clean', () => {
+    expect(recheckAfterRules(seen, 'https://ex.com/a?newtrack=1', newer)).toEqual(initialWatchState());
+  });
+
+  it('keeps the state when the link is still clean, so nothing is read again', () => {
+    expect(recheckAfterRules(seen, 'https://ex.com/a?newtrack=1', rules)).toBe(seen);
+  });
+
+  it('keeps the state when no clipboard link was judged clean', () => {
+    expect(recheckAfterRules(seen, null, newer)).toBe(seen);
   });
 });
 

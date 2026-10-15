@@ -52,6 +52,13 @@ export function decideIos(
   return { fresh, offer: fresh && clip.hasUrl, next: { ...s, lastChangeCount: clip.changeCount } };
 }
 
+// After a rules update: if the clipboard link the old rules called clean now has something to clean,
+// forget what was seen so the next check looks at it again. Otherwise keep the state, so nothing is
+// read again (on iOS a read can prompt).
+export function recheckAfterRules(s: WatchState, lastCleanLink: string | null, rules: RuleBundle): WatchState {
+  return lastCleanLink !== null && needsCleaning(lastCleanLink, rules) ? initialWatchState() : s;
+}
+
 // After an automatic clean, the original clipboard text can be restored only if something else replaced it.
 export function undoTarget(originalText: string, outcome: CleanOutcome): string | null {
   return outcome.copied && outcome.result.cleanUrl !== originalText ? originalText : null;
