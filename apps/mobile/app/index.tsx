@@ -3,6 +3,7 @@ import * as Clipboard from 'expo-clipboard';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { HowTo } from '../src/components/HowTo';
 import { ResultCard } from '../src/components/ResultCard';
 import { useApp } from '../src/state/AppContext';
 import { MONO, useColors } from '../src/theme';
@@ -102,6 +103,7 @@ export default function Home() {
       </View>
       {(busy || !ready) && <ActivityIndicator color={c.accent} />}
       {outcome && !busy && <ResultCard result={outcome.result} copied={outcome.copied} />}
+      {!outcome && !busy && ready && <HowTo />}
     </ScrollView>
   );
 }

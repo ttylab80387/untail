@@ -106,5 +106,15 @@
     "subject": "Untail report: link not cleaned well",
     "note": "Please describe the problem briefly (for example: a tracking code was left in, or the link does not open). Note: the original link below may identify the person who shared it; delete anything you do not want to send.",
     "noMail": "No mail app found. Please email ttylab80387@gmail.com."
+  },
+  "howto": {
+    "title": "Three ways to use it",
+    "copy": "Copy a link, then open Untail. It notices the link.",
+    "share": "In another app, tap Share → Untail.",
+    "shareTip": "Not in the list? Look under \"More\" in the share sheet, and pin it to the front.",
+    "auto": "Swap in the clean link as soon as you open the app, without tapping.",
+    "enableAuto": "Turn on auto-clean",
+    "autoOn": "Auto-clean is on",
+    "iosPaste": "On iPhone, set Settings > Untail > Paste from Other Apps to Allow, or iOS will ask every time you open the app."
   }
 }
