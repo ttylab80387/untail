@@ -12,7 +12,9 @@
     "autoCleaned": "已把剪貼簿裡的連結換成乾淨連結，可以直接貼上。",
     "undo": "復原",
     "clipboardNoTracking": "這個連結本來就是乾淨的，可以直接分享。",
-    "dismiss": "略過"
+    "dismiss": "略過",
+    "iosPasteHint": "不想每次都被詢問「允許貼上」？到設定把「從其他 App 貼上」改成「允許」。",
+    "openSettings": "前往設定"
   },
   "result": {
     "title": "處理結果",

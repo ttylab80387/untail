@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { HowTo } from '../src/components/HowTo';
 import { ResultCard } from '../src/components/ResultCard';
 import { useApp } from '../src/state/AppContext';
@@ -45,6 +45,13 @@ export default function Home() {
           <TextButton label={t('home.undo')} onPress={undoAutoClean} />
           <TextButton label={t('home.dismiss')} onPress={dismissAutoClean} muted />
         </Notice>
+      )}
+      {autoCleaned && !busy && Platform.OS === 'ios' && (
+        // iOS asks before every automatic read unless the user allows pasting for Untail in Settings.
+        <View style={styles.iosHint}>
+          <Text style={{ color: c.muted, fontSize: 12, lineHeight: 18 }}>{t('home.iosPasteHint')}</Text>
+          <TextButton label={t('home.openSettings')} onPress={() => void Linking.openSettings()} />
+        </View>
       )}
       {clipboardOffer && !busy && (
         <Notice icon="clipboard-outline" text={t('home.clipboardOffer')}>
@@ -149,5 +156,6 @@ const styles = StyleSheet.create({
   notice: { borderWidth: 1, borderRadius: 12, padding: 12, gap: 10 },
   noticeHead: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
   noticeText: { flex: 1, fontWeight: '600', lineHeight: 20 },
+  iosHint: { gap: 6, paddingHorizontal: 4, marginTop: -4 },
   noticeActions: { flexDirection: 'row', gap: 20, alignItems: 'center', paddingLeft: 26 },
 });
