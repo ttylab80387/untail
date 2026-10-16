@@ -18,7 +18,13 @@
         "monochromeImage": "./assets/monochrome.png",
         "backgroundColor": "#0f6b5f"
       },
-      "allowBackup": false
+      "allowBackup": false,
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.VIBRATE"
+      ]
     },
     "plugins": [
       "expo-router",
