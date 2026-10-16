@@ -3,12 +3,22 @@ import * as Clipboard from 'expo-clipboard';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { siteOf } from '@linkclean/core';
 import { HowTo } from '../src/components/HowTo';
+import { siteLabel } from '../src/lib/siteLabel';
 import { useReport } from '../src/components/useReport';
 import { ResultCard } from '../src/components/ResultCard';
 import { useApp } from '../src/state/AppContext';
 import { MONO, useColors } from '../src/theme';
 import { useBottomPadding } from '../src/bottomPadding';
+
+// The clean-link notice names the site, so it is clear which link was checked and where it goes.
+function cleanLinkNotice(t: (key: string, opts?: Record<string, string>) => string, link: string): string {
+  const site = siteOf(link);
+  if (!site) return t('home.clipboardNoTracking');
+  const l = siteLabel(site);
+  return t('home.clipboardNoTrackingSite', { site: l.ascii ? `${l.main} (${l.ascii})` : l.main });
+}
 
 export default function Home() {
   const bottomPadding = useBottomPadding();
@@ -38,7 +48,7 @@ export default function Home() {
   return (
     <ScrollView contentContainerStyle={[styles.container, bottomPadding]} keyboardShouldPersistTaps="handled">
       {cleanClipboardLink !== null && !clipboardOffer && !autoCleaned && !busy && (
-        <Notice icon="checkmark-circle" text={t('home.clipboardNoTracking')}>
+        <Notice icon="checkmark-circle" text={cleanLinkNotice(t, cleanClipboardLink)}>
           <TextButton label={t('home.dismiss')} onPress={dismissCleanLinkNotice} muted />
           <TextButton label={t('result.reportDoubt')} onPress={() => sendReport(cleanClipboardLink, cleanClipboardLink, 'clean (clipboard)')} muted />
         </Notice>

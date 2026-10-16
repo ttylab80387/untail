@@ -14,7 +14,8 @@
     "clipboardNoTracking": "沒有找到追蹤碼。Untail 只清除追蹤碼，不會檢查連結是否安全。",
     "dismiss": "略過",
     "iosPasteHint": "不想每次都被詢問「允許貼上」？到「設定 > App > Untail > 從其他 App 貼上」選擇「允許」。",
-    "openSettings": "前往設定"
+    "openSettings": "前往設定",
+    "clipboardNoTrackingSite": "沒有找到追蹤碼。網站：{{site}}。Untail 只清除追蹤碼，不會檢查連結是否安全。"
   },
   "result": {
     "title": "處理結果",
@@ -45,7 +46,10 @@
     "report": "回報問題",
     "copiedTag": "已複製",
     "reportDoubt": "覺得不對？回報",
-    "notSafetyCheck": "Untail 只移除追蹤碼，不會判斷連結是否安全。"
+    "notSafetyCheck": "Untail 只移除追蹤碼，不會判斷連結是否安全。",
+    "site": "網站：",
+    "siteSoFar": "目前取得的目的地：",
+    "hiddenKept": "網址含有看不見的字元（{{codes}}），Untail 沒有修改。"
   },
   "risk": {
     "high": "追蹤風險：高",

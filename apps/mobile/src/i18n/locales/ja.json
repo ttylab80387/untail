@@ -14,7 +14,8 @@
     "clipboardNoTracking": "追跡コードは見つかりませんでした。Untail は追跡コードを取り除くだけで、リンクが安全かどうかは確認しません。",
     "dismiss": "閉じる",
     "iosPasteHint": "毎回「ペーストを許可」と聞かれないようにするには、「設定 > アプリ > Untail > ほかのAppからペースト」を「許可」にしてください。",
-    "openSettings": "設定を開く"
+    "openSettings": "設定を開く",
+    "clipboardNoTrackingSite": "追跡コードは見つかりませんでした。サイト：{{site}}。Untail は追跡コードを取り除くだけで、リンクが安全かどうかは確認しません。"
   },
   "result": {
     "title": "結果",
@@ -45,7 +46,10 @@
     "report": "問題を報告",
     "copiedTag": "コピー済み",
     "reportDoubt": "おかしい？報告する",
-    "notSafetyCheck": "Untail は追跡コードを取り除くだけで、リンクの安全性は判断しません。"
+    "notSafetyCheck": "Untail は追跡コードを取り除くだけで、リンクの安全性は判断しません。",
+    "site": "サイト：",
+    "siteSoFar": "現時点の行き先：",
+    "hiddenKept": "リンクに目に見えない文字（{{codes}}）が含まれています。Untail は変更していません。"
   },
   "risk": {
     "high": "追跡リスク：高",

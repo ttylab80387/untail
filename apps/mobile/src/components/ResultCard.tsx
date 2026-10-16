@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Linking, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import type { AnalyzedParam, ProcessResult } from '@linkclean/core';
 import { referralCode } from '../lib/referral';
+import { siteLabel } from '../lib/siteLabel';
 import { useApp } from '../state/AppContext';
 import { useReport } from './useReport';
 import { MONO, useColors } from '../theme';
@@ -61,6 +62,21 @@ export function statusText(t: TFunction, result: ProcessResult): string {
     : t('result.status.none');
 }
 
+// Where the link goes: the main domain in bold, the subdomain muted, and the xn-- form for IDN hosts.
+function SiteLine({ destination }: { destination: NonNullable<ProcessResult['destination']> }) {
+  const { t } = useTranslation();
+  const c = useColors();
+  const l = siteLabel(destination.site);
+  return (
+    <Text style={{ color: c.muted }}>
+      {t(destination.complete ? 'result.site' : 'result.siteSoFar')}
+      {l.sub}
+      <Text style={{ color: c.text, fontWeight: '700' }}>{l.main}</Text>
+      {l.ascii ? ` (${l.ascii})` : ''}
+    </Text>
+  );
+}
+
 export function ResultCard({ result, copied }: { result: ProcessResult; copied: boolean }) {
   const { t } = useTranslation();
   const c = useColors();
@@ -86,7 +102,13 @@ export function ResultCard({ result, copied }: { result: ProcessResult; copied: 
         {statusText(t, result)}
         {copied ? <Text style={{ color: c.muted, fontWeight: '600' }}>{`  ·  ${t('result.copiedTag')}`}</Text> : null}
       </Text>
+      {result.destination && <SiteLine destination={result.destination} />}
       {result.reason && <Text style={{ color: c.warn, lineHeight: 19 }}>{t(`result.reason.${result.reason}`)}</Text>}
+      {result.hiddenKept && result.hiddenKept.length > 0 && (
+        <Text style={{ color: c.muted, fontSize: 12 }}>
+          {t('result.hiddenKept', { codes: [...new Set(result.hiddenKept.map((h) => h.code))].join(', ') })}
+        </Text>
+      )}
       <Text selectable style={[styles.url, { color: c.text, backgroundColor: c.bg }]}>
         {result.cleanUrl}
       </Text>

@@ -1,3 +1,4 @@
+import { destinationOf, scanHidden } from '@linkclean/core';
 import type { AnalyzedParam, ProcessResult, Reason, Status } from '@linkclean/core';
 
 export type SqlParam = string | number | null;
@@ -57,6 +58,12 @@ function toEntry(row: HistoryRow): HistoryEntry {
     hops: JSON.parse(row.hops_json) as string[],
   };
   if (row.reason) result.reason = row.reason as Reason;
+  // Derived from stored columns (no schema change), so rows written by older versions get them too.
+  const destination = destinationOf(result);
+  if (destination) result.destination = destination;
+  // Kept hidden characters stay in the stored original URL, so they can be found again.
+  const kept = scanHidden(result.originalUrl).found.filter((h) => !h.removed);
+  if (kept.length) result.hiddenKept = kept;
   return { id: row.id, createdAt: row.created_at, result };
 }
 

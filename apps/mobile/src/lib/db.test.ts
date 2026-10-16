@@ -32,7 +32,8 @@ describe('history', () => {
     const list = await listHistory(db);
     expect(list.map((e) => e.result.cleanUrl)).toEqual(['https://ex.com/2', 'https://ex.com/1']);
     expect(list[0]).toMatchObject({ createdAt: 2000, result: { status: 'partial', reason: 'network', hops: ['a', 'b'] } });
-    expect(list[1]!.result).toEqual(result(1));
+    // Stored fields round-trip; destination is derived from them on read.
+    expect(list[1]!.result).toEqual({ ...result(1), destination: expect.objectContaining({ complete: true }) });
   });
 
   it(`keeps only the newest ${HISTORY_LIMIT} entries`, async () => {
@@ -60,5 +61,25 @@ describe('kv', () => {
     await setKv(db, 'a', '1');
     await setKv(db, 'a', '2');
     expect(await getKv(db, 'a')).toBe('2');
+  });
+});
+
+describe('history rows carry derived link-safety fields', () => {
+  it('derives the destination reached so far and the kept hidden characters', async () => {
+    const post = 'https://www.threads.com/@a/post/B';
+    await addHistory(
+      db,
+      result(3, { originalUrl: 'https://www.threads.com/share/X\u200D/', cleanUrl: 'https://www.threads.com/share/X\u200D/', status: 'partial', reason: 'network', hops: ['https://www.threads.com/share/X\u200D/', post] }),
+      3000,
+    );
+    const [entry] = await listHistory(db);
+    expect(entry!.result.destination).toMatchObject({ complete: false, site: { domain: 'threads.com' } });
+    expect(entry!.result.hiddenKept?.map((h) => h.code)).toEqual(['U+200D']);
+  });
+  it('gives rows written before these fields existed the same derived fields', async () => {
+    await addHistory(db, result(4), 4000);
+    const [entry] = await listHistory(db);
+    expect(entry!.result.destination).toMatchObject({ complete: true, site: { domain: 'ex.com' } });
+    expect(entry!.result.hiddenKept).toBeUndefined();
   });
 });

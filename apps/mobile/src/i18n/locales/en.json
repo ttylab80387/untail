@@ -14,7 +14,8 @@
     "clipboardNoTracking": "No tracking codes found. Untail only removes trackers; it doesn't check whether a link is safe.",
     "dismiss": "Dismiss",
     "iosPasteHint": "Tired of the \"Allow Paste\" prompt? Go to Settings > Apps > Untail > Paste from Other Apps and choose Allow.",
-    "openSettings": "Open Settings"
+    "openSettings": "Open Settings",
+    "clipboardNoTrackingSite": "No tracking codes found. Site: {{site}}. Untail only removes trackers; it doesn't check whether a link is safe."
   },
   "result": {
     "title": "Result",
@@ -45,7 +46,10 @@
     "report": "Report a problem",
     "copiedTag": "Copied",
     "reportDoubt": "Looks wrong? Report it",
-    "notSafetyCheck": "Untail only removes trackers; it doesn't judge whether a link is safe."
+    "notSafetyCheck": "Untail only removes trackers; it doesn't judge whether a link is safe.",
+    "site": "Site: ",
+    "siteSoFar": "Destination so far: ",
+    "hiddenKept": "The link contains invisible characters ({{codes}}). Untail left them unchanged."
   },
   "risk": {
     "high": "Tracking risk: high",
