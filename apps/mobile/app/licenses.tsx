@@ -13,6 +13,13 @@ export default function Licenses() {
       <Pressable onPress={() => void Linking.openURL('https://www.gnu.org/licenses/lgpl-3.0.html')}>
         <Text style={{ color: c.accent }}>GNU LGPL-3.0</Text>
       </Pressable>
+      <Text style={{ color: c.text }}>{t('licenses.domains')}</Text>
+      <Pressable onPress={() => void Linking.openURL('https://opensource.org/license/mit')}>
+        <Text style={{ color: c.accent }}>MIT</Text>
+      </Pressable>
+      <Pressable onPress={() => void Linking.openURL('https://mozilla.org/MPL/2.0/')}>
+        <Text style={{ color: c.accent }}>MPL-2.0</Text>
+      </Pressable>
     </ScrollView>
   );
 }
