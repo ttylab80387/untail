@@ -37,11 +37,15 @@ const EMBEDDED_ODD_SHARE = 'https://example.com/a?next=https:%5C%5Cwww.threads.c
 const noFetch: FetchFn = async (url) => {
   throw new Error(`fetch must not be called: ${url}`);
 };
-const threadsFetch: FetchFn = async () => ({ url: THREADS_POST, status: 200 });
+// The share link redirects to the post; the post (same site) answers 200.
+const threadsFetch: FetchFn = async (url) =>
+  url === THREADS_POST ? { url, status: 200 } : { url, status: 302, location: THREADS_POST };
+// A mapped URL redirects to its value; a URL that is some mapped value answers 200.
 const mapFetch = (map: Record<string, string>): FetchFn => async (url) => {
   const next = map[url];
-  if (next === undefined) throw new Error(`unexpected fetch ${url}`);
-  return { url: next, status: 200 };
+  if (next !== undefined) return { url, status: 302, location: next };
+  if (Object.values(map).includes(url)) return { url, status: 200 };
+  throw new Error(`unexpected fetch ${url}`);
 };
 
 describe('processUrl', () => {
@@ -124,9 +128,9 @@ describe('processUrl', () => {
   });
 
   it('applies the timeout to the whole expansion chain', async () => {
-    const slow = (next: string): FetchFn => async () => {
+    const slow = (next: string): FetchFn => async (url) => {
       await new Promise((r) => setTimeout(r, 30));
-      return { url: next, status: 200 };
+      return { url, status: 302, location: next };
     };
     const FB_SHARE = 'https://www.facebook.com/share/p/TEST01/';
     const fetch: FetchFn = (url, init) =>
@@ -189,6 +193,26 @@ describe('processUrl', () => {
   it('cleans hidden characters in an unwrapped link', async () => {
     const wrapped = `https://l.facebook.com/l.php?u=${encodeURIComponent('https://example.com/a\u200Bb')}`;
     const r = await processUrl(wrapped, rules, { expand: false, locale: 'en' });
+    expect(r.cleanUrl).toBe('https://example.com/ab');
+    expect(r.removed.map((p) => p.key)).toContain('hidden');
+  });
+  it('reports the destination reached so far when expansion stops early', async () => {
+    const post = 'https://www.threads.com/@someone/post/DTest00001';
+    const fetch: FetchFn = async (url) => {
+      if (url === THREADS) return { url, status: 302, location: post };
+      throw new Error('offline');
+    };
+    const r = await processUrl(THREADS, rules, { expand: true, locale: 'en', fetch });
+    expect(r.hops).toEqual([THREADS, post]);
+    expect(r.destination).toMatchObject({ complete: false, site: { domain: 'threads.com' } });
+  });
+  it('reports a finished destination for a clean result', async () => {
+    const r = await processUrl('https://shopee.tw.secure-login.xyz/a?utm_source=x', rules, { expand: false, locale: 'en' });
+    expect(r.destination).toMatchObject({ complete: true, site: { domain: 'secure-login.xyz' } });
+  });
+  it('cleans a hidden character that arrives in a Location header', async () => {
+    const fetch: FetchFn = async (url) => ({ url, status: 301, location: 'https://example.com/a\u200Bb' });
+    const r = await processUrl('https://bit.ly/TEST02', rules, { expand: true, locale: 'en', fetch });
     expect(r.cleanUrl).toBe('https://example.com/ab');
     expect(r.removed.map((p) => p.key)).toContain('hidden');
   });

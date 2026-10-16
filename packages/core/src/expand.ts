@@ -1,6 +1,7 @@
 import type { Expander, ExpandFailure, FetchFn, RemovedItem } from './types';
 import { compile, matches } from './regex';
-import { canonicalUrl, getHost, getPath, getParam, matchView } from './query';
+import { canonicalUrl, getHost, getPath, getParam, matchView, parseUrl } from './query';
+import { sameSite } from './site';
 
 export const DEFAULT_USER_AGENT = 'Untail/0.1';
 export const DEFAULT_TIMEOUT_MS = 5000;
@@ -21,11 +22,15 @@ export interface ExpandResult {
   reason?: ExpandFailure;
 }
 
-class TimeoutError extends Error {}
+const MAX_HOPS = 6;
 
-class HttpError extends Error {
-  constructor(readonly finalUrl: string) {
-    super('HTTP error');
+// Why expansion stopped, and every hop it got to.
+class Stopped extends Error {
+  constructor(
+    readonly reason: ExpandFailure,
+    readonly trail: string[],
+  ) {
+    super(reason);
   }
 }
 
@@ -48,34 +53,51 @@ function normalizeHost(url: string, expanders: Record<string, Expander>): string
   return url;
 }
 
-// Resolves "/path" or "//host/path" Location values against the request URL.
-function absolute(location: string, base: string): string {
-  if (HTTP.test(location)) return location;
-  const origin = /^[a-z][a-z0-9+.-]*:\/\/[^/?#]+/i.exec(base)?.[0] ?? '';
-  if (location.startsWith('//')) return `${base.slice(0, base.indexOf(':') + 1)}${location}`;
-  return location.startsWith('/') ? `${origin}${location}` : location;
+// The next hop a browser would take for a Location header; null when it would not open it.
+function nextHop(location: string, base: string): string | null {
+  const target = HTTP.test(location) ? location : parseUrl(location, base)?.href;
+  return target ? canonicalUrl(target) : null;
 }
 
-// Race the request against a hard deadline so a fetch that ignores abort cannot hang the caller.
-// With firstHop the redirect is not followed: the first Location is the answer.
-async function resolve(url: string, opts: ExpandOptions, firstHop: boolean): Promise<string> {
+// Follows redirects one at a time in manual mode, under one deadline. A hop to another site, a login
+// wall (its next param is the answer) and the first hop of a firstHop expander are taken from Location
+// and returned without being requested, so expansion never contacts the destination.
+// Resolves to the trail: [url, ...every later hop]; the last entry is the answer.
+async function resolve(
+  url: string,
+  expanders: Record<string, Expander>,
+  opts: ExpandOptions,
+  firstHop: boolean,
+): Promise<string[]> {
   const controller = new AbortController();
   const headers = { 'User-Agent': opts.userAgent };
-  const redirect = firstHop ? 'manual' : 'follow';
+  const trail = [url];
+  const current = () => trail[trail.length - 1]!;
+  const send = (method: 'HEAD' | 'GET') => {
+    // Never start a request after the deadline has passed.
+    if (controller.signal.aborted) throw new Stopped('expand_timeout', [...trail]);
+    return opts.fetch(current(), { method, headers, signal: controller.signal, redirect: 'manual' });
+  };
   const work = (async () => {
     try {
-      let res = await opts.fetch(url, { method: 'HEAD', headers, signal: controller.signal, redirect });
-      // Some services reject HEAD outright (405) or answer it with 404; GET still redirects.
-      if (res.status === 405 || res.status === 404) {
-        // Never start a follow-up request after the deadline has passed.
-        if (controller.signal.aborted) throw new TimeoutError();
-        res = await opts.fetch(url, { method: 'GET', headers, signal: controller.signal, redirect });
+      for (let hop = 0; hop < MAX_HOPS; hop++) {
+        let res = await send('HEAD');
+        // Some services reject HEAD outright (405) or answer it with 404; GET still redirects.
+        if (res.status === 405 || res.status === 404) res = await send('GET');
+        if (!(res.status >= 300 && res.status < 400 && res.location)) {
+          if (res.status >= 400) throw new Stopped('network', [...trail]);
+          return trail;
+        }
+        const next = nextHop(res.location, current());
+        if (!next) throw new Stopped('unresolved', [...trail]);
+        const stop = firstHop || findLoginWall(next, expanders) !== undefined || !sameSite(next, current());
+        trail.push(next);
+        if (stop) return trail;
       }
-      if (firstHop && res.status >= 300 && res.status < 400 && res.location) return absolute(res.location, url);
-      if (res.status >= 400) throw new HttpError(res.url || url);
-      return res.url || url;
+      throw new Stopped('unresolved', [...trail]); // too many redirects on one site
     } catch (e) {
-      throw controller.signal.aborted ? new TimeoutError() : e;
+      if (controller.signal.aborted) throw new Stopped('expand_timeout', [...trail]);
+      throw e instanceof Stopped ? e : new Stopped('network', [...trail]);
     }
   })();
   work.catch(() => {}); // a rejection after the deadline must not surface as unhandled
@@ -84,7 +106,7 @@ async function resolve(url: string, opts: ExpandOptions, firstHop: boolean): Pro
   const deadline = new Promise<never>((_, reject) => {
     timer = setTimeout(() => {
       controller.abort();
-      reject(new TimeoutError());
+      reject(new Stopped('expand_timeout', [...trail]));
     }, opts.timeoutMs);
   });
   try {
@@ -102,19 +124,20 @@ export async function expandUrl(url: string, expanders: Record<string, Expander>
   // Always ask over https: it hides the link from the network, and Android release builds
   // refuse cleartext requests (Xiaohongshu shares http://xhslink.com links).
   const requestUrl = url.replace(/^http:\/\//i, 'https://');
-  let raw: string;
+  let trail: string[];
   try {
-    raw = await resolve(requestUrl, opts, expander.firstHop === true);
+    trail = await resolve(requestUrl, expanders, opts, expander.firstHop === true);
   } catch (e) {
-    if (e instanceof HttpError) return fail('network', e.finalUrl === url || e.finalUrl === requestUrl ? [url] : [url, e.finalUrl]);
-    return fail(e instanceof TimeoutError ? 'expand_timeout' : 'network');
+    const t = e instanceof Stopped ? e.trail : [requestUrl];
+    return fail(e instanceof Stopped ? e.reason : 'network', [url, ...t.slice(1)]);
   }
+  const raw = trail[trail.length - 1]!;
 
   // Redirect targets get the same browser-equivalent spelling as user input;
   // one a browser would refuse leaves the link unresolved.
   const finalUrl = canonicalUrl(raw);
-  if (!finalUrl) return fail('unresolved', [url, raw]);
-  const hops = [url, finalUrl];
+  if (!finalUrl) return fail('unresolved', [url, ...trail.slice(1)]);
+  const hops = [url, ...trail.slice(1, -1), finalUrl];
   let resolved = finalUrl;
   const wall = findLoginWall(finalUrl, expanders);
   if (wall) {

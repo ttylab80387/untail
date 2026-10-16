@@ -51,9 +51,9 @@ export function getParam(url: string, name: string): string | undefined {
 // Parsed exactly as a browser does (WHATWG URL). whatwg-url-minimum is the parser Expo installs
 // as the app's global URL, so tests on Node and the app agree (it skips IDNA, leaving Unicode
 // hosts as written).
-export function parseUrl(url: string): URL | null {
+export function parseUrl(url: string, base?: string): URL | null {
   try {
-    return new WhatwgURL(url);
+    return base === undefined ? new WhatwgURL(url) : new WhatwgURL(url, base);
   } catch {
     return null;
   }

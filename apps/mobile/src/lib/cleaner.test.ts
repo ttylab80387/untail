@@ -25,9 +25,10 @@ const POST = 'https://www.threads.com/@a/post/B?xmt=1';
 let db: Db;
 let copied: string[];
 let fetchCalls: string[];
+// The share link redirects to the post; the post (same site) answers 200.
 const fetch: FetchFn = async (url) => {
   fetchCalls.push(url);
-  return { url: POST, status: 200 };
+  return url === POST ? { url, status: 200 } : { url, status: 302, location: POST };
 };
 
 const deps = (over: Partial<CleanDeps> = {}): CleanDeps => ({
@@ -76,7 +77,7 @@ describe('cleanInput', () => {
   it('expands share links with the injected fetch', async () => {
     const out = await cleanInput(SHARE, deps());
     expect(out.result).toMatchObject({ status: 'clean', cleanUrl: 'https://www.threads.com/@a/post/B' });
-    expect(fetchCalls).toEqual([SHARE]);
+    expect(fetchCalls).toEqual([SHARE, POST]); // the post is on the same site, so it is requested too
   });
 
   it('ignores input without a URL', async () => {

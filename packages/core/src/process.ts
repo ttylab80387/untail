@@ -5,6 +5,7 @@ import { findExpander, expandUrl, DEFAULT_USER_AGENT, DEFAULT_TIMEOUT_MS } from 
 import { cleanUrl } from './clean';
 import { analyze } from './analyze';
 import { canonicalUrl, getHost, safeDecode } from './query';
+import { siteOf } from './site';
 
 const MAX_EXPANSIONS = 3;
 const MIN_SHARE_ID_LENGTH = 6; // shorter IDs would match by coincidence
@@ -19,6 +20,13 @@ function stillTracked(url: string, shareIds: string[], expanders: Record<string,
   return views.some((v) =>
     (v.slice(1).match(EMBEDDED_URL) ?? []).some((u) => findExpander(canonicalUrl(u) ?? u, expanders)),
   );
+}
+
+// Where the link goes: the clean URL when finished, otherwise the last hop reached.
+export function destinationOf(r: Pick<ProcessResult, 'status' | 'cleanUrl' | 'hops'>): ProcessResult['destination'] {
+  if (r.status === 'failed') return undefined;
+  const site = siteOf(r.status === 'clean' ? r.cleanUrl : (r.hops[r.hops.length - 1] ?? r.cleanUrl));
+  return site ? { site, complete: r.status === 'clean' } : undefined;
 }
 
 export interface ProcessOptions {
@@ -121,5 +129,7 @@ export async function processUrl(input: string, rules: RuleBundle, opts: Process
   };
   if (reason) result.reason = reason;
   if (kept.length) result.hiddenKept = kept;
+  const destination = destinationOf(result);
+  if (destination) result.destination = destination;
   return result;
 }

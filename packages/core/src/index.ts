@@ -1,5 +1,6 @@
 export * from './types';
-export { processUrl } from './process';
+export { processUrl, destinationOf } from './process';
+export { canonicalUrl } from './query';
 export type { ProcessOptions } from './process';
 export { cleanUrl } from './clean';
 export { unwrapUrl } from './unwrap';

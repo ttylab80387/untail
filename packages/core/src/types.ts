@@ -65,6 +65,8 @@ export interface ProcessResult {
   removed: AnalyzedParam[];
   hops: string[];
   hiddenKept?: HiddenChar[]; // invisible characters found and left in place
+  // Where the link goes: complete for a clean result, otherwise the last hop reached.
+  destination?: { site: SiteInfo; complete: boolean };
 }
 
 export type UrlPart = 'userinfo' | 'host' | 'path' | 'query' | 'fragment';
