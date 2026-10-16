@@ -40,6 +40,7 @@
           "androidIntentFilters": ["text/*"]
         }
       ],
+      "./plugins/withReleaseSigning",
       [
         "expo-splash-screen",
         { "image": "./assets/adaptive-foreground.png", "imageWidth": 200, "resizeMode": "contain", "backgroundColor": "#0d1714" }
