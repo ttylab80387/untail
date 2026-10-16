@@ -61,6 +61,28 @@ describe('getHost / getPath', () => {
     expect(getHost('not a url')).toBe('');
     expect(getHost('https://@/')).toBe('');
   });
+  // The browser decides where a link really goes, so host and path must match WHATWG URL parsing.
+  const tricky = [
+    'https://evil.example\\@shopee.tw/x',
+    'https://one.example@two.example@evil.example/',
+    'https://shopee.tw@evil.example/login',
+    'https://user:p@ss@evil.example:8443/a?b=1#c',
+    'https://[2001:db8::1]/a',
+    'https://[2001:db8::1]:8080/a',
+    'https://evil.example\\shopee.tw/x',
+    'https:\\\\evil.example/x',
+    'https:///evil.example/x',
+    'https://EVIL.Example./x',
+    'https://evil.example?q=shopee.tw/x',
+    'https://evil.example#@shopee.tw',
+  ];
+  it.each(tricky)('agrees with the browser on host: %s', (url) => {
+    expect(getHost(url)).toBe(new URL(url).hostname);
+  });
+  it.each(tricky)('agrees with the browser on path: %s', (url) => {
+    expect(getPath(url)).toBe(new URL(url).pathname);
+  });
+
   it('returns path without query or hash', () => {
     expect(getPath('https://ex.com/a/b?x=1#y')).toBe('/a/b');
     expect(getPath('https://ex.com')).toBe('/');
