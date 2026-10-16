@@ -8,11 +8,11 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "ios": {
-      "bundleIdentifier": "app.untail",
+      "bundleIdentifier": "com.ttylab.untail",
       "supportsTablet": true
     },
     "android": {
-      "package": "app.untail",
+      "package": "com.ttylab.untail",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-foreground.png",
         "monochromeImage": "./assets/monochrome.png",

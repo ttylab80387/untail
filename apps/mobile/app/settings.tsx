@@ -7,6 +7,7 @@ import type { Settings } from '../src/lib/settings';
 import { useApp } from '../src/state/AppContext';
 import { useColors } from '../src/theme';
 import { useBottomPadding } from '../src/bottomPadding';
+import { confirmAutoClean } from '../src/confirmAuto';
 
 export default function SettingsScreen() {
   const bottomPadding = useBottomPadding();
@@ -16,7 +17,10 @@ export default function SettingsScreen() {
   const [updating, setUpdating] = useState(false);
   const [outcome, setOutcome] = useState<UpdateOutcome | null>(null);
 
-  const toggle = (key: keyof Settings) => (value: boolean) => void setSettings({ ...settings, [key]: value });
+  const toggle = (key: keyof Settings) => (value: boolean) => {
+    if (key === 'autoClipboard' && value) confirmAutoClean(t, () => void setSettings({ ...settings, autoClipboard: true }));
+    else void setSettings({ ...settings, [key]: value });
+  };
 
   const update = async () => {
     setUpdating(true);

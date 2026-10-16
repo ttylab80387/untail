@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { confirmAutoClean } from '../confirmAuto';
 import { useApp } from '../state/AppContext';
 import { useColors } from '../theme';
 
@@ -13,11 +14,9 @@ export function HowTo() {
   const { settings, setSettings } = useApp();
   const autoOn = settings.autoClipboard && settings.detectClipboard;
 
-  const enableAuto = () => {
-    // Automatic cleaning only runs when clipboard detection is on.
-    void setSettings({ ...settings, detectClipboard: true, autoClipboard: true });
-    if (Platform.OS === 'ios') Alert.alert(t('howto.autoOn'), t('howto.iosPaste'));
-  };
+  // Automatic cleaning only runs when clipboard detection is on.
+  const enableAuto = () =>
+    confirmAutoClean(t, () => void setSettings({ ...settings, detectClipboard: true, autoClipboard: true }));
 
   const step = (n: number, body: ReactNode) => (
     <View style={styles.step}>
