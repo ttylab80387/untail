@@ -1,6 +1,6 @@
 import type { Expander, ExpandFailure, FetchFn, RemovedItem } from './types';
 import { compile, matches } from './regex';
-import { getHost, getPath, getParam } from './query';
+import { canonicalUrl, getHost, getPath, getParam } from './query';
 
 export const DEFAULT_USER_AGENT = 'Untail/0.1';
 export const DEFAULT_TIMEOUT_MS = 5000;
@@ -102,7 +102,9 @@ export async function expandUrl(url: string, expanders: Record<string, Expander>
   const requestUrl = url.replace(/^http:\/\//i, 'https://');
   let finalUrl: string;
   try {
-    finalUrl = await resolve(requestUrl, opts, expander.firstHop === true);
+    // Redirect targets get the same browser-equivalent spelling as user input.
+    const raw = await resolve(requestUrl, opts, expander.firstHop === true);
+    finalUrl = canonicalUrl(raw) ?? raw;
   } catch (e) {
     if (e instanceof HttpError) return fail('network', e.finalUrl === url || e.finalUrl === requestUrl ? [url] : [url, e.finalUrl]);
     return fail(e instanceof TimeoutError ? 'expand_timeout' : 'network');
@@ -114,7 +116,7 @@ export async function expandUrl(url: string, expanders: Record<string, Expander>
   if (wall) {
     const next = getParam(finalUrl, wall.param);
     if (!next || !HTTP.test(next) || findLoginWall(next, expanders)) return fail('unresolved', hops);
-    resolved = next;
+    resolved = canonicalUrl(next) ?? next;
     hops.push(resolved);
   }
   // A different URL that is again a short/share link is handed back to processUrl's loop.

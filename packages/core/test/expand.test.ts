@@ -72,6 +72,12 @@ describe('expandUrl', () => {
     expect(r.removed).toEqual([{ key: 'share-id', value: 'TEST01', host: 'www.facebook.com' }]);
   });
 
+  it('keeps the path when a redirect spells it with a backslash', async () => {
+    const fetch = fakeFetch({ [FB]: { url: 'https://m.facebook.com\\photo.php?fbid=123' } });
+    const r = await expandUrl(FB, expanders, opts(fetch));
+    expect(r.url).toBe('https://www.facebook.com/photo.php?fbid=123');
+  });
+
   it('reads the post URL out of a login wall and normalizes the host', async () => {
     const mPost = 'https://m.facebook.com/groups/somegroup/permalink/1234567890/?rdid=xyz';
     const login = loginFor(mPost);
