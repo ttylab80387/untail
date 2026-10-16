@@ -4,7 +4,7 @@
     "slug": "untail",
     "scheme": "untail",
     "version": "0.1.1",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "ios": {
@@ -41,6 +41,7 @@
           "androidIntentFilters": ["text/*"]
         }
       ],
+      ["expo-build-properties", { "android": { "enableMinifyInReleaseBuilds": true, "enableShrinkResourcesInReleaseBuilds": true } }],
       "./plugins/withReleaseSigning",
       [
         "expo-splash-screen",
