@@ -118,6 +118,8 @@ export function ResultCard({ result, copied }: { result: ProcessResult; copied: 
         </Pressable>
       )}
 
+      <Text style={{ color: c.muted, fontSize: 12, lineHeight: 17, marginTop: 4 }}>{t('result.notSafetyCheck')}</Text>
+
       {result.removed.length > 0 && (
         <Pressable onPress={report} style={styles.report} hitSlop={8}>
           <Text style={{ color: c.muted, textDecorationLine: 'underline' }}>{t('result.report')}</Text>

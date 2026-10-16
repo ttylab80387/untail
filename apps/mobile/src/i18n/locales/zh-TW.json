@@ -9,9 +9,9 @@
     "cleaning": "處理中…",
     "clipboardOffer": "剪貼簿裡有連結，要取得乾淨連結嗎？",
     "clipboardClean": "取得乾淨連結",
-    "autoCleaned": "已把剪貼簿裡的連結換成乾淨連結，可以直接貼上。",
+    "autoCleaned": "已移除剪貼簿連結裡的追蹤碼。",
     "undo": "復原",
-    "clipboardNoTracking": "這個連結本來就是乾淨的，可以直接分享。",
+    "clipboardNoTracking": "沒有找到追蹤碼。Untail 只清除追蹤碼，不會檢查連結是否安全。",
     "dismiss": "略過",
     "iosPasteHint": "不想每次都被詢問「允許貼上」？到「設定 > App > Untail > 從其他 App 貼上」選擇「允許」。",
     "openSettings": "前往設定"
@@ -42,7 +42,8 @@
     "referralCode": "連結中的推薦／推廣代碼：{{code}}",
     "report": "回報問題",
     "copiedTag": "已複製",
-    "reportDoubt": "覺得不對？回報"
+    "reportDoubt": "覺得不對？回報",
+    "notSafetyCheck": "Untail 只移除追蹤碼，不會判斷連結是否安全。"
   },
   "risk": {
     "high": "高風險",

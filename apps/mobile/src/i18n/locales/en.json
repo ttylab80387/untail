@@ -9,9 +9,9 @@
     "cleaning": "Working…",
     "clipboardOffer": "There is a link on the clipboard. Get a clean link?",
     "clipboardClean": "Get clean link",
-    "autoCleaned": "The clipboard link was replaced with a clean link. You can paste it now.",
+    "autoCleaned": "Tracking codes were removed from the clipboard link.",
     "undo": "Undo",
-    "clipboardNoTracking": "This link is already clean. Share it as is.",
+    "clipboardNoTracking": "No tracking codes found. Untail only removes trackers; it doesn't check whether a link is safe.",
     "dismiss": "Dismiss",
     "iosPasteHint": "Tired of the \"Allow Paste\" prompt? Go to Settings > Apps > Untail > Paste from Other Apps and choose Allow.",
     "openSettings": "Open Settings"
@@ -42,7 +42,8 @@
     "referralCode": "Referral / promoter code in the link: {{code}}",
     "report": "Report a problem",
     "copiedTag": "Copied",
-    "reportDoubt": "Looks wrong? Report it"
+    "reportDoubt": "Looks wrong? Report it",
+    "notSafetyCheck": "Untail only removes trackers; it doesn't judge whether a link is safe."
   },
   "risk": {
     "high": "High risk",

@@ -9,9 +9,9 @@
     "cleaning": "処理中…",
     "clipboardOffer": "クリップボードにリンクがあります。クリーンなリンクを取得しますか？",
     "clipboardClean": "クリーンなリンクを取得",
-    "autoCleaned": "クリップボードのリンクをクリーンなリンクに置き換えました。そのまま貼り付けできます。",
+    "autoCleaned": "クリップボードのリンクから追跡コードを取り除きました。",
     "undo": "元に戻す",
-    "clipboardNoTracking": "このリンクはもともときれいです。そのまま共有できます。",
+    "clipboardNoTracking": "追跡コードは見つかりませんでした。Untail は追跡コードを取り除くだけで、リンクが安全かどうかは確認しません。",
     "dismiss": "閉じる",
     "iosPasteHint": "毎回「ペーストを許可」と聞かれないようにするには、「設定 > アプリ > Untail > ほかのAppからペースト」を「許可」にしてください。",
     "openSettings": "設定を開く"
@@ -42,7 +42,8 @@
     "referralCode": "リンク内の紹介・アフィリエイトコード：{{code}}",
     "report": "問題を報告",
     "copiedTag": "コピー済み",
-    "reportDoubt": "おかしい？報告する"
+    "reportDoubt": "おかしい？報告する",
+    "notSafetyCheck": "Untail は追跡コードを取り除くだけで、リンクの安全性は判断しません。"
   },
   "risk": {
     "high": "高リスク",
