@@ -21,6 +21,11 @@ describe('activeProviders', () => {
     const names = activeProviders('https://accounts.google.com/x', providers).map((p) => p.urlPattern);
     expect(names).not.toContain(providers.google!.urlPattern);
   });
+  it('matches providers on the real host, not on userinfo', () => {
+    const fb = { fb: { urlPattern: '^https?:\\/\\/(?:[a-z0-9-]+\\.)*?facebook\\.com' } };
+    expect(activeProviders('https://facebook.com@evil.example/x', fb)).toHaveLength(0);
+    expect(activeProviders('https://user@facebook.com/x', fb)).toHaveLength(1);
+  });
   it('skips providers with invalid urlPattern', () => {
     expect(activeProviders('https://ex.com/', providers)).not.toContain(providers.brokenPattern);
   });

@@ -78,6 +78,19 @@ describe('expandUrl', () => {
     expect(r.url).toBe('https://www.facebook.com/photo.php?fbid=123');
   });
 
+  it('gives up on a redirect target the browser would refuse', async () => {
+    const XHS = 'https://xhslink.com/o/TEST01';
+    const fetch = fakeFetch({ [XHS]: { url: XHS, status: 302, location: 'https://example.com:bad/post' } });
+    const r = await expandUrl(XHS, expanders, opts(fetch));
+    expect(r.reason).toBe('unresolved');
+  });
+
+  it('spots a login wall hidden behind an odd spelling', async () => {
+    const fetch = fakeFetch({ [FB]: { url: loginFor('https://m.facebook.com\\login.php?next=x') } });
+    const r = await expandUrl(FB, expanders, opts(fetch));
+    expect(r.reason).toBe('unresolved');
+  });
+
   it('reads the post URL out of a login wall and normalizes the host', async () => {
     const mPost = 'https://m.facebook.com/groups/somegroup/permalink/1234567890/?rdid=xyz';
     const login = loginFor(mPost);

@@ -4,11 +4,11 @@ import { unwrapUrl } from './unwrap';
 import { findExpander, expandUrl, DEFAULT_USER_AGENT, DEFAULT_TIMEOUT_MS } from './expand';
 import { cleanUrl } from './clean';
 import { analyze } from './analyze';
-import { safeDecode } from './query';
+import { canonicalUrl, safeDecode } from './query';
 
 const MAX_EXPANSIONS = 3;
 const MIN_SHARE_ID_LENGTH = 6; // shorter IDs would match by coincidence
-const EMBEDDED_URL = /https?:\/\/[^\s"'<>&]+/gi;
+const EMBEDDED_URL = /https?:[/\\]+[^\s"'<>&]+/gi;
 
 // Last line of defence: the cleaned URL must not still carry a share ID we removed
 // upstream, nor embed another short/share link (e.g. a new login page or param name).
@@ -16,7 +16,9 @@ function stillTracked(url: string, shareIds: string[], expanders: Record<string,
   const views = [url, safeDecode(url), safeDecode(safeDecode(url))];
   const ids = shareIds.filter((id) => id.length >= MIN_SHARE_ID_LENGTH);
   if (views.some((v) => ids.some((id) => v.includes(id)))) return true;
-  return views.some((v) => (v.slice(1).match(EMBEDDED_URL) ?? []).some((u) => findExpander(u, expanders)));
+  return views.some((v) =>
+    (v.slice(1).match(EMBEDDED_URL) ?? []).some((u) => findExpander(canonicalUrl(u) ?? u, expanders)),
+  );
 }
 
 export interface ProcessOptions {

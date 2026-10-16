@@ -59,6 +59,17 @@ export function parseUrl(url: string): URL | null {
   }
 }
 
+// What rules are matched against: the URL without userinfo, which never decides the site
+// (https://facebook.com@evil.example opens evil.example).
+export function matchView(url: string): string {
+  if (!/^[a-z][a-z0-9+.-]*:\/\/[^/?#]*@/i.test(url)) return url;
+  const u = parseUrl(url);
+  if (!u) return url;
+  u.username = '';
+  u.password = '';
+  return u.href;
+}
+
 export function getHost(url: string): string {
   return parseUrl(url)?.hostname.toLowerCase() ?? '';
 }

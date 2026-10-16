@@ -60,6 +60,10 @@ describe('extractUrl', () => {
     expect(extractUrl('HTTPS://WWW.Threads.com/share/x')).toBe('HTTPS://WWW.Threads.com/share/x');
     expect(extractUrl('https://ex.com/a%20b?q=%E4%B8%AD')).toBe('https://ex.com/a%20b?q=%E4%B8%AD');
   });
+  it('stops at CJK quotes and title marks around the URL', () => {
+    expect(extractUrl('請看《https://example.com/item》')).toBe('https://example.com/item');
+    expect(extractUrl('“https://example.com/item”')).toBe('https://example.com/item');
+  });
   it('returns null when there is no http(s) URL', () => {
     expect(extractUrl('no link here')).toBeNull();
     expect(extractUrl('ftp://ex.com/file')).toBeNull();

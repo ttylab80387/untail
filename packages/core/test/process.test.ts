@@ -30,6 +30,8 @@ const rules: RuleBundle = {
 const THREADS = 'https://www.threads.com/share/BAAtest0001/';
 const THREADS_POST = 'https://www.threads.com/@someone/post/DTest00001?xmt=AQGtest&slof=1';
 
+const EMBEDDED_ODD_SHARE = 'https://example.com/a?next=https:%5C%5Cwww.threads.com%5Cshare%5CABCDEF123';
+
 const noFetch: FetchFn = async (url) => {
   throw new Error(`fetch must not be called: ${url}`);
 };
@@ -41,6 +43,11 @@ const mapFetch = (map: Record<string, string>): FetchFn => async (url) => {
 };
 
 describe('processUrl', () => {
+  it('still flags a share link embedded with an odd spelling', async () => {
+    const r = await processUrl(EMBEDDED_ODD_SHARE, rules, { expand: true, locale: 'en', fetch: noFetch });
+    expect(r.status).toBe('partial');
+  });
+
   it('fails on input without a URL', async () => {
     expect(await processUrl('hello', rules, { expand: true, locale: 'en', fetch: noFetch })).toEqual({
       originalUrl: 'hello',

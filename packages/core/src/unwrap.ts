@@ -1,6 +1,6 @@
 import type { Provider } from './types';
 import { compile } from './regex';
-import { safeDecode } from './query';
+import { canonicalUrl, safeDecode } from './query';
 import { activeProviders } from './providers';
 
 export interface UnwrapResult {
@@ -17,10 +17,17 @@ const BARE_HOST = /^[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:[/?#]|$)/i;
 function toHttpUrl(captured: string): string | null {
   // Try the raw capture first so already-usable targets keep encoded bytes such as %2F;
   // only percent-encoded wrappers (u=https%3A%2F%2F...) need decoding.
+  // The target gets the same browser-equivalent spelling as user input; one a browser would
+  // refuse is no target at all.
   for (const candidate of [captured, safeDecode(captured)]) {
-    if (HTTP.test(candidate)) return candidate;
     // ClearURLs captures may omit the scheme (e.g. Google AMP /amp/s/example.com/p).
-    if (!SCHEME.test(candidate) && BARE_HOST.test(candidate)) return `https://${candidate}`;
+    const url = HTTP.test(candidate)
+      ? candidate
+      : !SCHEME.test(candidate) && BARE_HOST.test(candidate)
+        ? `https://${candidate}`
+        : null;
+    const canonical = url ? canonicalUrl(url) : null;
+    if (canonical) return canonical;
   }
   return null;
 }

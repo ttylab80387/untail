@@ -25,6 +25,15 @@ const providers: Record<string, Provider> = {
 const googleWrap = (u: string) => `https://www.google.com/url?q=${encodeURIComponent(u)}`;
 
 describe('unwrapUrl', () => {
+  it('rewrites an unwrapped target to the URL the browser opens', () => {
+    expect(unwrapUrl(googleWrap('https://%66acebook.com/share/REAL999/'), providers).url).toBe(
+      'https://facebook.com/share/REAL999/',
+    );
+  });
+  it('treats a target the browser would refuse as no target', () => {
+    expect(unwrapUrl(googleWrap('https://example.com:bad/a'), providers).hops).toHaveLength(1);
+  });
+
   it('unwraps l.facebook.com links', () => {
     expect(unwrapUrl('https://l.facebook.com/l.php?u=https%3A%2F%2Fex.com%2Fa%3Fb%3D1&h=AT0x', providers)).toEqual({
       url: 'https://ex.com/a?b=1',

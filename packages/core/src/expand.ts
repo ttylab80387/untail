@@ -1,6 +1,6 @@
 import type { Expander, ExpandFailure, FetchFn, RemovedItem } from './types';
 import { compile, matches } from './regex';
-import { canonicalUrl, getHost, getPath, getParam } from './query';
+import { canonicalUrl, getHost, getPath, getParam, matchView } from './query';
 
 export const DEFAULT_USER_AGENT = 'Untail/0.1';
 export const DEFAULT_TIMEOUT_MS = 5000;
@@ -30,11 +30,13 @@ class HttpError extends Error {
 }
 
 export function findExpander(url: string, expanders: Record<string, Expander>): Expander | undefined {
-  return Object.values(expanders).find((e) => matches(e.match, url));
+  const view = matchView(url);
+  return Object.values(expanders).find((e) => matches(e.match, view));
 }
 
 function findLoginWall(url: string, expanders: Record<string, Expander>): Expander['loginWall'] {
-  return Object.values(expanders).find((e) => e.loginWall && matches(e.loginWall.match, url))?.loginWall;
+  const view = matchView(url);
+  return Object.values(expanders).find((e) => e.loginWall && matches(e.loginWall.match, view))?.loginWall;
 }
 
 function normalizeHost(url: string, expanders: Record<string, Expander>): string {
@@ -100,23 +102,26 @@ export async function expandUrl(url: string, expanders: Record<string, Expander>
   // Always ask over https: it hides the link from the network, and Android release builds
   // refuse cleartext requests (Xiaohongshu shares http://xhslink.com links).
   const requestUrl = url.replace(/^http:\/\//i, 'https://');
-  let finalUrl: string;
+  let raw: string;
   try {
-    // Redirect targets get the same browser-equivalent spelling as user input.
-    const raw = await resolve(requestUrl, opts, expander.firstHop === true);
-    finalUrl = canonicalUrl(raw) ?? raw;
+    raw = await resolve(requestUrl, opts, expander.firstHop === true);
   } catch (e) {
     if (e instanceof HttpError) return fail('network', e.finalUrl === url || e.finalUrl === requestUrl ? [url] : [url, e.finalUrl]);
     return fail(e instanceof TimeoutError ? 'expand_timeout' : 'network');
   }
 
+  // Redirect targets get the same browser-equivalent spelling as user input;
+  // one a browser would refuse leaves the link unresolved.
+  const finalUrl = canonicalUrl(raw);
+  if (!finalUrl) return fail('unresolved', [url, raw]);
   const hops = [url, finalUrl];
   let resolved = finalUrl;
   const wall = findLoginWall(finalUrl, expanders);
   if (wall) {
-    const next = getParam(finalUrl, wall.param);
-    if (!next || !HTTP.test(next) || findLoginWall(next, expanders)) return fail('unresolved', hops);
-    resolved = canonicalUrl(next) ?? next;
+    const param = getParam(finalUrl, wall.param);
+    const next = param ? canonicalUrl(param) : null;
+    if (!next || findLoginWall(next, expanders)) return fail('unresolved', hops);
+    resolved = next;
     hops.push(resolved);
   }
   // A different URL that is again a short/share link is handed back to processUrl's loop.
