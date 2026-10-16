@@ -24,7 +24,7 @@ Untail：去除連結追蹤碼
 【它會做什麼】
 ・移除常見的追蹤參數，並告訴你每一個是什麼、由誰使用、風險高低
 ・展開分享用的短網址（例如 Facebook、Threads、TikTok、bilibili、小紅書、Reddit 的分享連結），去掉裡面的分享者代碼
-・顯示連結裡的推薦碼或聯盟行銷代碼，讓你知道誰會因此得到分潤
+・顯示連結裡的推薦碼或聯盟行銷代碼
 ・處理好的乾淨連結可以直接複製、分享或打開
 
 【隱私】
@@ -36,7 +36,7 @@ Untail：去除連結追蹤碼
 
 【小提醒】
 ・追蹤方式一直在變，Untail 不能保證清掉所有追蹤碼。遇到沒處理乾淨的連結，可以用 App 裡的「回報問題」告訴我們
-・Untail 與 Facebook、Instagram、Threads、TikTok 等平台沒有任何關係
+・Untail 與 Facebook、Instagram、Threads、TikTok、bilibili、小紅書、Reddit 等平台沒有任何關係
 
 支援繁體中文、English、日本語。
 
@@ -61,7 +61,7 @@ HOW TO USE
 WHAT IT DOES
 • Removes common tracking parameters and explains each one: what it is, who uses it, how risky it is.
 • Expands share short links (for example from Facebook, Threads, TikTok, bilibili, Xiaohongshu and Reddit) and drops the sharer ID inside.
-• Shows referral and affiliate codes so you can see who earns from the link.
+• Shows referral and affiliate codes found in the link.
 • Copy, share or open the clean link in one tap.
 
 PRIVACY
@@ -73,7 +73,7 @@ PRIVACY
 
 GOOD TO KNOW
 • Tracking keeps changing, so Untail cannot promise to catch every tracker. If a link isn't cleaned well, use "Report a problem" in the app.
-• Untail is not affiliated with Facebook, Instagram, Threads, TikTok or any other platform.
+• Untail is not affiliated with Facebook, Instagram, Threads, TikTok, bilibili, Xiaohongshu, Reddit or any other platform.
 
 Available in English, 繁體中文 and 日本語.
 
@@ -99,7 +99,7 @@ Untail - リンクの追跡コード除去
 ・よく使われる追跡パラメータを削除し、それぞれの意味・利用者・リスクを説明します
 ・共有用の短縮リンク（Facebook、Threads、TikTok、bilibili、小紅書、Reddit など）を展開し、共有者 ID を取り除きます
 ・リンクに含まれる紹介コードやアフィリエイトコードを表示します
-・クリーンなリンクをワンタップでコピー、共有、表示できます
+・クリーンなリンクをワンタップでコピー、共有したり、ブラウザで開いたりできます
 
 【プライバシー】
 ・アカウント不要、広告なし、分析・追跡ツールは一切使っていません
@@ -110,7 +110,7 @@ Untail - リンクの追跡コード除去
 
 【ご注意】
 ・追跡の方法は変わり続けるため、すべての追跡コードを取り除けるとは限りません。うまくクリーンにならないリンクは、アプリの「問題を報告」からお知らせください
-・Untail は Facebook、Instagram、Threads、TikTok などのサービスとは一切関係ありません
+・Untail は Facebook、Instagram、Threads、TikTok、bilibili、小紅書、Reddit などのサービスとは一切関係ありません
 
 日本語、English、繁體中文に対応しています。
 
