@@ -433,5 +433,30 @@
         "exln"
       ]
     }
+  },
+  {
+    "name": "LINE lin.ee link shows the LINE account it opens",
+    "input": "https://lin.ee/TESTline1",
+    "responses": {
+      "https://lin.ee/TESTline1": "https://line.me/R/ti/p/@test0001?oat_content=url&ts=01010101"
+    },
+    "expected": {
+      "cleanUrl": "https://line.me/R/ti/p/@test0001",
+      "status": "clean",
+      "removedKeys": [
+        "oat_content",
+        "ts"
+      ]
+    }
+  },
+  {
+    "name": "Other LINE links keep their ts parameter",
+    "input": "https://line.me/S/sticker/1?ts=123",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://line.me/S/sticker/1?ts=123",
+      "status": "clean",
+      "removedKeys": []
+    }
   }
 ]

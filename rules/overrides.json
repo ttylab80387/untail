@@ -66,6 +66,13 @@
         "stkn",
         "exln"
       ]
+    },
+    "line.me-oa": {
+      "urlPattern": "^https?:\\/\\/line\\.me\\/R\\/ti\\/p\\/",
+      "rules": [
+        "oat_content",
+        "ts"
+      ]
     }
   }
 }

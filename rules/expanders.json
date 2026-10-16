@@ -35,6 +35,10 @@
     "firstHop": true,
     "shareId": "/s/([^/?#]+)"
   },
+  "line": {
+    "match": "^https?://lin\\.ee/",
+    "firstHop": true
+  },
   "generic": {
     "match": "^https?://(bit\\.ly|t\\.co|lnkd\\.in|amzn\\.to|shp\\.ee|fb\\.me)/"
   }

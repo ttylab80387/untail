@@ -1053,5 +1053,25 @@
       "en": "An invisible character that changes text direction, often used to make an address look like a different one.",
       "ja": "文字の表示方向を変える隠し文字です。アドレスを別のものに見せかけるためによく使われます。"
     }
+  },
+  "line.me:oat_content": {
+    "owner": "LINE",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "LINE 官方帳號的加入管道統計，記錄你是從哪種連結加入的。",
+      "en": "LINE Official Account source tracking: records which kind of link you joined from.",
+      "ja": "LINE 公式アカウントの流入元の計測です。どの種類のリンクから追加したかを記録します。"
+    }
+  },
+  "line.me:ts": {
+    "owner": "LINE",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "LINE 官方帳號連結的建立代碼，用於統計。",
+      "en": "Code of the LINE Official Account link, used for statistics.",
+      "ja": "LINE 公式アカウントのリンクを識別するコードで、計測に使われます。"
+    }
   }
 }
