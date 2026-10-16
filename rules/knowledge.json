@@ -1036,24 +1036,6 @@
       "ja": "Instagram の新しい共有識別子（base64 でエンコードされたランダムなコード）。この共有に紐付き、誰が共有したかを Instagram が把握できる可能性があります。"
     }
   },
-  "hidden": {
-    "category": "hidden",
-    "risk": "medium",
-    "desc": {
-      "zh-TW": "看不見的字元。可能讓連結打不開、被用來辨識是誰複製的，或用來偽裝網址。",
-      "en": "An invisible character. It can break the link, identify who copied it, or disguise the address.",
-      "ja": "目に見えない文字です。リンクが開けなくなったり、コピーした人の特定や、アドレスの偽装に使われたりすることがあります。"
-    }
-  },
-  "hidden-bidi": {
-    "category": "hidden",
-    "risk": "high",
-    "desc": {
-      "zh-TW": "改變文字顯示方向的隱藏字元，常被用來讓網址看起來像另一個網址。",
-      "en": "An invisible character that changes text direction, often used to make an address look like a different one.",
-      "ja": "文字の表示方向を変える隠し文字です。アドレスを別のものに見せかけるためによく使われます。"
-    }
-  },
   "line.me:oat_content": {
     "owner": "LINE",
     "category": "campaign",

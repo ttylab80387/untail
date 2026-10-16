@@ -8,7 +8,9 @@ export interface OwnData {
   knowledge: Record<string, KnowledgeEntry>;
 }
 
-const CATEGORIES = ['sharer_id', 'ad_click', 'affiliate', 'campaign', 'session', 'hidden', 'unknown'];
+// Only categories every installed app accepts: an app rejects the whole bundle on an unknown one.
+// ('hidden' is described by the app itself, not by published rules.)
+const CATEGORIES = ['sharer_id', 'ad_click', 'affiliate', 'campaign', 'session', 'unknown'];
 const RISKS = ['high', 'medium', 'low'];
 const LOCALES = ['zh-TW', 'en', 'ja'] as const;
 const KEY_PATTERN_FIELDS = new Set(['rules', 'referralMarketing']);

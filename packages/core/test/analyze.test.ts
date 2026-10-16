@@ -80,3 +80,13 @@ describe('analyze', () => {
     expect(r.map((p) => p.key)).toEqual(['si', 'fbclid', 'utm_source', 'zzz']);
   });
 });
+
+describe('built-in knowledge for hidden characters', () => {
+  it('describes hidden characters even when the rules have no entry', () => {
+    const [plain] = analyze([{ key: 'hidden', value: 'U+200B', host: 'ex.com' }], {}, 'zh-TW');
+    expect(plain).toMatchObject({ category: 'hidden', risk: 'medium' });
+    expect(plain!.desc).toContain('看不見');
+    const [bidi] = analyze([{ key: 'hidden-bidi', value: 'U+202E', host: 'ex.com' }], {}, 'en');
+    expect(bidi).toMatchObject({ category: 'hidden', risk: 'high' });
+  });
+});

@@ -89,4 +89,11 @@ describe('checked-in rule data', () => {
       expect(p.desc).toBeDefined();
     }
   });
+  // Published to every installed app: an app rejects the whole bundle when it sees a category it
+  // does not know, so only categories that version 0.1.1 accepts may appear here.
+  it('only uses knowledge categories that installed 0.1.1 apps accept', () => {
+    const v011 = ['sharer_id', 'ad_click', 'affiliate', 'campaign', 'session', 'unknown'];
+    const bad = Object.entries(knowledge as Record<string, KnowledgeEntry>).filter(([, k]) => !v011.includes(k.category));
+    expect(bad.map(([key]) => key)).toEqual([]);
+  });
 });

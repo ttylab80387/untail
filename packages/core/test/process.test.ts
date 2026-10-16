@@ -20,8 +20,6 @@ const rules: RuleBundle = {
     generic: { match: '^https?://(bit\\.ly|fb\\.me)/' },
   },
   knowledge: {
-    hidden: { category: 'hidden', risk: 'medium', desc: { en: 'hidden' } },
-    'hidden-bidi': { category: 'hidden', risk: 'high', desc: { en: 'hidden bidi' } },
     'threads.com:share-id': { owner: 'Meta', category: 'sharer_id', risk: 'high', desc: { en: 'share id' } },
     'threads.com:xmt': { owner: 'Meta', category: 'sharer_id', risk: 'high', desc: { en: 'xmt' } },
     'facebook.com:share-id': { owner: 'Meta', category: 'sharer_id', risk: 'high', desc: { en: 'fb share id' } },
