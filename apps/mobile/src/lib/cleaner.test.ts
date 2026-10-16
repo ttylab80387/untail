@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { FetchFn, RuleBundle } from '@linkclean/core';
 import { cleanInput } from './cleaner';
+import { decideText, initialWatchState } from './clipboardWatch';
 import type { CleanDeps } from './cleaner';
 import { listHistory, migrate } from './db';
 import type { Db } from './db';
@@ -106,5 +107,14 @@ describe('cleanInput', () => {
     expect(out.copied).toBe(false);
     expect(copied).toEqual([]);
     expect(await listHistory(db)).toEqual([]);
+  });
+
+  it('gives the same result for clipboard text and for the same text typed in', async () => {
+    const text = '看 https://example.com/a.\u200B';
+    const offered = decideText(text, initialWatchState(), rules).url!;
+    const a = await cleanInput(offered, deps());
+    const b = await cleanInput(text, deps());
+    expect(a.result.cleanUrl).toBe(b.result.cleanUrl);
+    expect(a.result.cleanUrl).toBe('https://example.com/a');
   });
 });

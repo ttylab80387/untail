@@ -1,4 +1,4 @@
-import { cleanUrl, extractUrl, findExpander, unwrapUrl } from '@linkclean/core';
+import { cleanUrl, extractUrlDetailed, findExpander, unwrapUrl } from '@linkclean/core';
 import type { RuleBundle } from '@linkclean/core';
 import type { CleanOutcome } from './cleaner';
 
@@ -31,15 +31,22 @@ export function needsCleaning(url: string, rules: RuleBundle): boolean {
 // already seen and links that are already clean (such as one the app copied in an earlier session).
 // `fresh` means the clipboard changed since the last check, so notices about the old content are stale.
 // `clean` is a new link with nothing to clean, so the screen can show it and the user can tell the check ran.
+// An offered `url` is the whole clipboard text, so it is processed exactly like the same text typed in.
 export function decideText(
   text: string,
   s: WatchState,
   rules: RuleBundle,
 ): { url: string | null; fresh: boolean; clean: string | null; next: WatchState } {
   const fresh = text !== '' && text !== s.lastSeenText;
-  const found = fresh ? extractUrl(text) : null;
-  const url = found && needsCleaning(found, rules) ? found : null;
-  return { url, fresh, clean: url === null ? found : null, next: { ...s, lastSeenText: text || s.lastSeenText } };
+  const found = fresh ? extractUrlDetailed(text) : null;
+  // Hidden characters (removed or kept) are worth showing even without tracking params.
+  const offer = found !== null && (needsCleaning(found.url, rules) || found.hidden.length > 0);
+  return {
+    url: offer ? text : null,
+    fresh,
+    clean: found && !offer ? found.url : null,
+    next: { ...s, lastSeenText: text || s.lastSeenText },
+  };
 }
 
 // iOS reading the text would prompt, so only the link check and the change count are used.

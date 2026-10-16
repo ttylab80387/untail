@@ -31,9 +31,9 @@ describe('needsCleaning', () => {
 });
 
 describe('decideText', () => {
-  it('offers the URL found in new clipboard text', () => {
+  it('offers new clipboard text that holds a link to clean, passing the whole text on', () => {
     const r = decideText('看這個 https://ex.com/a?utm_source=x', initialWatchState(), rules);
-    expect(r.url).toBe('https://ex.com/a?utm_source=x');
+    expect(r.url).toBe('看這個 https://ex.com/a?utm_source=x');
   });
 
   it('does not offer the same text twice', () => {
@@ -146,5 +146,18 @@ describe('undoTarget', () => {
 
   it('returns null when the copied text equals the original', () => {
     expect(undoTarget('https://ex.com/a', outcome('https://ex.com/a', true))).toBeNull();
+  });
+});
+
+describe('decideText with hidden characters', () => {
+  it('offers a link whose only problem is a zero-width space, passing the whole text on', () => {
+    const text = '看 https://example.com/a\u200Bb 。';
+    const d = decideText(text, initialWatchState(), rules);
+    expect(d.url).toBe(text);
+    expect(d.clean).toBeNull();
+  });
+  it('also offers a link that only carries a kept joiner, so the finding can be shown', () => {
+    const d = decideText('https://example.com/a\u200Db', initialWatchState(), rules);
+    expect(d.url).toBe('https://example.com/a\u200Db');
   });
 });
