@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import type { TFunction } from 'i18next';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Linking, Pressable, Share, StyleSheet, Text, View } from 'react-native';
@@ -52,6 +53,14 @@ function ParamRow({ p }: { p: AnalyzedParam }) {
   );
 }
 
+// The headline states what was done, never that a link is "clean" or safe.
+export function statusText(t: TFunction, result: ProcessResult): string {
+  if (result.status !== 'clean') return t(`result.status.${result.status}`);
+  return result.removed.length
+    ? t('result.status.removed', { count: result.removed.length })
+    : t('result.status.none');
+}
+
 export function ResultCard({ result, copied }: { result: ProcessResult; copied: boolean }) {
   const { t } = useTranslation();
   const c = useColors();
@@ -74,7 +83,7 @@ export function ResultCard({ result, copied }: { result: ProcessResult; copied: 
   return (
     <View style={[styles.card, { backgroundColor: c.card }]}>
       <Text style={[styles.status, { color: statusColor }]}>
-        {t(`result.status.${result.status}`)}
+        {statusText(t, result)}
         {copied ? <Text style={{ color: c.muted, fontWeight: '600' }}>{`  ·  ${t('result.copiedTag')}`}</Text> : null}
       </Text>
       {result.reason && <Text style={{ color: c.warn, lineHeight: 19 }}>{t(`result.reason.${result.reason}`)}</Text>}

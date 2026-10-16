@@ -9,7 +9,7 @@
     "cleaning": "處理中…",
     "clipboardOffer": "剪貼簿裡有連結，要取得乾淨連結嗎？",
     "clipboardClean": "取得乾淨連結",
-    "autoCleaned": "已移除剪貼簿連結裡的追蹤碼。",
+    "autoCleaned": "已更新剪貼簿裡的連結。",
     "undo": "復原",
     "clipboardNoTracking": "沒有找到追蹤碼。Untail 只清除追蹤碼，不會檢查連結是否安全。",
     "dismiss": "略過",
@@ -21,7 +21,9 @@
     "status": {
       "clean": "已取得乾淨連結",
       "partial": "可能仍有追蹤碼",
-      "failed": "找不到有效網址"
+      "failed": "找不到有效網址",
+      "removed": "已移除 {{count}} 個追蹤碼",
+      "none": "沒有找到追蹤碼"
     },
     "reason": {
       "expand_disabled": "已關閉短網址展開，這個分享連結仍可能帶有分享者資訊。",
@@ -31,7 +33,7 @@
       "invalid_input": "請貼上以 http:// 或 https:// 開頭的連結。"
     },
     "copy": "複製",
-    "copied": "已複製乾淨連結",
+    "copied": "已複製連結",
     "share": "分享",
     "open": "開啟",
     "removedCount": "已移除的追蹤碼：{{count}}",
@@ -46,9 +48,9 @@
     "notSafetyCheck": "Untail 只移除追蹤碼，不會判斷連結是否安全。"
   },
   "risk": {
-    "high": "高風險",
-    "medium": "中風險",
-    "low": "低風險"
+    "high": "追蹤風險：高",
+    "medium": "追蹤風險：中",
+    "low": "追蹤風險：低"
   },
   "category": {
     "sharer_id": "分享者識別",

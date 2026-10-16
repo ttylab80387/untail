@@ -7,6 +7,7 @@ import type { HistoryEntry } from '../src/lib/db';
 import { useApp } from '../src/state/AppContext';
 import { MONO, useColors } from '../src/theme';
 import { useBottomPadding } from '../src/bottomPadding';
+import { statusText } from '../src/components/ResultCard';
 
 export default function History() {
   const bottomPadding = useBottomPadding();
@@ -54,7 +55,7 @@ export default function History() {
               {item.result.cleanUrl}
             </Text>
             <Text style={{ color: item.result.status === 'clean' ? c.ok : c.warn, fontSize: 12 }}>
-              {t(`result.status.${item.result.status}`)} · {t('result.removedCount', { count: item.result.removed.length })}
+              {statusText(t, item.result)}
             </Text>
           </Pressable>
         )}

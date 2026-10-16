@@ -9,7 +9,7 @@
     "cleaning": "Working…",
     "clipboardOffer": "There is a link on the clipboard. Get a clean link?",
     "clipboardClean": "Get clean link",
-    "autoCleaned": "Tracking codes were removed from the clipboard link.",
+    "autoCleaned": "The clipboard link was updated.",
     "undo": "Undo",
     "clipboardNoTracking": "No tracking codes found. Untail only removes trackers; it doesn't check whether a link is safe.",
     "dismiss": "Dismiss",
@@ -21,7 +21,9 @@
     "status": {
       "clean": "Clean link ready",
       "partial": "May still contain tracking",
-      "failed": "No valid link found"
+      "failed": "No valid link found",
+      "removed": "Tracking codes removed: {{count}}",
+      "none": "No tracking codes found"
     },
     "reason": {
       "expand_disabled": "Short-link expansion is off, so this share link may still identify who shared it.",
@@ -31,7 +33,7 @@
       "invalid_input": "Paste a link that starts with http:// or https://."
     },
     "copy": "Copy",
-    "copied": "Clean link copied",
+    "copied": "Link copied",
     "share": "Share",
     "open": "Open",
     "removedCount": "Tracking codes removed: {{count}}",
@@ -46,9 +48,9 @@
     "notSafetyCheck": "Untail only removes trackers; it doesn't judge whether a link is safe."
   },
   "risk": {
-    "high": "High risk",
-    "medium": "Medium risk",
-    "low": "Low risk"
+    "high": "Tracking risk: high",
+    "medium": "Tracking risk: medium",
+    "low": "Tracking risk: low"
   },
   "category": {
     "sharer_id": "Sharer identity",
