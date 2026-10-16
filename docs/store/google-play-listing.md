@@ -22,7 +22,7 @@ Untail：去除連結追蹤碼
 ・也可以開啟「自動處理剪貼簿連結」：打開 App 就直接換成乾淨連結，不用再按
 
 【它會做什麼】
-・移除常見的追蹤參數，並告訴你每一個是什麼、由誰使用、風險高低
+・移除常見的追蹤參數，並告訴你每一個是什麼、由誰使用、追蹤程度多高
 ・展開分享用的短網址（例如 Facebook、Threads、TikTok、bilibili、小紅書、Reddit 的分享連結），去掉裡面的分享者代碼
 ・顯示連結裡的推薦碼或聯盟行銷代碼
 ・處理好的乾淨連結可以直接複製、分享或打開
@@ -35,6 +35,7 @@ Untail：去除連結追蹤碼
 ・追蹤碼規則公開在 GitHub，會自動更新，不用等 App 改版
 
 【小提醒】
+・Untail 只移除追蹤碼，不會檢查連結是否安全
 ・追蹤方式一直在變，Untail 不能保證清掉所有追蹤碼。遇到沒處理乾淨的連結，可以用 App 裡的「回報問題」告訴我們
 ・Untail 與 Facebook、Instagram、Threads、TikTok、bilibili、小紅書、Reddit 等平台沒有任何關係
 
@@ -59,7 +60,7 @@ HOW TO USE
 • Or turn on "Clean clipboard links automatically": opening the app swaps in the clean link, no tapping.
 
 WHAT IT DOES
-• Removes common tracking parameters and explains each one: what it is, who uses it, how risky it is.
+• Removes common tracking parameters and explains each one: what it is, who uses it, and how much it tracks you.
 • Expands share short links (for example from Facebook, Threads, TikTok, bilibili, Xiaohongshu and Reddit) and drops the sharer ID inside.
 • Shows referral and affiliate codes found in the link.
 • Copy, share or open the clean link in one tap.
@@ -72,6 +73,7 @@ PRIVACY
 • The tracking rules are public on GitHub and update automatically, without waiting for an app update.
 
 GOOD TO KNOW
+• Untail removes trackers; it does not check whether a link is safe.
 • Tracking keeps changing, so Untail cannot promise to catch every tracker. If a link isn't cleaned well, use "Report a problem" in the app.
 • Untail is not affiliated with Facebook, Instagram, Threads, TikTok, bilibili, Xiaohongshu, Reddit or any other platform.
 
@@ -96,7 +98,7 @@ Untail - リンクの追跡コード除去
 ・「クリップボードのリンクを自動でクリーンに」をオンにすると、アプリを開くだけでクリーンなリンクに置き換わります
 
 【できること】
-・よく使われる追跡パラメータを削除し、それぞれの意味・利用者・リスクを説明します
+・よく使われる追跡パラメータを削除し、それぞれの意味・利用者・追跡の度合いを説明します
 ・共有用の短縮リンク（Facebook、Threads、TikTok、bilibili、小紅書、Reddit など）を展開し、共有者 ID を取り除きます
 ・リンクに含まれる紹介コードやアフィリエイトコードを表示します
 ・クリーンなリンクをワンタップでコピー、共有したり、ブラウザで開いたりできます
@@ -109,6 +111,7 @@ Untail - リンクの追跡コード除去
 ・追跡ルールは GitHub で公開され、アプリの更新を待たずに自動で更新されます
 
 【ご注意】
+・Untail は追跡コードを取り除くだけで、リンクが安全かどうかは確認しません
 ・追跡の方法は変わり続けるため、すべての追跡コードを取り除けるとは限りません。うまくクリーンにならないリンクは、アプリの「問題を報告」からお知らせください
 ・Untail は Facebook、Instagram、Threads、TikTok、bilibili、小紅書、Reddit などのサービスとは一切関係ありません
 
