@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractUrl } from '../src/extract';
+import { extractUrl, extractUrlDetailed } from '../src/extract';
 
 describe('extractUrl', () => {
   it('returns a bare URL', () => {
@@ -68,5 +68,29 @@ describe('extractUrl', () => {
     expect(extractUrl('no link here')).toBeNull();
     expect(extractUrl('ftp://ex.com/file')).toBeNull();
     expect(extractUrl('')).toBeNull();
+  });
+  it('keeps a URL whole across a BOM and strips hidden characters', () => {
+    expect(extractUrl('https://example.com/a\uFEFFb')).toBe('https://example.com/ab');
+    expect(extractUrl('看這個\u200Bhttps://x.com/a\u200B\u3002')).toBe('https://x.com/a');
+  });
+  it('strips hidden characters from a bare URL too', () => {
+    expect(extractUrl('https://ex\u200Bample.com/a')).toBe('https://example.com/a');
+  });
+  it('keeps every 。 in the host of a bare URL', () => {
+    expect(extractUrl('https://example\u3002com/a')).toBe('https://example.com/a');
+    expect(extractUrl('https://例子\u3002台灣/')).toBe('https://例子.台灣/');
+    expect(extractUrl('https://a\u3002b\u3002example\u3002com')).toBe('https://a.b.example.com/');
+  });
+  it('treats 。 in prose as a sentence end unless an ASCII label follows it in the host', () => {
+    expect(extractUrl('請看https://example\u3002com/a 謝謝')).toBe('https://example.com/a');
+    expect(extractUrl('請看https://example.com\u3002謝謝')).toBe('https://example.com');
+    expect(extractUrl('請看https://example.com\u300210點見')).toBe('https://example.com');
+    expect(extractUrl('請看https://example.com/a\u3002下一句')).toBe('https://example.com/a');
+  });
+  it('re-scans a host the browser decodes', () => {
+    expect(extractUrlDetailed('https://ex%E2%80%8Bample.com/')).toEqual({
+      url: 'https://example.com/',
+      hidden: [{ code: 'U+200B', part: 'host', removed: true, index: 10 }],
+    });
   });
 });

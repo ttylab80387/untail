@@ -7,7 +7,7 @@ const isStrMap = (v: unknown) => isObj(v) && Object.values(v).every((x) => typeo
 const isPattern = (v: unknown) => typeof v === 'string' && compile(v) !== null;
 
 const RULE_FIELDS = ['rules', 'rawRules', 'referralMarketing', 'exceptions', 'redirections'] as const;
-const CATEGORIES = ['sharer_id', 'ad_click', 'affiliate', 'campaign', 'session', 'unknown'];
+const CATEGORIES = ['sharer_id', 'ad_click', 'affiliate', 'campaign', 'session', 'hidden', 'unknown'];
 const RISKS = ['high', 'medium', 'low'];
 
 // Validates a bundle obtained at runtime: every field core reads must have the type core expects.

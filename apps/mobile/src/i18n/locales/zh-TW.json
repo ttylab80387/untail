@@ -58,7 +58,8 @@
     "affiliate": "推薦／聯盟行銷",
     "campaign": "行銷活動",
     "session": "工作階段",
-    "unknown": "未知"
+    "unknown": "未知",
+    "hidden": "隱藏字元"
   },
   "history": {
     "title": "歷史紀錄",

@@ -8,7 +8,7 @@ export interface OwnData {
   knowledge: Record<string, KnowledgeEntry>;
 }
 
-const CATEGORIES = ['sharer_id', 'ad_click', 'affiliate', 'campaign', 'session', 'unknown'];
+const CATEGORIES = ['sharer_id', 'ad_click', 'affiliate', 'campaign', 'session', 'hidden', 'unknown'];
 const RISKS = ['high', 'medium', 'low'];
 const LOCALES = ['zh-TW', 'en', 'ja'] as const;
 const KEY_PATTERN_FIELDS = new Set(['rules', 'referralMarketing']);

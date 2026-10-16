@@ -19,7 +19,7 @@ export interface Expander {
 }
 
 export type Locale = 'zh-TW' | 'en' | 'ja';
-export type Category = 'sharer_id' | 'ad_click' | 'affiliate' | 'campaign' | 'session' | 'unknown';
+export type Category = 'sharer_id' | 'ad_click' | 'affiliate' | 'campaign' | 'session' | 'hidden' | 'unknown';
 export type Risk = 'high' | 'medium' | 'low';
 
 export interface KnowledgeEntry {
@@ -64,6 +64,19 @@ export interface ProcessResult {
   reason?: Reason;
   removed: AnalyzedParam[];
   hops: string[];
+  hiddenKept?: HiddenChar[]; // invisible characters found and left in place
+}
+
+export type UrlPart = 'userinfo' | 'host' | 'path' | 'query' | 'fragment';
+
+// An invisible character found in a URL. code is like 'U+200B'; index is the offset of its first
+// occurrence in the scanned string; encoded means it was found percent-encoded (never changed).
+export interface HiddenChar {
+  code: string;
+  part: UrlPart;
+  removed: boolean;
+  index: number;
+  encoded?: true;
 }
 
 // Where a link goes. host/domain are for display (Unicode); the ascii* forms are for comparison.

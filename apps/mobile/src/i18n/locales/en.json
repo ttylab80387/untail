@@ -58,7 +58,8 @@
     "affiliate": "Referral / affiliate",
     "campaign": "Campaign",
     "session": "Session",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "hidden": "Hidden character"
   },
   "history": {
     "title": "History",

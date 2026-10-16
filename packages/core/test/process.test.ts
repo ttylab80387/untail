@@ -20,6 +20,8 @@ const rules: RuleBundle = {
     generic: { match: '^https?://(bit\\.ly|fb\\.me)/' },
   },
   knowledge: {
+    hidden: { category: 'hidden', risk: 'medium', desc: { en: 'hidden' } },
+    'hidden-bidi': { category: 'hidden', risk: 'high', desc: { en: 'hidden bidi' } },
     'threads.com:share-id': { owner: 'Meta', category: 'sharer_id', risk: 'high', desc: { en: 'share id' } },
     'threads.com:xmt': { owner: 'Meta', category: 'sharer_id', risk: 'high', desc: { en: 'xmt' } },
     'facebook.com:share-id': { owner: 'Meta', category: 'sharer_id', risk: 'high', desc: { en: 'fb share id' } },
@@ -174,5 +176,20 @@ describe('processUrl', () => {
   it('treats a full-width short link like the ASCII one', async () => {
     const r = await processUrl('https://www.\uFF54\uFF48\uFF52\uFF45\uFF41\uFF44\uFF53.com/share/BAAtest0001/', rules, { expand: false, locale: 'en' });
     expect(r.reason).toBe('expand_disabled');
+  });
+  it('lists each removed hidden character once and reports the ones it kept', async () => {
+    const r = await processUrl('https://ex\u200B.com/a\u200Bb\u200Dc\u202Ed', rules, { expand: false, locale: 'en' });
+    expect(r.cleanUrl).toBe('https://ex.com/ab\u200Dcd');
+    expect(r.removed.filter((p) => p.category === 'hidden').map((p) => [p.key, p.value])).toEqual([
+      ['hidden-bidi', 'U+202E'],
+      ['hidden', 'U+200B'],
+    ]);
+    expect(r.hiddenKept?.map((h) => h.code)).toEqual(['U+200D']);
+  });
+  it('cleans hidden characters in an unwrapped link', async () => {
+    const wrapped = `https://l.facebook.com/l.php?u=${encodeURIComponent('https://example.com/a\u200Bb')}`;
+    const r = await processUrl(wrapped, rules, { expand: false, locale: 'en' });
+    expect(r.cleanUrl).toBe('https://example.com/ab');
+    expect(r.removed.map((p) => p.key)).toContain('hidden');
   });
 });

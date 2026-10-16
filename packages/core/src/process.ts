@@ -1,10 +1,10 @@
-import type { Expander, FetchFn, ProcessResult, Reason, RemovedItem, RuleBundle } from './types';
-import { extractUrl } from './extract';
+import type { Expander, FetchFn, HiddenChar, ProcessResult, Reason, RemovedItem, RuleBundle } from './types';
+import { extractUrlDetailed, takeUrl } from './extract';
 import { unwrapUrl } from './unwrap';
 import { findExpander, expandUrl, DEFAULT_USER_AGENT, DEFAULT_TIMEOUT_MS } from './expand';
 import { cleanUrl } from './clean';
 import { analyze } from './analyze';
-import { canonicalUrl, safeDecode } from './query';
+import { canonicalUrl, getHost, safeDecode } from './query';
 
 const MAX_EXPANSIONS = 3;
 const MIN_SHARE_ID_LENGTH = 6; // shorter IDs would match by coincidence
@@ -30,21 +30,30 @@ export interface ProcessOptions {
 }
 
 export async function processUrl(input: string, rules: RuleBundle, opts: ProcessOptions): Promise<ProcessResult> {
-  const extracted = extractUrl(input);
-  if (!extracted) {
+  const found = extractUrlDetailed(input);
+  if (!found) {
     return { originalUrl: input.trim(), cleanUrl: '', status: 'failed', reason: 'invalid_input', removed: [], hops: [] };
   }
 
+  const extracted = found.url;
   const hops = [extracted];
   const visit = (next: string) => {
     if (next !== hops[hops.length - 1]) hops.push(next);
   };
   const removed: RemovedItem[] = [];
   let reason: Reason | undefined;
+  const hidden: HiddenChar[] = [...found.hidden];
+  // Redirect targets and unwrapped links get the same hidden-character handling as the input.
+  const take = (u: string): string => {
+    const r = takeUrl(u);
+    if (!r) return u;
+    hidden.push(...r.hidden);
+    return r.url;
+  };
 
   const first = unwrapUrl(extracted, rules.providers);
   first.hops.forEach(visit);
-  let url = first.url;
+  let url = take(first.url);
   if (!first.complete) reason = 'unresolved';
 
   // One time budget for the whole chain, not per expansion.
@@ -71,11 +80,27 @@ export async function processUrl(input: string, rules: RuleBundle, opts: Process
         removed.push(...r.removed);
         const u = unwrapUrl(r.url, rules.providers);
         u.hops.forEach(visit);
-        url = u.url;
+        url = take(u.url);
         if (!u.complete) reason = 'unresolved';
       }
     }
   }
+
+  const host = getHost(extracted);
+  const removedCodes = new Set<string>();
+  for (const h of hidden.filter((x) => x.removed)) {
+    if (removedCodes.has(h.code)) continue; // one row per character kind
+    removedCodes.add(h.code);
+    removed.push({ key: /^U\+202[A-E]$/.test(h.code) ? 'hidden-bidi' : 'hidden', value: h.code, host });
+  }
+  // The same URL can be scanned more than once (input, then after unwrapping), so keep each finding once.
+  const keptKeys = new Set<string>();
+  const kept = hidden.filter((x) => {
+    const k = `${x.code}|${x.part}|${x.encoded ?? ''}`;
+    if (x.removed || keptKeys.has(k)) return false;
+    keptKeys.add(k);
+    return true;
+  });
 
   const cleaned = cleanUrl(url, rules.providers);
   removed.push(...cleaned.removed);
@@ -95,5 +120,6 @@ export async function processUrl(input: string, rules: RuleBundle, opts: Process
     hops,
   };
   if (reason) result.reason = reason;
+  if (kept.length) result.hiddenKept = kept;
   return result;
 }
