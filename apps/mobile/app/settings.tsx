@@ -18,8 +18,12 @@ export default function SettingsScreen() {
   const [outcome, setOutcome] = useState<UpdateOutcome | null>(null);
 
   const toggle = (key: keyof Settings) => (value: boolean) => {
-    if (key === 'autoClipboard' && value) confirmAutoClean(t, () => void setSettings({ ...settings, autoClipboard: true }));
-    else void setSettings({ ...settings, [key]: value });
+    // Automatic cleaning only runs when clipboard detection is on.
+    if (key === 'autoClipboard' && value) {
+      confirmAutoClean(t, () => void setSettings({ ...settings, detectClipboard: true, autoClipboard: true }));
+    } else {
+      void setSettings({ ...settings, [key]: value });
+    }
   };
 
   const update = async () => {

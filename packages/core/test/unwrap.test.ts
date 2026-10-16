@@ -33,6 +33,18 @@ describe('unwrapUrl', () => {
   it('treats a target the browser would refuse as no target', () => {
     expect(unwrapUrl(googleWrap('https://example.com:bad/a'), providers).hops).toHaveLength(1);
   });
+  it('unwraps a wrapper link that carries userinfo', () => {
+    const wrapped = googleWrap('https://example.com/p').replace('https://', 'https://user@');
+    expect(unwrapUrl(wrapped, providers).url).toBe('https://example.com/p');
+  });
+  it('accepts a target spelled with backslashes or a control character', () => {
+    expect(unwrapUrl(googleWrap('https:\\\\example.com\\p?utm_source=x'), providers).url).toBe(
+      'https://example.com/p?utm_source=x',
+    );
+    expect(unwrapUrl(googleWrap('https://example.com/?ut\tm_source=x'), providers).url).toBe(
+      'https://example.com/?utm_source=x',
+    );
+  });
 
   it('unwraps l.facebook.com links', () => {
     expect(unwrapUrl('https://l.facebook.com/l.php?u=https%3A%2F%2Fex.com%2Fa%3Fb%3D1&h=AT0x', providers)).toEqual({

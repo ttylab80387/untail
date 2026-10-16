@@ -92,6 +92,8 @@ export function canonicalUrl(url: string): string | null {
     const m = /^([a-z]+:\/\/[^/?#]*)([^?#]*)/i.exec(s);
     return m ? [m[1]!.toLowerCase(), safeDecode(m[2] || '/')] : ['', ''];
   };
+  // Browsers drop tabs and newlines anywhere in a URL, which changes parameter names.
+  if (/[\t\r\n]/.test(url)) return u.href;
   const [rawAuth, rawPath] = parts(url);
   const [auth, path] = parts(u.href);
   return rawAuth === auth && rawPath === path ? url : u.href;

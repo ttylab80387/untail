@@ -1,6 +1,6 @@
 import type { Provider } from './types';
 import { compile } from './regex';
-import { canonicalUrl, safeDecode } from './query';
+import { canonicalUrl, matchView, safeDecode } from './query';
 import { activeProviders } from './providers';
 
 export interface UnwrapResult {
@@ -10,7 +10,6 @@ export interface UnwrapResult {
 }
 
 const MAX_DEPTH = 3;
-const HTTP = /^https?:\/\//i;
 const SCHEME = /^[a-z][a-z0-9+.-]*:/i;
 const BARE_HOST = /^[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:[/?#]|$)/i;
 
@@ -20,22 +19,20 @@ function toHttpUrl(captured: string): string | null {
   // The target gets the same browser-equivalent spelling as user input; one a browser would
   // refuse is no target at all.
   for (const candidate of [captured, safeDecode(captured)]) {
-    // ClearURLs captures may omit the scheme (e.g. Google AMP /amp/s/example.com/p).
-    const url = HTTP.test(candidate)
-      ? candidate
-      : !SCHEME.test(candidate) && BARE_HOST.test(candidate)
-        ? `https://${candidate}`
-        : null;
-    const canonical = url ? canonicalUrl(url) : null;
+    const canonical = canonicalUrl(candidate);
     if (canonical) return canonical;
+    // ClearURLs captures may omit the scheme (e.g. Google AMP /amp/s/example.com/p).
+    const bare = !SCHEME.test(candidate) && BARE_HOST.test(candidate) ? canonicalUrl(`https://${candidate}`) : null;
+    if (bare) return bare;
   }
   return null;
 }
 
 function unwrapOnce(url: string, providers: Record<string, Provider>): string | null {
+  const view = matchView(url);
   for (const p of activeProviders(url, providers)) {
     for (const r of p.redirections ?? []) {
-      const captured = compile(r)?.exec(url)?.[1];
+      const captured = compile(r)?.exec(view)?.[1];
       const target = captured ? toHttpUrl(captured) : null;
       if (target && target !== url) return target;
     }
