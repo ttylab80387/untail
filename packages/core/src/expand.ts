@@ -1,7 +1,9 @@
-import type { Expander, ExpandFailure, FetchFn, RemovedItem } from './types';
+import type { Expander, ExpandFailure, FetchFn, HiddenChar, RemovedItem } from './types';
 import { compile, matches } from './regex';
 import { canonicalUrl, getHost, getPath, getParam, matchView, parseUrl } from './query';
 import { sameSite } from './site';
+import { scanHidden } from './hidden';
+import { takeUrl } from './extract';
 
 export const DEFAULT_USER_AGENT = 'Untail/0.1';
 export const DEFAULT_TIMEOUT_MS = 5000;
@@ -20,6 +22,7 @@ export interface ExpandResult {
   hops: string[];
   removed: RemovedItem[];
   reason?: ExpandFailure;
+  hidden?: HiddenChar[]; // hidden characters found in (and removed from) redirect targets
 }
 
 const MAX_HOPS = 6;
@@ -54,9 +57,15 @@ function normalizeHost(url: string, expanders: Record<string, Expander>): string
 }
 
 // The next hop a browser would take for a Location header; null when it would not open it.
-function nextHop(location: string, base: string): string | null {
-  const target = HTTP.test(location) ? location : parseUrl(location, base)?.href;
-  return target ? canonicalUrl(target) : null;
+// Hidden characters are removed (and recorded) first, so they cannot hide a login wall, a wrapper
+// or the site a hop goes to.
+function nextHop(location: string, base: string, hidden: HiddenChar[]): string | null {
+  const scanned = scanHidden(location);
+  const target = HTTP.test(scanned.url) ? scanned.url : parseUrl(scanned.url, base)?.href;
+  const taken = target ? takeUrl(target) : null;
+  if (!taken) return null;
+  hidden.push(...scanned.found, ...taken.hidden);
+  return taken.url;
 }
 
 // Follows redirects one at a time in manual mode, under one deadline. A hop to another site, a login
@@ -68,6 +77,7 @@ async function resolve(
   expanders: Record<string, Expander>,
   opts: ExpandOptions,
   firstHop: boolean,
+  hidden: HiddenChar[],
 ): Promise<string[]> {
   const controller = new AbortController();
   const headers = { 'User-Agent': opts.userAgent };
@@ -76,7 +86,9 @@ async function resolve(
   const send = (method: 'HEAD' | 'GET') => {
     // Never start a request after the deadline has passed.
     if (controller.signal.aborted) throw new Stopped('expand_timeout', [...trail]);
-    return opts.fetch(current(), { method, headers, signal: controller.signal, redirect: 'manual' });
+    // Android release builds refuse cleartext, and https hides the link from the network.
+    const target = current().replace(/^http:\/\//i, 'https://');
+    return opts.fetch(target, { method, headers, signal: controller.signal, redirect: 'manual' });
   };
   const work = (async () => {
     try {
@@ -88,7 +100,7 @@ async function resolve(
           if (res.status >= 400) throw new Stopped('network', [...trail]);
           return trail;
         }
-        const next = nextHop(res.location, current());
+        const next = nextHop(res.location, current(), hidden);
         if (!next) throw new Stopped('unresolved', [...trail]);
         const stop = firstHop || findLoginWall(next, expanders) !== undefined || !sameSite(next, current());
         trail.push(next);
@@ -124,9 +136,10 @@ export async function expandUrl(url: string, expanders: Record<string, Expander>
   // Always ask over https: it hides the link from the network, and Android release builds
   // refuse cleartext requests (Xiaohongshu shares http://xhslink.com links).
   const requestUrl = url.replace(/^http:\/\//i, 'https://');
+  const hidden: HiddenChar[] = [];
   let trail: string[];
   try {
-    trail = await resolve(requestUrl, expanders, opts, expander.firstHop === true);
+    trail = await resolve(requestUrl, expanders, opts, expander.firstHop === true, hidden);
   } catch (e) {
     const t = e instanceof Stopped ? e.trail : [requestUrl];
     return fail(e instanceof Stopped ? e.reason : 'network', [url, ...t.slice(1)]);
@@ -142,7 +155,9 @@ export async function expandUrl(url: string, expanders: Record<string, Expander>
   const wall = findLoginWall(finalUrl, expanders);
   if (wall) {
     const param = getParam(finalUrl, wall.param);
-    const next = param ? canonicalUrl(param) : null;
+    const taken = param ? takeUrl(param) : null;
+    if (taken) hidden.push(...taken.hidden);
+    const next = taken?.url ?? null;
     if (!next || findLoginWall(next, expanders)) return fail('unresolved', hops);
     resolved = next;
     hops.push(resolved);
@@ -157,5 +172,7 @@ export async function expandUrl(url: string, expanders: Record<string, Expander>
   const id = expander.shareId ? compile(expander.shareId)?.exec(getPath(url))?.[1] : undefined;
   if (id) removed.push({ key: 'share-id', value: id, host: getHost(url) });
 
-  return { url: normalized, hops, removed };
+  const result: ExpandResult = { url: normalized, hops, removed };
+  if (hidden.length) result.hidden = hidden;
+  return result;
 }

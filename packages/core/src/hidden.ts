@@ -6,9 +6,10 @@ const ALWAYS = /^[\u200B\uFEFF\u2060\u00AD\u202A-\u202E]$/;
 const HOST_ONLY = /^[\u200E\u200F\u2066-\u2069]$/; // direction marks/isolates: removed from the hostname only
 const KEEP = /^[\u200C\u200D]$/; // ZWNJ/ZWJ: needed by IDN, Persian and emoji, never removed
 const TAG = /^\uDB40[\uDC00-\uDC7F]$/; // U+E0000–U+E007F as a surrogate pair
-// UTF-8 of exactly the characters above: U+200B–U+200F, U+202A–U+202E, U+2060, U+2066–U+2069,
+// UTF-8 of the characters above except ZWNJ/ZWJ (percent-encoded joiners are ordinary text, e.g.
+// in Persian Wikipedia paths): U+200B, U+200E, U+200F, U+202A–U+202E, U+2060, U+2066–U+2069,
 // U+FEFF, U+00AD and tag characters.
-const ENCODED = /^(?:%E2%80%8[B-F]|%E2%80%A[A-E]|%E2%81%A[06-9]|%EF%BB%BF|%C2%AD|%F3%A0%8[01]%[89AB][0-9A-F])/i;
+const ENCODED = /^(?:%E2%80%8[BEF]|%E2%80%A[A-E]|%E2%81%A[06-9]|%EF%BB%BF|%C2%AD|%F3%A0%8[01]%[89AB][0-9A-F])/i;
 
 const code = (ch: string) => `U+${ch.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')}`;
 

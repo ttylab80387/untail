@@ -61,8 +61,8 @@ function toEntry(row: HistoryRow): HistoryEntry {
   // Derived from stored columns (no schema change), so rows written by older versions get them too.
   const destination = destinationOf(result);
   if (destination) result.destination = destination;
-  // Kept hidden characters stay in the stored original URL, so they can be found again.
-  const kept = scanHidden(result.originalUrl).found.filter((h) => !h.removed);
+  // Kept hidden characters are judged on the clean link, as when the result was made.
+  const kept = scanHidden(result.cleanUrl).found.filter((h) => !h.removed);
   if (kept.length) result.hiddenKept = kept;
   return { id: row.id, createdAt: row.created_at, result };
 }

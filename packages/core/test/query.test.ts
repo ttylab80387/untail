@@ -76,8 +76,9 @@ describe('getHost / getPath', () => {
     'https://evil.example?q=shopee.tw/x',
     'https://evil.example#@shopee.tw',
   ];
+  // Same host as the browser, except that a trailing dot is dropped (example.com. is example.com).
   it.each(tricky)('agrees with the browser on host: %s', (url) => {
-    expect(getHost(url)).toBe(new URL(url).hostname);
+    expect(getHost(url)).toBe(new URL(url).hostname.replace(/\.$/, ''));
   });
   it.each(tricky)('agrees with the browser on path: %s', (url) => {
     expect(getPath(url)).toBe(new URL(url).pathname);

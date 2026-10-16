@@ -39,8 +39,9 @@ export function decideText(
 ): { url: string | null; fresh: boolean; clean: string | null; next: WatchState } {
   const fresh = text !== '' && text !== s.lastSeenText;
   const found = fresh ? extractUrlDetailed(text) : null;
-  // Hidden characters (removed or kept) are worth showing even without tracking params.
-  const offer = found !== null && (needsCleaning(found.url, rules) || found.hidden.length > 0);
+  // A hidden character that cleaning removes is worth offering even without tracking params; one that is
+  // kept (a joiner) is not, so automatic mode never rewrites the clipboard without changing the link.
+  const offer = found !== null && (needsCleaning(found.url, rules) || found.hidden.some((h) => h.removed));
   return {
     url: offer ? text : null,
     fresh,

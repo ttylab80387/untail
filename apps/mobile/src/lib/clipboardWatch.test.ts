@@ -156,8 +156,10 @@ describe('decideText with hidden characters', () => {
     expect(d.url).toBe(text);
     expect(d.clean).toBeNull();
   });
-  it('also offers a link that only carries a kept joiner, so the finding can be shown', () => {
-    const d = decideText('https://example.com/a\u200Db', initialWatchState(), rules);
-    expect(d.url).toBe('https://example.com/a\u200Db');
+  // Nothing would be removed, so automatic mode must not rewrite the clipboard for it.
+  it('does not offer a link that only carries a kept joiner', () => {
+    const d = decideText('看 https://example.com/a\u200Db 很棒', initialWatchState(), rules);
+    expect(d.url).toBeNull();
+    expect(d.clean).toBe('https://example.com/a\u200Db');
   });
 });

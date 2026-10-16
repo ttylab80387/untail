@@ -7,7 +7,7 @@ import type { HistoryEntry } from '../src/lib/db';
 import { useApp } from '../src/state/AppContext';
 import { MONO, useColors } from '../src/theme';
 import { useBottomPadding } from '../src/bottomPadding';
-import { statusText } from '../src/components/ResultCard';
+import { statusText } from '../src/lib/statusText';
 
 export default function History() {
   const bottomPadding = useBottomPadding();

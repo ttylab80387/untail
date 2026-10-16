@@ -9,6 +9,9 @@ const WS = '\\t\\n\\v\\f\\r \\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\
 const URL_RE = new RegExp(`https?:[/\\\\]+[^${WS}"<>《》“”‘’，、；：！？「」『』（）【】]+`, 'i');
 const TRAILING = /[.,;:!?'*]+$/;
 const STOP = '\u3002';
+const HOST_DROPPED = /[\u200B\uFEFF\u2060\u00AD]/g;
+// Whitespace plus the invisible characters that can surround a copied link.
+const EDGE = /^[\s\u200B\u2060]+|[\s\u200B\u2060]+$/g;
 
 export interface Extracted {
   url: string; // what a browser would open, hidden characters removed
@@ -27,9 +30,12 @@ function cutAtSentenceEnd(s: string, bare: boolean): string {
   const tail = s.slice(hostStart).search(/[/\\?#]/);
   const hostEnd = tail < 0 ? s.length : hostStart + tail;
   for (let i = s.indexOf(STOP); i >= 0; i = s.indexOf(STOP, i + 1)) {
-    const label = /^[^.\u3002]*/.exec(s.slice(i + 1, hostEnd))![0];
+    // Hidden characters a browser drops from a host do not count as part of the label.
+    const label = /^[^.\u3002]*/.exec(s.slice(i + 1, hostEnd))![0].replace(HOST_DROPPED, '');
     const inHost = i < hostEnd;
-    if (!inHost || (!bare && !/^[A-Za-z0-9-]+$/.test(label))) return s.slice(0, i);
+    // An empty label is a sentence end; in prose only a letter label (a TLD-like word) continues the host,
+    // so 。10/20 or 。下一句 end the URL.
+    if (!inHost || !label || (!bare && !/^[A-Za-z][A-Za-z-]*$/.test(label))) return s.slice(0, i);
   }
   return s;
 }
@@ -73,7 +79,7 @@ export function extractUrlDetailed(text: string): Extracted | null {
   const m = URL_RE.exec(text);
   if (!m) return null;
   // A bare URL is taken verbatim; trailing punctuation is only trimmed when the URL sits in prose.
-  const bare = text.trim() === m[0];
+  const bare = text.replace(EDGE, '') === m[0].replace(EDGE, '');
   const raw = cutAtSentenceEnd(m[0], bare);
   if (bare) return takeUrl(raw);
   // A hidden character may sit between the URL and its punctuation, so trim before and after it.

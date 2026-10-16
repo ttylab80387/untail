@@ -6,6 +6,7 @@ import { Linking, Pressable, Share, StyleSheet, Text, View } from 'react-native'
 import type { AnalyzedParam, ProcessResult } from '@linkclean/core';
 import { referralCode } from '../lib/referral';
 import { siteLabel } from '../lib/siteLabel';
+import { statusText } from '../lib/statusText';
 import { useApp } from '../state/AppContext';
 import { useReport } from './useReport';
 import { MONO, useColors } from '../theme';
@@ -44,7 +45,7 @@ function ParamRow({ p }: { p: AnalyzedParam }) {
         <View style={styles.paramBody}>
           <Text style={{ color: c.text, lineHeight: 19 }}>{p.desc ?? t('result.noDesc')}</Text>
           <Text style={{ color: c.muted, fontSize: 12 }}>
-            {t(`risk.${p.risk}`)}
+            {t(p.category === 'hidden' ? `riskHidden.${p.risk}` : `risk.${p.risk}`)}
             {p.owner ? ` · ${t('result.owner', { owner: p.owner })}` : ''}
           </Text>
           <Text selectable style={[styles.mono, { color: c.muted }]}>{`${p.key}=${p.value}`}</Text>
@@ -52,14 +53,6 @@ function ParamRow({ p }: { p: AnalyzedParam }) {
       )}
     </Pressable>
   );
-}
-
-// The headline states what was done, never that a link is "clean" or safe.
-export function statusText(t: TFunction, result: ProcessResult): string {
-  if (result.status !== 'clean') return t(`result.status.${result.status}`);
-  return result.removed.length
-    ? t('result.status.removed', { count: result.removed.length })
-    : t('result.status.none');
 }
 
 // Where the link goes: the main domain in bold, the subdomain muted, and the xn-- form for IDN hosts.

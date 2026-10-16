@@ -3,6 +3,7 @@ import { parse } from 'tldts';
 // The npm package, not Node's deprecated built-in of the same name.
 import punycode from 'punycode/punycode.js';
 import { FORBIDDEN_HOST, getHost, mapHost } from './query';
+import { scanHidden } from './hidden';
 import type { SiteInfo } from './types';
 
 function asciiOf(host: string): string | null {
@@ -16,12 +17,23 @@ function asciiOf(host: string): string | null {
   }
 }
 
+// Decodes xn-- labels one by one for display. A label stays in xn-- form when it does not decode,
+// or decodes to something that is not plain host text (hidden or direction characters, delimiters),
+// so a crafted label cannot disguise how the host reads.
 function unicodeOf(ascii: string): string {
-  try {
-    return punycode.toUnicode(ascii);
-  } catch {
-    return ascii;
-  }
+  return ascii
+    .split('.')
+    .map((label) => {
+      if (!label.startsWith('xn--')) return label;
+      try {
+        const decoded = punycode.toUnicode(label);
+        const plain = scanHidden(`https://${decoded}/`).found.length === 0 && !FORBIDDEN_HOST.test(decoded) && mapHost(decoded) === decoded;
+        return plain && !decoded.includes('.') ? decoded : label;
+      } catch {
+        return label;
+      }
+    })
+    .join('.');
 }
 
 // Where a link really goes: the host and its registrable ("main") domain.

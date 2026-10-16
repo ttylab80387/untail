@@ -1,5 +1,6 @@
 import type { Expander, FetchFn, HiddenChar, ProcessResult, Reason, RemovedItem, RuleBundle } from './types';
 import { extractUrlDetailed, takeUrl } from './extract';
+import { scanHidden } from './hidden';
 import { unwrapUrl } from './unwrap';
 import { findExpander, expandUrl, DEFAULT_USER_AGENT, DEFAULT_TIMEOUT_MS } from './expand';
 import { cleanUrl } from './clean';
@@ -61,6 +62,7 @@ export async function processUrl(input: string, rules: RuleBundle, opts: Process
 
   const first = unwrapUrl(extracted, rules.providers);
   first.hops.forEach(visit);
+  hidden.push(...(first.hidden ?? []));
   let url = take(first.url);
   if (!first.complete) reason = 'unresolved';
 
@@ -86,8 +88,10 @@ export async function processUrl(input: string, rules: RuleBundle, opts: Process
       reason = r.reason;
       if (!reason) {
         removed.push(...r.removed);
+        hidden.push(...(r.hidden ?? []));
         const u = unwrapUrl(r.url, rules.providers);
         u.hops.forEach(visit);
+        hidden.push(...(u.hidden ?? []));
         url = take(u.url);
         if (!u.complete) reason = 'unresolved';
       }
@@ -101,17 +105,11 @@ export async function processUrl(input: string, rules: RuleBundle, opts: Process
     removedCodes.add(h.code);
     removed.push({ key: /^U\+202[A-E]$/.test(h.code) ? 'hidden-bidi' : 'hidden', value: h.code, host });
   }
-  // The same URL can be scanned more than once (input, then after unwrapping), so keep each finding once.
-  const keptKeys = new Set<string>();
-  const kept = hidden.filter((x) => {
-    const k = `${x.code}|${x.part}|${x.encoded ?? ''}`;
-    if (x.removed || keptKeys.has(k)) return false;
-    keptKeys.add(k);
-    return true;
-  });
 
   const cleaned = cleanUrl(url, rules.providers);
   removed.push(...cleaned.removed);
+  // Kept characters are judged on the link the user gets, not on wrappers or removed parameters.
+  const kept = scanHidden(cleaned.url).found.filter((h) => !h.removed);
 
   const shareIds = removed.filter((item) => item.key === 'share-id').map((item) => item.value);
   if (!reason && stillTracked(cleaned.url, shareIds, rules.expanders)) {

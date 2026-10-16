@@ -52,12 +52,12 @@ describe('scanHidden', () => {
     expect(scanHidden('https://ex.com/a\u{E0041}b').url).toBe('https://ex.com/ab');
   });
   it('reports percent-encoded hidden characters in any case without changing them', () => {
-    const r = scanHidden('https://ex.com/a%E2%80%8Bb?x=%ef%bb%bf#%E2%80%8d');
-    expect(r.url).toBe('https://ex.com/a%E2%80%8Bb?x=%ef%bb%bf#%E2%80%8d');
+    const r = scanHidden('https://ex.com/a%E2%80%8Bb?x=%ef%bb%bf#%e2%80%8f');
+    expect(r.url).toBe('https://ex.com/a%E2%80%8Bb?x=%ef%bb%bf#%e2%80%8f');
     expect(r.found.map((f) => [f.code, f.part, f.removed, f.encoded])).toEqual([
       ['U+200B', 'path', false, true],
       ['U+FEFF', 'query', false, true],
-      ['U+200D', 'fragment', false, true],
+      ['U+200F', 'fragment', false, true],
     ]);
   });
   it('does not report encoded characters outside the policy', () => {

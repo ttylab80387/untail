@@ -61,13 +61,19 @@ export function parseUrl(url: string, base?: string): URL | null {
 
 // What rules are matched against: the URL without userinfo, which never decides the site
 // (https://facebook.com@evil.example opens evil.example).
+// A trailing dot names the same host (example.com. is example.com), so it is dropped here too.
 export function matchView(url: string): string {
-  if (!/^[a-z][a-z0-9+.-]*:\/\/[^/?#]*@/i.test(url)) return url;
-  const u = parseUrl(url);
-  if (!u) return url;
+  const view = dropHostDot(url);
+  if (!/^[a-z][a-z0-9+.-]*:\/\/[^/?#]*@/i.test(view)) return view;
+  const u = parseUrl(view);
+  if (!u) return view;
   u.username = '';
   u.password = '';
   return u.href;
+}
+
+function dropHostDot(url: string): string {
+  return url.replace(/^([a-z][a-z0-9+.-]*:\/\/(?:[^/?#@]*@)?[^/?#@:]+)\.(?=[:/?#]|$)/i, '$1');
 }
 
 // Characters a browser drops from a host (UTS #46 "ignored"), and the ideographic/full-width full stops it reads as dots.
@@ -84,7 +90,7 @@ export function mapHost(host: string): string {
 }
 
 export function getHost(url: string): string {
-  return parseUrl(url)?.hostname.toLowerCase() ?? '';
+  return parseUrl(url)?.hostname.toLowerCase().replace(/\.$/, '') ?? '';
 }
 
 export function getPath(url: string): string {

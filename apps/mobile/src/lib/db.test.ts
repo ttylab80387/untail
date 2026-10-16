@@ -76,6 +76,11 @@ describe('history rows carry derived link-safety fields', () => {
     expect(entry!.result.destination).toMatchObject({ complete: false, site: { domain: 'threads.com' } });
     expect(entry!.result.hiddenKept?.map((h) => h.code)).toEqual(['U+200D']);
   });
+  it('judges kept hidden characters on the clean link, not on the short link', async () => {
+    await addHistory(db, result(5, { originalUrl: 'https://bit.ly/TEST', cleanUrl: 'https://example.com/a\u200Db', hops: ['https://bit.ly/TEST', 'https://example.com/a\u200Db'] }), 5000);
+    const [entry] = await listHistory(db);
+    expect(entry!.result.hiddenKept?.map((h) => h.code)).toEqual(['U+200D']);
+  });
   it('gives rows written before these fields existed the same derived fields', async () => {
     await addHistory(db, result(4), 4000);
     const [entry] = await listHistory(db);
