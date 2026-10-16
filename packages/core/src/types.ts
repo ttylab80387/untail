@@ -66,6 +66,15 @@ export interface ProcessResult {
   hops: string[];
 }
 
+// Where a link goes. host/domain are for display (Unicode); the ascii* forms are for comparison.
+export interface SiteInfo {
+  host: string;
+  domain: string | null; // registrable domain; null for IPs and bare public suffixes
+  asciiHost: string;
+  asciiDomain: string | null;
+  isIp: boolean;
+}
+
 export interface FetchInit {
   method: 'HEAD' | 'GET';
   headers: Record<string, string>;

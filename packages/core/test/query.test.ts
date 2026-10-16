@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { splitUrl, joinUrl, getParam, getHost, getPath, safeDecode } from '../src/query';
+import { splitUrl, joinUrl, getParam, getHost, getPath, safeDecode, canonicalUrl } from '../src/query';
 
 describe('splitUrl / joinUrl', () => {
   it('round-trips a URL byte-for-byte', () => {
@@ -97,5 +97,15 @@ describe('safeDecode', () => {
   });
   it('returns input unchanged when decoding fails', () => {
     expect(safeDecode('%E0%A4%A')).toBe('%E0%A4%A');
+  });
+});
+
+describe('canonicalUrl host mapping', () => {
+  it('rewrites a host that a browser maps to plain ASCII', () => {
+    expect(canonicalUrl('https://\uFF42\uFF49\uFF54.ly/abc?x=\uFF41')).toBe('https://bit.ly/abc?x=%EF%BD%81');
+    expect(canonicalUrl('https://例子.台灣/路徑')).toBe('https://例子.台灣/路徑');
+  });
+  it('refuses a host that maps to a URL delimiter', () => {
+    expect(canonicalUrl('https://shopee.tw\uFF0F.evil.com/')).toBeNull();
   });
 });

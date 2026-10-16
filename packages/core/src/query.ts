@@ -70,6 +70,19 @@ export function matchView(url: string): string {
   return u.href;
 }
 
+// Characters a browser drops from a host (UTS #46 "ignored"), and the ideographic/full-width full stops it reads as dots.
+const HOST_IGNORED = /[\u00AD\u034F\u180B-\u180F\u200B\u2060\uFE00-\uFE0F\uFEFF]/g;
+const HOST_DOTS = /[\u3002\uFF0E\uFF61]/g;
+export const FORBIDDEN_HOST = /[\s#%/:<>?@[\\\]^|]/;
+
+// The host a browser connects to, before punycode. whatwg-url-minimum skips IDNA, so this mapping is done here.
+export function mapHost(host: string): string {
+  if (host.startsWith('[')) return host; // IPv6
+  const kept = host.replace(HOST_IGNORED, '');
+  const nfkc = typeof kept.normalize === 'function' ? kept.normalize('NFKC') : kept;
+  return nfkc.replace(HOST_DOTS, '.').toLowerCase().replace(/\.$/, '');
+}
+
 export function getHost(url: string): string {
   return parseUrl(url)?.hostname.toLowerCase() ?? '';
 }
@@ -86,6 +99,17 @@ export function getPath(url: string): string {
 export function canonicalUrl(url: string): string | null {
   const u = parseUrl(url);
   if (!u?.hostname || !/^https?:$/.test(u.protocol)) return null;
+  const mapped = mapHost(u.hostname);
+  // A browser refuses a host that maps to a URL delimiter (full-width slash, at sign, ...): so does Untail,
+  // otherwise a full-width slash after shopee.tw would make evil.com read as shopee.tw.
+  if (FORBIDDEN_HOST.test(mapped.replace(/^\[.*\]$/, ''))) return null;
+  // A host that maps to plain ASCII (full-width letters, ignorable characters) is the ASCII site,
+  // so rules, expansion and display all see it. Unicode (IDN) hosts stay as written.
+  const dot = u.hostname.endsWith('.') ? '.' : '';
+  if (mapped + dot !== u.hostname && /^[a-z0-9.-]+$/.test(mapped)) {
+    u.hostname = mapped + dot;
+    return u.href;
+  }
   // Compare scheme + authority as written (an encoded host must be rewritten) and the path decoded
   // (raw non-ASCII equals its percent-encoded form).
   const parts = (s: string) => {

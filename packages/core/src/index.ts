@@ -8,3 +8,4 @@ export { expandUrl, findExpander, DEFAULT_USER_AGENT, DEFAULT_TIMEOUT_MS } from 
 export { analyze, resolveLocale } from './analyze';
 export { extractUrl } from './extract';
 export { validateBundle } from './validate';
+export { siteOf, sameSite } from './site';

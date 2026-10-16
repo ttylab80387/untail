@@ -171,4 +171,8 @@ describe('processUrl', () => {
     expect(r).toMatchObject({ cleanUrl: THREADS, status: 'partial', reason: 'network' });
     expect(r.removed.map((p) => p.key)).toEqual(['utm_source']);
   });
+  it('treats a full-width short link like the ASCII one', async () => {
+    const r = await processUrl('https://www.\uFF54\uFF48\uFF52\uFF45\uFF41\uFF44\uFF53.com/share/BAAtest0001/', rules, { expand: false, locale: 'en' });
+    expect(r.reason).toBe('expand_disabled');
+  });
 });
