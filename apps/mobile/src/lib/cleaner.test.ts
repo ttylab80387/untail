@@ -118,4 +118,31 @@ describe('cleanInput', () => {
     expect(a.result.cleanUrl).toBe(b.result.cleanUrl);
     expect(a.result.cleanUrl).toBe('https://example.com/a');
   });
+
+  it('does not copy when copyIf rejects the result', async () => {
+    const out = await cleanInput('https://ex.com/a?utm_source=x', deps({ copyIf: () => false }));
+    expect(out.copied).toBe(false);
+    expect(copied).toEqual([]);
+  });
+
+  it('copies when copyIf accepts the result', async () => {
+    const out = await cleanInput('https://ex.com/a?utm_source=x', deps({ copyIf: (r) => r.cleanUrl !== r.originalUrl }));
+    expect(out.copied).toBe(true);
+    expect(copied).toEqual(['https://ex.com/a']);
+  });
+
+  it('does not record when recordIf rejects the result', async () => {
+    let seen: string | null = null;
+    await cleanInput(
+      'https://ex.com/a?utm_source=x',
+      deps({
+        recordIf: (r) => {
+          seen = r.cleanUrl;
+          return false;
+        },
+      }),
+    );
+    expect(seen).toBe('https://ex.com/a');
+    expect(await listHistory(db)).toEqual([]);
+  });
 });

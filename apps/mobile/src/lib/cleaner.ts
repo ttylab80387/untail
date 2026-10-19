@@ -15,6 +15,10 @@ export interface CleanDeps {
   now(): number;
   // False once newer clipboard content arrived; the clean link must then not replace it.
   isCurrent?(): boolean;
+  // Extra conditions from the caller, e.g. the tile copies and records only a link that changed,
+  // and only while its request is still valid.
+  copyIf?(result: ProcessResult): boolean;
+  recordIf?(result: ProcessResult): boolean;
 }
 
 export interface CleanOutcome {
@@ -32,7 +36,7 @@ export async function cleanInput(input: string, deps: CleanDeps): Promise<CleanO
   if (result.status === 'failed') return { result, copied: false };
 
   // Side effects are best-effort: a storage or clipboard failure must never hide the cleaned result.
-  if (deps.settings.history) {
+  if (deps.settings.history && (deps.recordIf?.(result) ?? true)) {
     try {
       await addHistory(deps.db, result, deps.now());
     } catch {
@@ -41,7 +45,12 @@ export async function cleanInput(input: string, deps: CleanDeps): Promise<CleanO
   }
   let copied = false;
   // Only a fully clean URL is copied automatically (spec §6.3).
-  if (result.status === 'clean' && deps.settings.autoCopy && (deps.isCurrent?.() ?? true)) {
+  if (
+    result.status === 'clean' &&
+    deps.settings.autoCopy &&
+    (deps.isCurrent?.() ?? true) &&
+    (deps.copyIf?.(result) ?? true)
+  ) {
     try {
       await deps.copy(result.cleanUrl);
       copied = true;
