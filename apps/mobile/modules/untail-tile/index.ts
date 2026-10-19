@@ -11,7 +11,7 @@ interface NativeTile {
   waitForWindowFocus(timeoutMs: number): Promise<boolean>;
   moveTaskToBack(): Promise<boolean>;
   requestAddTile(): Promise<AddTileResult>;
-  addListener(event: 'onTileLaunch', listener: () => void): { remove(): void };
+  addListener(event: 'onTileLaunch' | 'onUntailLeft', listener: () => void): { remove(): void };
 }
 
 // Android only; on iOS every call is a no-op or reports "unsupported".
@@ -29,6 +29,11 @@ export function consumeTileLaunch(): TileLaunch | null {
 
 export function addTileLaunchListener(listener: () => void): { remove(): void } {
   return native ? native.addListener('onTileLaunch', listener) : { remove: () => undefined };
+}
+
+// Fires when the last Untail activity stops: the user really left (not just a dialog or the shade).
+export function addUntailLeftListener(listener: () => void): { remove(): void } {
+  return native ? native.addListener('onUntailLeft', listener) : { remove: () => undefined };
 }
 
 export async function waitForWindowFocus(timeoutMs: number): Promise<boolean> {

@@ -4,6 +4,7 @@ import android.app.ActivityOptions
 import android.app.PendingIntent
 import android.content.Intent
 import android.os.Build
+import android.os.SystemClock
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import android.util.Log
@@ -38,6 +39,7 @@ class CleanLinkTileService : TileService() {
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         .putExtra(TileLaunchStore.EXTRA_LAUNCH, true)
         .putExtra(TileLaunchStore.EXTRA_WAS_FOREGROUND, wasInForeground)
+        .putExtra(TileLaunchStore.EXTRA_AT, SystemClock.elapsedRealtime())
       if (Build.VERSION.SDK_INT >= 34) {
         val mode = if (Build.VERSION.SDK_INT >= 36) {
           ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOW_ALWAYS

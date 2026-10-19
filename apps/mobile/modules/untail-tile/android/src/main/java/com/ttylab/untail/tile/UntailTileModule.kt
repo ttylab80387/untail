@@ -17,11 +17,17 @@ class UntailTileModule : Module() {
 
   override fun definition() = ModuleDefinition {
     Name("UntailTile")
-    Events("onTileLaunch")
+    Events("onTileLaunch", "onUntailLeft")
 
     // The event only says "a request is waiting"; JS takes it with consumeTileLaunch(), exactly once.
-    OnCreate { TileLaunchStore.listener = { sendEvent("onTileLaunch", emptyMap<String, Any>()) } }
-    OnDestroy { TileLaunchStore.listener = null }
+    OnCreate {
+      TileLaunchStore.listener = { sendEvent("onTileLaunch", emptyMap<String, Any>()) }
+      ForegroundTracker.onLeft = { sendEvent("onUntailLeft", emptyMap<String, Any>()) }
+    }
+    OnDestroy {
+      TileLaunchStore.listener = null
+      ForegroundTracker.onLeft = null
+    }
 
     Function("consumeTileLaunch") {
       TileLaunchStore.consume()?.let { mapOf("wasInForeground" to it.wasInForeground) }

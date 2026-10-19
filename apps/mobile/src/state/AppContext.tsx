@@ -9,7 +9,13 @@ import { resolveLocale } from '@linkclean/core';
 import type { Locale, RuleBundle } from '@linkclean/core';
 import bundledJson from '../../assets/rules.json';
 import { clipboardStateAsync } from '../../modules/untail-clipboard';
-import { addTileLaunchListener, consumeTileLaunch, moveTaskToBack, waitForWindowFocus } from '../../modules/untail-tile';
+import {
+  addTileLaunchListener,
+  addUntailLeftListener,
+  consumeTileLaunch,
+  moveTaskToBack,
+  waitForWindowFocus,
+} from '../../modules/untail-tile';
 import type { TileLaunch } from '../../modules/untail-tile';
 import { SITE_BASE_URL, USER_AGENT } from '../config';
 import i18n from '../i18n';
@@ -190,8 +196,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       pendingJobs.current += 1;
       setPending((n) => n + 1);
       const gen = clipboardGen.current;
+      // A tile job's validity is the gate's: 'background' (onPause) also fires for dialogs and some
+      // notification shades, so it must not cancel a tile request.
       const isCurrent = () =>
-        gen === clipboardGen.current && (opts.isValid?.() ?? true) && (mode !== 'auto' || !tile.busy());
+        (mode === 'tile' || gen === clipboardGen.current) &&
+        (opts.isValid?.() ?? true) &&
+        (mode !== 'auto' || !tile.busy());
       const job = queue.current.then(async () => {
         try {
           const { rules: r, locale: l } = latest.current;
@@ -376,7 +386,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (state === 'background') {
         // Another app may change the clipboard while we are away.
         clipboardGen.current += 1;
-        tile.leave();
         skipNextActive.current = false;
         setTileNotice(null);
       }
@@ -388,6 +397,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       else if (skipNextActive.current) skipNextActive.current = false;
       else void checkClipboard(latest.current.settings);
     });
+    // Leaving Untail (its activity stopped) ends a running tile request's copy, toast and return.
+    const leftSub = addUntailLeftListener(() => tile.leave());
     // Untail already in front (only the shade covered it) gets the request through this event.
     const tileSub = addTileLaunchListener(() => {
       if (!readyRef.current) return;
@@ -400,6 +411,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       alive = false;
       sub.remove();
       tileSub.remove();
+      leftSub.remove();
     };
   }, [db, refresh, checkClipboard, startTile, tile]);
 
