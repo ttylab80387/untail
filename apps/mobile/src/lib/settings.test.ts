@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { migrate, setKv } from './db';
+import { getKv, migrate, setKv } from './db';
 import type { Db } from './db';
-import { DEFAULT_SETTINGS, loadSettings, saveSettings } from './settings';
+import { DEFAULT_SETTINGS, clearLastTileResult, formatHm, loadLastTileResult, loadSettings, saveLastTileResult, saveSettings } from './settings';
 import { nodeDb } from './testing/nodeDb';
 
 let db: Db;
@@ -31,5 +31,32 @@ describe('settings', () => {
   it('fills missing or non-boolean fields with defaults', async () => {
     await setKv(db, 'settings', JSON.stringify({ expand: false, autoCopy: 'no' }));
     expect(await loadSettings(db)).toEqual({ ...DEFAULT_SETTINGS, expand: false });
+  });
+});
+
+describe('last tile result', () => {
+  it('round-trips and never stores a URL', async () => {
+    expect(await loadLastTileResult(db)).toBeNull();
+    await saveLastTileResult(db, { row: 1, removed: 2, expandedOnly: false, at: 1_700_000_000_000 });
+    expect(await loadLastTileResult(db)).toEqual({ row: 1, removed: 2, expandedOnly: false, at: 1_700_000_000_000 });
+    expect(await getKv(db, 'lastTileResult')).not.toMatch(/https?:/);
+  });
+
+  it('clears', async () => {
+    await saveLastTileResult(db, { row: 2, removed: 0, expandedOnly: false, at: 1 });
+    await clearLastTileResult(db);
+    expect(await loadLastTileResult(db)).toBeNull();
+  });
+
+  it('ignores malformed stored values', async () => {
+    await setKv(db, 'lastTileResult', '{"row":9}');
+    expect(await loadLastTileResult(db)).toBeNull();
+    await setKv(db, 'lastTileResult', 'not json');
+    expect(await loadLastTileResult(db)).toBeNull();
+  });
+
+  it('formats local hours and minutes', () => {
+    const at = new Date(2026, 9, 19, 7, 5).getTime();
+    expect(formatHm(at)).toBe('07:05');
   });
 });
