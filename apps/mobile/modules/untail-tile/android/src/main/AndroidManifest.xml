@@ -1,0 +1,16 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <application>
+    <!-- BIND_QUICK_SETTINGS_TILE lets only the system bind the tile; it is not a permission users grant. -->
+    <service
+      android:name="com.ttylab.untail.tile.CleanLinkTileService"
+      android:exported="true"
+      android:icon="@drawable/ic_untail_tile"
+      android:label="@string/untail_tile_label"
+      android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+      <intent-filter>
+        <action android:name="android.service.quicksettings.action.QS_TILE" />
+      </intent-filter>
+      <meta-data android:name="android.service.quicksettings.TOGGLEABLE_TILE" android:value="false" />
+    </service>
+  </application>
+</manifest>
