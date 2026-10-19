@@ -1,3 +1,0 @@
-com.ttylab.untail.tile
-drawable ic_untail_tile
-string untail_tile_label

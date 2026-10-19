@@ -1,7 +1,0 @@
-com.ttylab.untail.tile.untail-tile-pngs-0 /Users/ttyusb0978/Desktop/myproject/trackurlapp/apps/mobile/modules/untail-tile/android/build/generated/res/pngs/release
-com.ttylab.untail.tile.untail-tile-resValues-1 /Users/ttyusb0978/Desktop/myproject/trackurlapp/apps/mobile/modules/untail-tile/android/build/generated/res/resValues/release
-com.ttylab.untail.tile.untail-tile-mergeReleaseResources-2 /Users/ttyusb0978/Desktop/myproject/trackurlapp/apps/mobile/modules/untail-tile/android/build/intermediates/incremental/release/mergeReleaseResources/merged.dir
-com.ttylab.untail.tile.untail-tile-mergeReleaseResources-3 /Users/ttyusb0978/Desktop/myproject/trackurlapp/apps/mobile/modules/untail-tile/android/build/intermediates/incremental/release/mergeReleaseResources/stripped.dir
-com.ttylab.untail.tile.untail-tile-release-4 /Users/ttyusb0978/Desktop/myproject/trackurlapp/apps/mobile/modules/untail-tile/android/build/intermediates/merged_res/release/mergeReleaseResources
-com.ttylab.untail.tile.untail-tile-main-5 /Users/ttyusb0978/Desktop/myproject/trackurlapp/apps/mobile/modules/untail-tile/android/src/main/res
-com.ttylab.untail.tile.untail-tile-release-6 /Users/ttyusb0978/Desktop/myproject/trackurlapp/apps/mobile/modules/untail-tile/android/src/release/res

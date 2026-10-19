@@ -9,3 +9,6 @@ apps/mobile/android/
 apps/mobile/.expo/
 apps/mobile/.expo-export-check/
 apps/mobile/expo-env.d.ts
+
+# Gradle output of local Expo modules
+apps/mobile/modules/*/android/build/

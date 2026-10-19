@@ -1,2 +1,0 @@
-int drawable ic_untail_tile 0x0
-int string untail_tile_label 0x0
