@@ -15,7 +15,12 @@
     "dismiss": "Dismiss",
     "iosPasteHint": "Tired of the \"Allow Paste\" prompt? Go to Settings > Apps > Untail > Paste from Other Apps and choose Allow.",
     "openSettings": "Open Settings",
-    "clipboardNoTrackingSite": "No tracking codes found. Site: {{site}}. Untail only removes trackers; it doesn't check whether a link is safe."
+    "clipboardNoTrackingSite": "No tracking codes found. Site: {{site}}. Untail only removes trackers; it doesn't check whether a link is safe.",
+    "tileNoLink": "There is no link on the clipboard.",
+    "tileUnreadable": "Couldn't read the clipboard. Tap the tile again, or paste the link.",
+    "lastTileCopied": "Last tile tap ({{time}}): clean link copied, {{count}} removed",
+    "lastTileExpanded": "Last tile tap ({{time}}): link expanded and copied",
+    "lastTileNoTracking": "Last tile tap ({{time}}): no tracking codes, nothing to change"
   },
   "result": {
     "title": "Result",
@@ -140,5 +145,10 @@
     "high": "Risk: high",
     "medium": "Risk: medium",
     "low": "Risk: low"
+  },
+  "tile": {
+    "toastCopied": "Clean link copied ({{count}} removed)",
+    "toastExpanded": "Link expanded and copied",
+    "toastNoTracking": "No tracking codes in this link; nothing to change"
   }
 }

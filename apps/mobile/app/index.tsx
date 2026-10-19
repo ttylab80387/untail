@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { siteOf } from '@linkclean/core';
 import { HowTo } from '../src/components/HowTo';
+import { formatHm } from '../src/lib/settings';
 import { siteLabel } from '../src/lib/siteLabel';
 import { useReport } from '../src/components/useReport';
 import { ResultCard } from '../src/components/ResultCard';
@@ -39,6 +40,8 @@ export default function Home() {
     undoAutoClean,
     dismissAutoClean,
     dismissCleanLinkNotice,
+    tileNotice,
+    lastTile,
   } = useApp();
   const sendReport = useReport();
   const canClean = ready && !busy && input.trim().length > 0;
@@ -90,6 +93,11 @@ export default function Home() {
           <TextButton label={t('home.dismiss')} onPress={dismissClipboardOffer} muted />
         </Notice>
       )}
+      {tileNotice && !busy && (
+        <Notice icon="alert-circle-outline" text={t(tileNotice === 'no_link' ? 'home.tileNoLink' : 'home.tileUnreadable')}>
+          {null}
+        </Notice>
+      )}
       <TextInput
         value={input}
         onChangeText={setInput}
@@ -128,6 +136,15 @@ export default function Home() {
         </Pressable>
       </View>
       {(busy || !ready) && <ActivityIndicator color={c.accent} />}
+      {lastTile && !busy && !tileNotice && (
+        <Text style={{ color: c.muted, fontSize: 12 }}>
+          {lastTile.row === 2
+            ? t('home.lastTileNoTracking', { time: formatHm(lastTile.at) })
+            : lastTile.expandedOnly
+              ? t('home.lastTileExpanded', { time: formatHm(lastTile.at) })
+              : t('home.lastTileCopied', { time: formatHm(lastTile.at), count: lastTile.removed })}
+        </Text>
+      )}
       {outcome && !busy && <ResultCard result={outcome.result} copied={outcome.copied} />}
       {!outcome && !busy && ready && <HowTo />}
     </ScrollView>

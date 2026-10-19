@@ -1,11 +1,11 @@
 import '../src/i18n';
 import { Ionicons } from '@expo/vector-icons';
-import { Link, router, Stack } from 'expo-router';
+import { Link, router, Stack, usePathname } from 'expo-router';
 import { ShareIntentProvider, useShareIntentContext } from 'expo-share-intent';
 import { StatusBar } from 'expo-status-bar';
 import { SQLiteProvider } from 'expo-sqlite';
 import type { SQLiteDatabase } from 'expo-sqlite';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Image, Pressable, Text, View } from 'react-native';
 import { migrate } from '../src/lib/db';
@@ -28,6 +28,24 @@ function ShareWatcher() {
     if (router.canDismiss()) router.dismissAll();
     void submit(text);
   }, [isReady, ready, hasShareIntent, shareIntent, resetShareIntent, submit]);
+  return null;
+}
+
+// A tile request shows its result on the home screen; leaving the home screen while it runs cancels it.
+function TileWatcher() {
+  const { tileRequests, invalidateTile } = useApp();
+  const pathname = usePathname();
+  useEffect(() => {
+    if (tileRequests > 0 && router.canDismiss()) router.dismissAll();
+  }, [tileRequests]);
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    if (pathname !== '/') invalidateTile();
+  }, [pathname, invalidateTile]);
   return null;
 }
 
@@ -68,6 +86,7 @@ export default function RootLayout() {
       <SQLiteProvider databaseName="linkclean.db" onInit={initDb}>
         <AppProvider>
           <ShareWatcher />
+          <TileWatcher />
           <StatusBar style="light" />
           <Stack
             screenOptions={{

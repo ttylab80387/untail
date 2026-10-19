@@ -15,7 +15,12 @@
     "dismiss": "略過",
     "iosPasteHint": "不想每次都被詢問「允許貼上」？到「設定 > App > Untail > 從其他 App 貼上」選擇「允許」。",
     "openSettings": "前往設定",
-    "clipboardNoTrackingSite": "沒有找到追蹤碼。網站：{{site}}。Untail 只清除追蹤碼，不會檢查連結是否安全。"
+    "clipboardNoTrackingSite": "沒有找到追蹤碼。網站：{{site}}。Untail 只清除追蹤碼，不會檢查連結是否安全。",
+    "tileNoLink": "剪貼簿裡沒有連結。",
+    "tileUnreadable": "讀不到剪貼簿。請再點一次磚，或手動貼上。",
+    "lastTileCopied": "上次點磚（{{time}}）：已複製乾淨連結，移除 {{count}} 項",
+    "lastTileExpanded": "上次點磚（{{time}}）：已展開並複製連結",
+    "lastTileNoTracking": "上次點磚（{{time}}）：連結沒有追蹤碼，不用改"
   },
   "result": {
     "title": "處理結果",
@@ -140,5 +145,10 @@
     "high": "風險：高",
     "medium": "風險：中",
     "low": "風險：低"
+  },
+  "tile": {
+    "toastCopied": "已複製乾淨連結（移除 {{count}} 項）",
+    "toastExpanded": "已展開並複製連結",
+    "toastNoTracking": "連結沒有追蹤碼，不用改"
   }
 }

@@ -15,7 +15,12 @@
     "dismiss": "閉じる",
     "iosPasteHint": "毎回「ペーストを許可」と聞かれないようにするには、「設定 > アプリ > Untail > ほかのAppからペースト」を「許可」にしてください。",
     "openSettings": "設定を開く",
-    "clipboardNoTrackingSite": "追跡コードは見つかりませんでした。サイト：{{site}}。Untail は追跡コードを取り除くだけで、リンクが安全かどうかは確認しません。"
+    "clipboardNoTrackingSite": "追跡コードは見つかりませんでした。サイト：{{site}}。Untail は追跡コードを取り除くだけで、リンクが安全かどうかは確認しません。",
+    "tileNoLink": "クリップボードにリンクがありません。",
+    "tileUnreadable": "クリップボードを読み取れませんでした。もう一度タイルをタップするか、手動で貼り付けてください。",
+    "lastTileCopied": "前回のタイル（{{time}}）：クリーンなリンクをコピー、{{count}} 件削除",
+    "lastTileExpanded": "前回のタイル（{{time}}）：リンクを展開してコピー",
+    "lastTileNoTracking": "前回のタイル（{{time}}）：追跡コードなし、変更は不要"
   },
   "result": {
     "title": "結果",
@@ -140,5 +145,10 @@
     "high": "リスク：高",
     "medium": "リスク：中",
     "low": "リスク：低"
+  },
+  "tile": {
+    "toastCopied": "クリーンなリンクをコピーしました（{{count}} 件削除）",
+    "toastExpanded": "リンクを展開してコピーしました",
+    "toastNoTracking": "追跡コードはありません。変更は不要です"
   }
 }

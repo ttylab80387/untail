@@ -13,7 +13,7 @@ export default function History() {
   const bottomPadding = useBottomPadding();
   const { t, i18n } = useTranslation();
   const c = useColors();
-  const { db } = useApp();
+  const { db, clearLastTile } = useApp();
   const [items, setItems] = useState<HistoryEntry[]>([]);
 
   const reload = useCallback(() => {
@@ -33,7 +33,14 @@ export default function History() {
         options={{
           headerRight: () =>
             items.length ? (
-              <Pressable onPress={() => confirm(t('history.clearConfirm'), () => clearHistory(db))}>
+              <Pressable
+                onPress={() =>
+                  confirm(t('history.clearConfirm'), async () => {
+                    await clearHistory(db);
+                    await clearLastTile();
+                  })
+                }
+              >
                 <Text style={{ color: c.danger }}>{t('history.clearAll')}</Text>
               </Pressable>
             ) : null,

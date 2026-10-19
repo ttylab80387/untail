@@ -4,11 +4,13 @@ import { useLocales } from 'expo-localization';
 import { useSQLiteContext } from 'expo-sqlite';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { AppState as RNAppState, Platform } from 'react-native';
+import { AppState as RNAppState, Platform, ToastAndroid } from 'react-native';
 import { resolveLocale } from '@linkclean/core';
 import type { Locale, RuleBundle } from '@linkclean/core';
 import bundledJson from '../../assets/rules.json';
 import { clipboardStateAsync } from '../../modules/untail-clipboard';
+import { addTileLaunchListener, consumeTileLaunch, moveTaskToBack, waitForWindowFocus } from '../../modules/untail-tile';
+import type { TileLaunch } from '../../modules/untail-tile';
 import { SITE_BASE_URL, USER_AGENT } from '../config';
 import i18n from '../i18n';
 import { cleanInput } from '../lib/cleaner';
@@ -18,8 +20,11 @@ import type { Db } from '../lib/db';
 import { loadRules, updateRules } from '../lib/rulesStore';
 import type { UpdateOutcome } from '../lib/rulesStore';
 import { rnFetch } from '../lib/rnFetch';
-import { DEFAULT_SETTINGS, loadSettings, saveSettings } from '../lib/settings';
-import type { Settings } from '../lib/settings';
+import { DEFAULT_SETTINGS, clearLastTileResult, loadLastTileResult, loadSettings, saveLastTileResult, saveSettings } from '../lib/settings';
+import type { LastTileResult, Settings } from '../lib/settings';
+import { createTileGate, runTile } from '../lib/tileFlow';
+import type { CleanPolicy } from '../lib/tileFlow';
+import type { TileToast } from '../lib/tileOutcome';
 
 const BUNDLED = bundledJson as unknown as RuleBundle;
 
@@ -49,6 +54,11 @@ export interface AppState {
   undoAutoClean(): void;
   dismissAutoClean(): void;
   dismissCleanLinkNotice(): void;
+  tileNotice: 'no_link' | 'unreadable' | null;
+  lastTile: LastTileResult | null;
+  clearLastTile(): Promise<void>;
+  tileRequests: number; // bumped when a tile request starts, so the layout returns to the home screen
+  invalidateTile(): void;
 }
 
 const Ctx = createContext<AppState | null>(null);
@@ -61,6 +71,11 @@ async function fetchText(url: string): Promise<string> {
 
 const sha256 = (text: string) => Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, text);
 
+function tileToastText(t: TileToast): string {
+  if (t.kind === 'copied') return i18n.t('tile.toastCopied', { count: t.removed });
+  return i18n.t(t.kind === 'expanded' ? 'tile.toastExpanded' : 'tile.toastNoTracking');
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
   // expo-sqlite's SQLiteDatabase implements the Db subset used by src/lib.
   const db = useSQLiteContext() as unknown as Db;
@@ -68,12 +83,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [rules, setRules] = useState<RuleBundle>(BUNDLED);
   const [settings, setSettingsState] = useState<Settings>(DEFAULT_SETTINGS);
-  const [input, setInput] = useState('');
+  const [input, setInputState] = useState('');
   const [outcome, setOutcome] = useState<CleanOutcome | null>(null);
   const [pending, setPending] = useState(0);
   const [clipboardOffer, setClipboardOffer] = useState<ClipboardOffer | null>(null);
   const [autoCleaned, setAutoCleaned] = useState<{ undo: string } | null>(null);
   const [cleanClipboardLink, setCleanClipboardLink] = useState<string | null>(null);
+  const [tileNotice, setTileNotice] = useState<'no_link' | 'unreadable' | null>(null);
+  const [lastTile, setLastTile] = useState<LastTileResult | null>(null);
+  const [tileRequests, setTileRequests] = useState(0);
+  const [tile] = useState(createTileGate);
+  const readyRef = useRef(false);
+  // Set when the tile event started a request; the 'active' change that follows the new intent
+  // must not run the clipboard check.
+  const skipNextActive = useRef(false);
+  const invalidateTile = useCallback(() => {
+    tile.cancel();
+    setTileNotice(null);
+  }, [tile]);
   const watch = useRef(initialWatchState());
   // Bumped when the app goes to the background (another app may change the clipboard) and when
   // the user copies something; a job started before that must not write the clipboard.
@@ -137,44 +164,56 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // A copy the user asked for: pending jobs must not overwrite it.
   const copy = useCallback(
     async (text: string) => {
+      tile.cancel();
       clipboardGen.current += 1;
       await writeClipboard(text);
       setOutcome((o) => (o && o.result.cleanUrl === text ? { ...o, copied: true } : o));
     },
-    [writeClipboard],
+    [writeClipboard, tile],
   );
 
+  type Mode = 'manual' | 'auto' | 'tile';
+  interface EnqueueOptions extends Partial<CleanPolicy> {
+    settings?: Settings; // settings just loaded, before React has applied them
+    isValid?: () => boolean; // tile: may still copy
+    showsResult?: () => boolean; // tile: may still replace the home screen
+  }
   // Jobs run one at a time. An automatic job (from the clipboard) always copies its clean link,
-  // but is dropped once it is stale; a job the user asked for always shows its result.
-  // `settings` lets a caller pass settings it just loaded, before React has applied them.
+  // but is dropped once it is stale or a tile request owns the clipboard; a job the user asked for
+  // always shows its result. A tile job copies like an automatic one and shows its result unless the
+  // user has moved on to something else.
   const enqueue = useCallback(
-    (text: string, auto: boolean, settings?: Settings): Promise<CleanOutcome | null> => {
-      setInput(text);
+    (text: string, mode: Mode, opts: EnqueueOptions = {}): Promise<CleanOutcome | null> => {
+      setInputState(text);
       setCleanClipboardLink(null);
       setAutoCleaned(null);
       pendingJobs.current += 1;
       setPending((n) => n + 1);
       const gen = clipboardGen.current;
-      const isCurrent = () => gen === clipboardGen.current;
+      const isCurrent = () =>
+        gen === clipboardGen.current && (opts.isValid?.() ?? true) && (mode !== 'auto' || !tile.busy());
       const job = queue.current.then(async () => {
         try {
           const { rules: r, locale: l } = latest.current;
-          const s = settings ?? latest.current.settings;
+          const s = opts.settings ?? latest.current.settings;
           const out = await cleanInput(text, {
             db,
             rules: r,
-            settings: auto ? { ...s, autoCopy: true } : s,
+            settings: mode === 'manual' ? s : { ...s, autoCopy: true },
             locale: l,
             fetch: rnFetch,
             userAgent: USER_AGENT,
             copy: writeClipboard,
             now: Date.now,
             isCurrent,
+            copyIf: opts.copyIf,
+            recordIf: opts.recordIf,
           });
           if (!isCurrent()) {
-            if (auto) return null;
+            if (mode === 'auto') return null;
+            if (mode === 'tile' && !(opts.showsResult?.() ?? true)) return null;
             // The screen may show newer clipboard content by now; put the requested link back.
-            setInput(text);
+            if (mode === 'manual') setInputState(text);
           }
           setOutcome(out);
           return out;
@@ -189,13 +228,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
       queue.current = job.then(() => undefined);
       return job;
     },
-    [db, writeClipboard],
+    [db, writeClipboard, tile],
   );
 
-  const submit = useCallback((text: string) => enqueue(text, false).then(() => undefined), [enqueue]);
+  const submit = useCallback(
+    (text: string) => {
+      invalidateTile();
+      return enqueue(text, 'manual').then(() => undefined);
+    },
+    [enqueue, invalidateTile],
+  );
 
   const checkClipboard = useCallback(
     async (s: Settings) => {
+      // A tile request owns the clipboard while it runs.
+      if (tile.busy()) return;
       if (!s.detectClipboard) return;
       try {
         let raw: string;
@@ -219,6 +266,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         } else {
           raw = await Clipboard.getStringAsync();
         }
+        // A tile request may have started while this read was waiting.
+        if (tile.busy()) return;
         const d = decideText(raw, watch.current, latest.current.rules);
         watch.current = d.next;
         // New clipboard content makes an earlier "replaced" notice misleading.
@@ -230,7 +279,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           const clean = pendingJobs.current === 0 ? d.clean : null;
           setCleanClipboardLink(clean);
           if (clean !== null) {
-            setInput(clean);
+            setInputState(clean);
             setOutcome(null);
           }
         }
@@ -239,16 +288,65 @@ export function AppProvider({ children }: { children: ReactNode }) {
           return;
         }
         setClipboardOffer(null);
-        const out = await enqueue(d.url, true, s);
+        const out = await enqueue(d.url, 'auto', { settings: s });
         const undo = out ? undoTarget(raw, out) : null;
         setAutoCleaned(undo === null ? null : { undo });
       } catch {
         // Clipboard access is best-effort.
       }
     },
-    [enqueue],
+    [enqueue, tile],
   );
   recheckClipboard.current = () => void checkClipboard(latest.current.settings);
+
+  const startTile = useCallback(
+    async (launch: TileLaunch) => {
+      const id = tile.start();
+      // A tap while a request runs is the same request (spec §3.1).
+      if (id === null) return;
+      setTileRequests((n) => n + 1);
+      setClipboardOffer(null);
+      setAutoCleaned(null);
+      setCleanClipboardLink(null);
+      setTileNotice(null);
+      const isValid = () => tile.isValid(id);
+      try {
+        await runTile(launch.wasInForeground, {
+          waitForFocus: waitForWindowFocus,
+          readClipboard: () => Clipboard.getStringAsync(),
+          sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+          rules: () => latest.current.rules,
+          clean: (text, policy) => enqueue(text, 'tile', { ...policy, isValid, showsResult: () => tile.showsResult(id) }),
+          isValid,
+          noteSeen: (text) => {
+            if (text !== '') watch.current = noteSelfWrite(watch.current, text);
+          },
+          // Never leave clipboard text without a link, or an older result, on the home screen.
+          resetScreen: () => {
+            setInputState('');
+            setOutcome(null);
+          },
+          showNotice: setTileNotice,
+          toast: (t) => ToastAndroid.show(tileToastText(t), ToastAndroid.SHORT),
+          moveToBack: moveTaskToBack,
+          remember: async (r) => {
+            const value: LastTileResult = { ...r, at: Date.now() };
+            setLastTile(value);
+            await saveLastTileResult(db, value);
+          },
+          forget: async () => {
+            setLastTile(null);
+            await clearLastTileResult(db);
+          },
+        });
+      } catch {
+        // A failed tile request leaves Untail open on the home screen.
+      } finally {
+        tile.finish(id);
+      }
+    },
+    [db, enqueue, tile],
+  );
 
   useEffect(() => {
     let alive = true;
@@ -256,29 +354,54 @@ export function AppProvider({ children }: { children: ReactNode }) {
       let s = DEFAULT_SETTINGS;
       let r = BUNDLED;
       try {
-        [s, r] = await Promise.all([loadSettings(db), loadRules(db, BUNDLED)]);
+        let last: LastTileResult | null;
+        [s, r, last] = await Promise.all([loadSettings(db), loadRules(db, BUNDLED), loadLastTileResult(db).catch(() => null)]);
+        setLastTile(last);
       } catch {
         // Unreadable storage: keep defaults rather than blocking the app.
       }
       if (!alive) return;
       setSettingsState(s);
       setRules(r);
+      // A tile request starting right now reads these before React re-renders.
+      latest.current = { ...latest.current, settings: s, rules: r };
       setReady(true);
+      readyRef.current = true;
       void refresh(false);
-      void checkClipboard(s);
+      const launch = consumeTileLaunch();
+      if (launch) void startTile(launch);
+      else void checkClipboard(s);
     })();
     const sub = RNAppState.addEventListener('change', (state) => {
-      // Another app may change the clipboard while we are away.
-      if (state === 'background') clipboardGen.current += 1;
-      if (state !== 'active') return;
+      if (state === 'background') {
+        // Another app may change the clipboard while we are away.
+        clipboardGen.current += 1;
+        tile.leave();
+        skipNextActive.current = false;
+        setTileNotice(null);
+      }
+      // Before startup finishes, startup itself takes the tile request and checks the clipboard.
+      if (state !== 'active' || !readyRef.current) return;
       void refresh(false);
-      void checkClipboard(latest.current.settings);
+      const launch = consumeTileLaunch();
+      if (launch) void startTile(launch);
+      else if (skipNextActive.current) skipNextActive.current = false;
+      else void checkClipboard(latest.current.settings);
+    });
+    // Untail already in front (only the shade covered it) gets the request through this event.
+    const tileSub = addTileLaunchListener(() => {
+      if (!readyRef.current) return;
+      const launch = consumeTileLaunch();
+      if (!launch) return;
+      skipNextActive.current = true;
+      void startTile(launch);
     });
     return () => {
       alive = false;
       sub.remove();
+      tileSub.remove();
     };
-  }, [db, refresh, checkClipboard]);
+  }, [db, refresh, checkClipboard, startTile, tile]);
 
   const value = useMemo<AppState>(
     () => ({
@@ -288,7 +411,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       settings,
       locale,
       input,
-      setInput,
+      setInput(text: string) {
+        invalidateTile();
+        setInputState(text);
+      },
       outcome,
       busy: pending > 0,
       submit,
@@ -318,8 +444,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       },
       dismissAutoClean: () => setAutoCleaned(null),
       dismissCleanLinkNotice: () => setCleanClipboardLink(null),
+      tileNotice,
+      lastTile,
+      async clearLastTile() {
+        setLastTile(null);
+        await clearLastTileResult(db);
+      },
+      tileRequests,
+      invalidateTile,
     }),
-    [ready, db, rules, settings, locale, input, outcome, pending, submit, refresh, copy, clipboardOffer, autoCleaned, cleanClipboardLink],
+    [ready, db, rules, settings, locale, input, outcome, pending, submit, refresh, copy, clipboardOffer, autoCleaned, cleanClipboardLink, tileNotice, lastTile, tileRequests, invalidateTile],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
