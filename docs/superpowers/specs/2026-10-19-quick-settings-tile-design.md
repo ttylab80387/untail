@@ -42,7 +42,7 @@
 - 圖示：Untail 單色壁虎，96×96 px PNG 放在 `drawable-xxxhdpi`（等於 24dp，系統依透明度上色、低密度自動縮小），由 `assets/monochrome.png` 裁切縮小
 - 外觀永遠是「未啟用」（這是動作，不是開關）
 - 鎖定畫面時點磚：先要求解鎖，解鎖後才執行
-- 處理中又點一次磚：視為同一個請求，不重複處理（第一次點磚時記下的「本來在其他 App」不變）
+- 處理中又點一次磚：視為同一個請求，不重複處理（第一次點磚時記下的「本來在其他 App」不變；冷啟動、JS 還沒取走請求時也一樣）
 
 ### 3.2 點磚後的結果
 
@@ -130,7 +130,7 @@
 - service 宣告：`android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"`、`exported=true`、intent filter `android.service.quicksettings.action.QS_TILE`、meta-data `android.service.quicksettings.TOGGLEABLE_TILE=false`、icon、label
 - `onStartListening()`：把磚設為 `STATE_INACTIVE` 並 `updateTile()`
 - `onClick()`：
-  1. 讀 `ForegroundTracker.isStarted`（行程不存在時為 false），放進 extra `untail_tile_was_foreground`；另帶 `untail_tile_launch=true`
+  1. 讀 `ForegroundTracker.isStarted`（行程不存在時為 false），放進 extra `untail_tile_was_foreground`；另帶 `untail_tile_launch=true` 與點磚時間 `untail_tile_at`（`SystemClock.elapsedRealtime()`）。MainActivity 收到時，若沒有時間、超過 15 秒，或帶 `FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY`（行程被殺後從最近使用重建），一律當作不是磚請求，避免使用者沒點磚就讀寫剪貼簿
   2. intent：明確指定 MainActivity，flag `FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_SINGLE_TOP`；MainActivity 維持現有的 `launchMode="singleTask"`（`android/app/src/main/AndroidManifest.xml`，由 Expo 產生）
   3. API 34 以上：`PendingIntent.getActivity(context = 這個 service, requestCode = 0, intent = 第 2 步的 intent, flags = FLAG_IMMUTABLE | FLAG_UPDATE_CURRENT, options = ActivityOptions.makeBasic().setPendingIntentCreatorBackgroundActivityStartMode(MODE_BACKGROUND_ACTIVITY_START_ALLOWED).toBundle())`，再呼叫 `startActivityAndCollapse(pendingIntent)`；API 33 以下：`startActivityAndCollapse(intent)`
   4. 若 `isLocked`：把第 1～3 步放進 `unlockAndRun { }` 的回呼裡，解鎖後才執行
@@ -158,7 +158,7 @@
 
 ### 4.6 請求的有效期間
 每個磚請求有一個編號。以下情況發生時，該請求失效：
-- 使用者離開 Untail（App 進入 background）
+- 使用者離開 Untail（Untail 的 Activity 停止。不用 React Native 的 background：它在 onPause 就觸發，系統對話框或部分機型的通知列也會造成 onPause）
 - 收到新的分享、使用者手動送出連結、使用者自己按複製
 - 使用者在 Untail 裡操作（例如在輸入框打字、切換頁面）
 
