@@ -1,4 +1,3 @@
-// apps/mobile/src/lib/tileFlow.ts
 import type { ProcessResult, RuleBundle } from '@linkclean/core';
 import type { CleanOutcome } from './cleaner';
 import { decideTileOutcome, linkChanged, precheckTile } from './tileOutcome';

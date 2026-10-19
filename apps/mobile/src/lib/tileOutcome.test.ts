@@ -1,4 +1,3 @@
-// apps/mobile/src/lib/tileOutcome.test.ts
 import { describe, expect, it } from 'vitest';
 import type { ProcessResult, RuleBundle } from '@linkclean/core';
 import { decideTileOutcome, precheckTile } from './tileOutcome';

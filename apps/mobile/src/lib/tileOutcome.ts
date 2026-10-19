@@ -1,4 +1,3 @@
-// apps/mobile/src/lib/tileOutcome.ts
 import { extractUrlDetailed } from '@linkclean/core';
 import type { ProcessResult, RuleBundle } from '@linkclean/core';
 import type { CleanOutcome } from './cleaner';
