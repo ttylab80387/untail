@@ -27,7 +27,7 @@ How the clipboard was filled on the emulator: type the text into the Settings se
 
 | Case | Before fix | After fix |
 |---|---|---|
-| Cold start, second tile tap 2–3 s after the first | Stayed in Untail (20 s watched) | Back in Settings search after about 4 s, clipboard clean |
+| Cold start, second tile tap 2–3 s after the first | Stayed in Untail (20 s watched) | Back in Settings search after about 4 s (clipboard not checked in these runs) |
 | Cold tile tap, then `am kill`, new tracking link copied, Untail reopened from recents | Untail cleaned the clipboard and left on its own | Normal start: "There is a link on the clipboard. Get a clean link?", clipboard untouched |
 
 ## Phones and other emulators
