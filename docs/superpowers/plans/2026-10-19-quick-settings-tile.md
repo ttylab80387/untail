@@ -8,7 +8,7 @@
 
 **Tech Stack:** Expo SDK 57 / React Native, expo-modules-core (Kotlin), expo-router, expo-clipboard, vitest, Android API 24–36.
 
-**Spec:** `docs/superpowers/specs/2026-10-19-quick-settings-tile-design.md` (revision 2 + toast/last-result update, commit b77e5d2)
+**Spec:** `docs/superpowers/specs/2026-10-19-quick-settings-tile-design.md` (revision 3: plan-review rulings on repeated taps, request validity, icon and the last-tile line)
 
 ## Global Constraints
 
@@ -20,18 +20,19 @@
 - Show Untail's toast **before** `moveTaskToBack`.
 - Already-clean link (row 2): do not write the clipboard, do not write history.
 - Plain text without a link (row 3) must not be put into the home input box.
-- Last tile result stores `{ row, removed, expandedOnly, at }` only — never the URL.
+- Last tile result stores `{ row, removed, expandedOnly, at }` only — never the URL. Rows 3–6 clear it; row 7 leaves it.
+- A tap while a tile request runs is the same request. Leaving Untail stops copy/toast/return/history but keeps the result on screen; a user action in Untail stops the request and drops its result.
 - Code comments in English; user-facing copy in zh-TW / en / ja with identical keys (`src/i18n/i18n.test.ts` enforces this).
 - Tool gotcha: Write/Edit turn a typed `\u200b` into the real character. In tests build invisible characters with `String.fromCharCode(0x200b)`; after editing any file run `python3 scripts/check-invisible.py <file>` from the repo root.
 - Version: `0.1.3`, Android `versionCode` 5.
 
 ## Review Focus
 
-1. **Two taps in quick succession** (second tap while the first is still expanding a short link): only the newest request may copy, toast or return; the older one becomes row 7. → Task 4 test `a newer request makes the older one invalid`.
+1. **Two taps in quick succession** (second tap while the first is still expanding a short link, started from another app): the second tap is the same request (spec §3.1); the first keeps `wasInForeground = false`, so it still copies, toasts and returns once. → Task 4 test `treats a second tap while a request runs as the same request`; Task 8 row 10.
 2. **Clipboard holds the clean link Untail itself wrote earlier** (user taps the tile twice on the same link): must be row 2 ("no tracking"), not a second copy and not a history row. → Task 1 test `treats a link with nothing to clean as already clean`.
-3. **Short link with expansion turned off in Settings**: result is partial (`expand_disabled`) → row 6, stay in Untail, no toast. → Task 1 test `stays on partial results`.
-4. **Link with only an invisible character** (no tracking params): must count as needing cleaning, be copied, and toast "移除 1 項". → Task 1 test `counts a removed hidden character as a change`.
-5. **Cold start from the tile** (process not running): `wasInForeground` must be false, so a successful clean returns to the previous app. → Task 4 test `returns to the previous app after a cold start`; Task 8 device check.
+3. **Short link that expands to a URL with nothing to remove** (or a link inside surrounding text): the comparison must be against the extracted link, so this is row 2, not row 5 and not a misleading "expanded and copied". → Task 1 test `row 2: a short link that expands to itself with nothing removed is already clean`.
+4. **Link with only an invisible character** (no tracking params): must count as a change, be copied, and toast "移除 1 項". → Task 1 test `counts a removed hidden character as a change`.
+5. **User leaves Untail while a short link expands**: no copy, no toast, no return, no history row; the result is still on the home screen next time. → Task 4 tests `does nothing visible when the request turns invalid while cleaning` and `copies and records only a changed link while the request is valid`; Task 3 test `does not record when recordIf rejects the result`.
 
 ---
 
@@ -41,12 +42,12 @@
 |---|---|
 | Create `apps/mobile/src/lib/tileOutcome.ts` | `precheckTile` (offline check of clipboard text) and `decideTileOutcome` (spec §3.2 table) — pure |
 | Create `apps/mobile/src/lib/tileOutcome.test.ts` | Tests for the above |
-| Create `apps/mobile/src/lib/tileFlow.ts` | `runTile`: focus → read → precheck → clean → decide → notice/remember/toast/back, all through injected deps |
+| Create `apps/mobile/src/lib/tileFlow.ts` | `createTileGate` (which request may still act) and `runTile`: focus → read → precheck → clean → decide → notice/remember/toast/back, all through injected deps |
 | Create `apps/mobile/src/lib/tileFlow.test.ts` | Tests with fake deps |
 | Modify `apps/mobile/src/lib/settings.ts` | `LastTileResult` load/save/clear, `formatHm` |
 | Modify `apps/mobile/src/lib/settings.test.ts` | Tests for last tile result |
-| Modify `apps/mobile/src/lib/cleaner.ts` | Optional `copyIf` predicate on `CleanDeps` |
-| Modify `apps/mobile/src/lib/cleaner.test.ts` | `copyIf` tests |
+| Modify `apps/mobile/src/lib/cleaner.ts` | Optional `copyIf` and `recordIf` predicates on `CleanDeps` |
+| Modify `apps/mobile/src/lib/cleaner.test.ts` | `copyIf` and `recordIf` tests |
 | Create `apps/mobile/modules/untail-tile/` | Expo module: `expo-module.config.json`, `index.ts`, `android/build.gradle`, Kotlin sources, manifest, resources, icon |
 | Modify `apps/mobile/src/state/AppContext.tsx` | `startTile`, enqueue modes, request validity, `tileNotice`, `lastTile`, `tileRequests`, `invalidateTile` |
 | Modify `apps/mobile/app/_layout.tsx` | `TileWatcher`: go home on a tile request, invalidate on navigation |
@@ -75,11 +76,14 @@
   ```ts
   export type TilePrecheck = { kind: 'no_link' } | { kind: 'already_clean'; url: string } | { kind: 'needs_cleaning' };
   export function precheckTile(text: string, rules: RuleBundle): TilePrecheck;
+  export function linkChanged(r: ProcessResult): boolean; // something removed, or the URL itself changed
   export type TileToast = { kind: 'copied'; removed: number } | { kind: 'expanded' } | { kind: 'noTracking' };
   export interface TileFacts { read: 'ok' | 'unreadable'; pre: TilePrecheck | null; outcome: CleanOutcome | null; wasInForeground: boolean; valid: boolean }
   export interface TileDecision { row: 1 | 2 | 3 | 4 | 5 | 6 | 7; toast: TileToast | null; goBack: boolean; remember: { row: 1 | 2; removed: number; expandedOnly: boolean } | null }
   export function decideTileOutcome(f: TileFacts): TileDecision;
   ```
+
+`ProcessResult.originalUrl` is the URL extracted from the input (surrounding text and invisible characters removed), so `linkChanged` compares like with like; a removed invisible character shows up in `removed`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -155,7 +159,8 @@ describe('decideTileOutcome', () => {
 
   it('counts a removed hidden character as a change', () => {
     const hidden: ProcessResult['removed'][number] = { key: 'hidden', value: 'U+200B', category: 'hidden', risk: 'low' };
-    const d = decideTileOutcome(facts({ outcome: { result: result({ removed: [hidden] }), copied: true } }));
+    const same = { originalUrl: 'https://ex.com/ab', cleanUrl: 'https://ex.com/ab' };
+    const d = decideTileOutcome(facts({ outcome: { result: result({ ...same, removed: [hidden] }), copied: true } }));
     expect(d.toast).toEqual({ kind: 'copied', removed: 1 });
   });
 
@@ -168,6 +173,12 @@ describe('decideTileOutcome', () => {
 
   it('row 2: already clean toasts and returns, nothing else', () => {
     const d = decideTileOutcome(facts({ pre: { kind: 'already_clean', url: 'https://ex.com/a' } }));
+    expect(d).toEqual({ row: 2, toast: { kind: 'noTracking' }, goBack: true, remember: { row: 2, removed: 0, expandedOnly: false } });
+  });
+
+  it('row 2: a short link that expands to itself with nothing removed is already clean', () => {
+    const same = result({ originalUrl: 'https://bit.ly/abc', cleanUrl: 'https://bit.ly/abc', removed: [] });
+    const d = decideTileOutcome(facts({ outcome: { result: same, copied: false } }));
     expect(d).toEqual({ row: 2, toast: { kind: 'noTracking' }, goBack: true, remember: { row: 2, removed: 0, expandedOnly: false } });
   });
 
@@ -211,7 +222,7 @@ Expected: FAIL — `Failed to resolve import "./tileOutcome"`.
 ```ts
 // apps/mobile/src/lib/tileOutcome.ts
 import { extractUrlDetailed } from '@linkclean/core';
-import type { RuleBundle } from '@linkclean/core';
+import type { ProcessResult, RuleBundle } from '@linkclean/core';
 import type { CleanOutcome } from './cleaner';
 import { needsCleaning } from './clipboardWatch';
 
@@ -224,6 +235,11 @@ export function precheckTile(text: string, rules: RuleBundle): TilePrecheck {
   if (!found) return { kind: 'no_link' };
   const dirty = needsCleaning(found.url, rules) || found.hidden.some((h) => h.removed);
   return dirty ? { kind: 'needs_cleaning' } : { kind: 'already_clean', url: found.url };
+}
+
+// originalUrl is the extracted link, so surrounding text never counts as a change.
+export function linkChanged(r: ProcessResult): boolean {
+  return r.removed.length > 0 || r.cleanUrl !== r.originalUrl;
 }
 
 export type TileToast = { kind: 'copied'; removed: number } | { kind: 'expanded' } | { kind: 'noTracking' };
@@ -245,15 +261,21 @@ export interface TileDecision {
 
 const stay = (row: TileDecision['row']): TileDecision => ({ row, toast: null, goBack: false, remember: null });
 
+const alreadyClean = (f: TileFacts): TileDecision => ({
+  row: 2,
+  toast: { kind: 'noTracking' },
+  goBack: !f.wasInForeground,
+  remember: { row: 2, removed: 0, expandedOnly: false },
+});
+
 export function decideTileOutcome(f: TileFacts): TileDecision {
   if (!f.valid) return stay(7);
   if (f.read === 'unreadable' || f.pre === null) return stay(4);
   if (f.pre.kind === 'no_link') return stay(3);
-  if (f.pre.kind === 'already_clean') {
-    return { row: 2, toast: { kind: 'noTracking' }, goBack: !f.wasInForeground, remember: { row: 2, removed: 0, expandedOnly: false } };
-  }
+  if (f.pre.kind === 'already_clean') return alreadyClean(f);
   const out = f.outcome;
   if (!out || out.result.status !== 'clean') return stay(6);
+  if (!linkChanged(out.result)) return alreadyClean(f);
   if (!out.copied) return stay(5);
   const removed = out.result.removed.length;
   return {
@@ -268,7 +290,7 @@ export function decideTileOutcome(f: TileFacts): TileDecision {
 - [ ] **Step 4: Run the tests to verify they pass**
 
 Run: `pnpm --filter @linkclean/mobile test -- src/lib/tileOutcome.test.ts`
-Expected: PASS (15 tests).
+Expected: PASS (16 tests).
 
 - [ ] **Step 5: Commit**
 
@@ -396,14 +418,16 @@ git commit -m "feat(mobile): store the last tile result without the link"
 
 ---
 
-### Task 3: Copy only when the link changed (`cleaner.ts`)
+### Task 3: Let the caller restrict the copy and the history write (`cleaner.ts`)
 
 **Files:**
-- Modify: `apps/mobile/src/lib/cleaner.ts` (`CleanDeps` and the copy condition)
+- Modify: `apps/mobile/src/lib/cleaner.ts` (`CleanDeps`, the history condition and the copy condition)
 - Test: `apps/mobile/src/lib/cleaner.test.ts`
 
 **Interfaces:**
-- Produces: `CleanDeps.copyIf?(result: ProcessResult): boolean` — when present, an automatic copy also requires `copyIf(result) === true`.
+- Produces:
+  - `CleanDeps.copyIf?(result: ProcessResult): boolean` — when present, an automatic copy also requires `copyIf(result) === true`.
+  - `CleanDeps.recordIf?(result: ProcessResult): boolean` — when present, a history row also requires `recordIf(result) === true`. Checked after processing, right before the write, so a request that became invalid while expanding writes nothing.
 
 - [ ] **Step 1: Write the failing tests** — append inside the `describe('cleanInput', () => {` block (line 55) in `cleaner.test.ts`:
 
@@ -415,25 +439,48 @@ git commit -m "feat(mobile): store the last tile result without the link"
   });
 
   it('copies when copyIf accepts the result', async () => {
-    const out = await cleanInput('https://ex.com/a?utm_source=x', deps({ copyIf: (r) => r.cleanUrl !== 'https://ex.com/a?utm_source=x' }));
+    const out = await cleanInput('https://ex.com/a?utm_source=x', deps({ copyIf: (r) => r.cleanUrl !== r.originalUrl }));
     expect(out.copied).toBe(true);
     expect(copied).toEqual(['https://ex.com/a']);
+  });
+
+  it('does not record when recordIf rejects the result', async () => {
+    let seen: string | null = null;
+    await cleanInput(
+      'https://ex.com/a?utm_source=x',
+      deps({
+        recordIf: (r) => {
+          seen = r.cleanUrl;
+          return false;
+        },
+      }),
+    );
+    expect(seen).toBe('https://ex.com/a');
+    expect(await listHistory(db)).toEqual([]);
   });
 ```
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
 Run: `pnpm --filter @linkclean/mobile test -- src/lib/cleaner.test.ts`
-Expected: FAIL — the first new test copies `https://ex.com/a` (and TypeScript may report `copyIf` unknown in `deps`).
+Expected: FAIL — the first new test copies `https://ex.com/a` and the third finds one history row.
 
 - [ ] **Step 3: Implement** — in `apps/mobile/src/lib/cleaner.ts`, add to `CleanDeps` after `isCurrent?(): boolean;`:
 
 ```ts
-  // Extra condition for the automatic copy, e.g. the tile copies only when the link actually changed.
+  // Extra conditions from the caller, e.g. the tile copies and records only a link that changed,
+  // and only while its request is still valid.
   copyIf?(result: ProcessResult): boolean;
+  recordIf?(result: ProcessResult): boolean;
 ```
 
-and change the copy condition to:
+change `if (deps.settings.history) {` to:
+
+```ts
+  if (deps.settings.history && (deps.recordIf?.(result) ?? true)) {
+```
+
+and the copy condition to:
 
 ```ts
   if (
@@ -453,38 +500,56 @@ Expected: PASS.
 
 ```bash
 git add apps/mobile/src/lib/cleaner.ts apps/mobile/src/lib/cleaner.test.ts
-git commit -m "feat(mobile): let a caller restrict the automatic copy"
+git commit -m "feat(mobile): let a caller restrict the automatic copy and the history write"
 ```
 
 ---
 
-### Task 4: Tile flow orchestration (`tileFlow.ts`)
+### Task 4: Tile request gate and flow (`tileFlow.ts`)
 
 **Files:**
 - Create: `apps/mobile/src/lib/tileFlow.ts`
 - Test: `apps/mobile/src/lib/tileFlow.test.ts`
 
 **Interfaces:**
-- Consumes: `precheckTile`, `decideTileOutcome`, `TileDecision`, `TileToast` (Task 1); `CleanOutcome` (`cleaner.ts`)
+- Consumes: `precheckTile`, `linkChanged`, `decideTileOutcome`, `TileDecision`, `TileToast` (Task 1); `CleanOutcome` (`cleaner.ts`)
 - Produces:
   ```ts
+  export interface TileGate {
+    start(): number | null;
+    isValid(id: number): boolean;
+    showsResult(id: number): boolean;
+    busy(): boolean;
+    leave(): void;
+    cancel(): void;
+    finish(id: number): void;
+  }
+  export function createTileGate(): TileGate;
+  export interface CleanPolicy { copyIf(r: ProcessResult): boolean; recordIf(r: ProcessResult): boolean }
   export interface TileFlowDeps {
     waitForFocus(timeoutMs: number): Promise<boolean>;
     readClipboard(): Promise<string>;
     sleep(ms: number): Promise<void>;
     rules(): RuleBundle;
-    clean(text: string, copyIf: (r: ProcessResult) => boolean): Promise<CleanOutcome | null>;
+    clean(text: string, policy: CleanPolicy): Promise<CleanOutcome | null>;
     isValid(): boolean;
     noteSeen(text: string): void;
+    resetScreen(): void;
     showNotice(n: 'no_link' | 'unreadable' | null): void;
     toast(t: TileToast): void;
     moveToBack(): Promise<boolean>;
     remember(r: { row: 1 | 2; removed: number; expandedOnly: boolean }): Promise<void>;
+    forget(): Promise<void>;
   }
   export const FOCUS_TIMEOUT_MS = 1500;
   export const EMPTY_RETRY_MS = 100;
   export function runTile(wasInForeground: boolean, d: TileFlowDeps): Promise<TileDecision>;
   ```
+
+Request lifecycle (spec §3.1, §4.6, as ruled in the spec revision of this plan):
+- A tap while a request runs is the same request: `start()` returns `null` and the running one keeps its `wasInForeground`.
+- Leaving Untail (`leave()`): the request may no longer copy, toast, return or write history, but its result still appears on the home screen (`showsResult` stays true). A tap after leaving starts a new request that replaces it.
+- A user action in Untail (typing, sending, a share, copying, leaving the home screen) calls `cancel()`: the request may do nothing more and its result must not replace what the user is now looking at.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -493,8 +558,8 @@ git commit -m "feat(mobile): let a caller restrict the automatic copy"
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { ProcessResult, RuleBundle } from '@linkclean/core';
 import type { CleanOutcome } from './cleaner';
-import { runTile } from './tileFlow';
-import type { TileFlowDeps } from './tileFlow';
+import { createTileGate, runTile } from './tileFlow';
+import type { CleanPolicy, TileFlowDeps } from './tileFlow';
 
 const rules: RuleBundle = {
   schemaVersion: 1,
@@ -507,22 +572,69 @@ const rules: RuleBundle = {
 const DIRTY = 'https://ex.com/a?utm_source=x';
 const CLEAN = 'https://ex.com/a';
 const removed: ProcessResult['removed'] = [{ key: 'utm_source', value: 'x', category: 'campaign', risk: 'low' }];
+const cleaned: ProcessResult = { originalUrl: DIRTY, cleanUrl: CLEAN, status: 'clean', removed, hops: [DIRTY] };
+
+describe('createTileGate', () => {
+  it('treats a second tap while a request runs as the same request', () => {
+    const g = createTileGate();
+    const first = g.start();
+    expect(first).not.toBeNull();
+    expect(g.start()).toBeNull();
+    expect(g.isValid(first!)).toBe(true);
+  });
+
+  it('after leaving: no more side effects, result still shown, a new tap replaces it', () => {
+    const g = createTileGate();
+    const first = g.start()!;
+    g.leave();
+    expect(g.isValid(first)).toBe(false);
+    expect(g.showsResult(first)).toBe(true);
+    const second = g.start()!;
+    expect(second).not.toBe(first);
+    expect(g.showsResult(first)).toBe(false);
+    expect(g.isValid(second)).toBe(true);
+  });
+
+  it('a user action cancels the request and its result', () => {
+    const g = createTileGate();
+    const id = g.start()!;
+    g.cancel();
+    expect(g.isValid(id)).toBe(false);
+    expect(g.showsResult(id)).toBe(false);
+    expect(g.busy()).toBe(false);
+  });
+
+  it('finishing frees the gate, and an old id cannot finish a newer request', () => {
+    const g = createTileGate();
+    const first = g.start()!;
+    g.finish(first);
+    expect(g.busy()).toBe(false);
+    const second = g.start()!;
+    g.finish(first);
+    expect(g.isValid(second)).toBe(true);
+  });
+});
 
 let log: string[];
 let clips: string[];
+let reads: number;
 let valid: boolean;
-let cleanResult: (text: string, copyIf: (r: ProcessResult) => boolean) => Promise<CleanOutcome | null>;
+let cleanResult: (text: string, policy: CleanPolicy) => Promise<CleanOutcome | null>;
 
 const deps = (over: Partial<TileFlowDeps> = {}): TileFlowDeps => ({
   waitForFocus: async () => true,
-  readClipboard: async () => clips.shift() ?? '',
+  readClipboard: async () => {
+    reads += 1;
+    return clips.shift() ?? '';
+  },
   sleep: async (ms) => {
     log.push(`sleep ${ms}`);
   },
   rules: () => rules,
-  clean: (text, copyIf) => cleanResult(text, copyIf),
+  clean: (text, policy) => cleanResult(text, policy),
   isValid: () => valid,
   noteSeen: (t) => log.push(`seen ${t}`),
+  resetScreen: () => log.push('reset'),
   showNotice: (n) => log.push(`notice ${n}`),
   toast: (t) => log.push(`toast ${JSON.stringify(t)}`),
   moveToBack: async () => {
@@ -532,17 +644,18 @@ const deps = (over: Partial<TileFlowDeps> = {}): TileFlowDeps => ({
   remember: async (r) => {
     log.push(`remember ${r.row}`);
   },
+  forget: async () => {
+    log.push('forget');
+  },
   ...over,
 });
 
 beforeEach(() => {
   log = [];
   clips = [];
+  reads = 0;
   valid = true;
-  cleanResult = async (_text, copyIf) => {
-    const result: ProcessResult = { originalUrl: DIRTY, cleanUrl: CLEAN, status: 'clean', removed, hops: [DIRTY] };
-    return { result, copied: copyIf(result) };
-  };
+  cleanResult = async (_text, policy) => ({ result: cleaned, copied: policy.copyIf(cleaned) });
 });
 
 describe('runTile', () => {
@@ -560,37 +673,53 @@ describe('runTile', () => {
     expect(log).toContain('toast {"kind":"copied","removed":1}');
   });
 
-  it('does not clean or copy an already clean link', async () => {
+  it('does not clean or copy an already clean link, and clears the old result', async () => {
     clips = [CLEAN];
-    let cleaned = false;
+    let cleanedCalled = false;
     cleanResult = async () => {
-      cleaned = true;
+      cleanedCalled = true;
       return null;
     };
     const d = await runTile(false, deps());
     expect(d.row).toBe(2);
-    expect(cleaned).toBe(false);
-    expect(log).toEqual([`seen ${CLEAN}`, 'notice null', 'remember 2', 'toast {"kind":"noTracking"}', 'back']);
+    expect(cleanedCalled).toBe(false);
+    expect(log).toEqual([`seen ${CLEAN}`, 'reset', 'notice null', 'remember 2', 'toast {"kind":"noTracking"}', 'back']);
   });
 
-  it('copies only when the link changed', async () => {
-    clips = [`  ${DIRTY}  `];
-    let accepted: boolean | null = null;
-    cleanResult = async (_t, copyIf) => {
-      const same: ProcessResult = { originalUrl: DIRTY, cleanUrl: DIRTY, status: 'clean', removed: [], hops: [DIRTY] };
-      accepted = copyIf(same);
-      return { result: same, copied: accepted };
+  it('copies and records only a changed link while the request is valid', async () => {
+    clips = [DIRTY];
+    const got: { policy?: CleanPolicy } = {};
+    cleanResult = async (_t, policy) => {
+      got.policy = policy;
+      return { result: cleaned, copied: policy.copyIf(cleaned) };
     };
+    await runTile(false, deps());
+    const p = got.policy!;
+    const same: ProcessResult = { originalUrl: CLEAN, cleanUrl: CLEAN, status: 'clean', removed: [], hops: [CLEAN] };
+    const partial: ProcessResult = { ...same, status: 'partial', reason: 'expand_disabled' };
+    expect(p.copyIf(cleaned)).toBe(true);
+    expect(p.copyIf(same)).toBe(false);
+    expect(p.copyIf(partial)).toBe(false);
+    expect(p.recordIf(cleaned)).toBe(true);
+    expect(p.recordIf(same)).toBe(false);
+    expect(p.recordIf(partial)).toBe(true);
+    valid = false;
+    expect(p.recordIf(cleaned)).toBe(false);
+  });
+
+  it('stays and clears the last tile line when the copy failed', async () => {
+    clips = [DIRTY];
+    cleanResult = async () => ({ result: cleaned, copied: false });
     const d = await runTile(false, deps());
-    expect(accepted).toBe(false);
     expect(d.row).toBe(5);
+    expect(log).toEqual([`seen ${DIRTY}`, 'notice null', 'forget']);
   });
 
   it('retries once after an empty read, then reports no link', async () => {
     clips = ['', ''];
     const d = await runTile(false, deps());
     expect(d.row).toBe(3);
-    expect(log).toEqual(['sleep 100', 'seen ', 'notice no_link']);
+    expect(log).toEqual(['sleep 100', 'seen ', 'reset', 'notice no_link', 'forget']);
   });
 
   it('uses the second read when the first was empty', async () => {
@@ -599,10 +728,25 @@ describe('runTile', () => {
     expect(d.row).toBe(1);
   });
 
+  it('does not read again after the user left during the retry pause', async () => {
+    clips = ['', DIRTY];
+    const d = await runTile(
+      false,
+      deps({
+        sleep: async () => {
+          valid = false;
+        },
+      }),
+    );
+    expect(reads).toBe(1);
+    expect(d.row).toBe(7);
+  });
+
   it('reports unreadable when focus never comes', async () => {
     const d = await runTile(false, deps({ waitForFocus: async () => false }));
     expect(d.row).toBe(4);
-    expect(log).toEqual(['notice unreadable']);
+    expect(reads).toBe(0);
+    expect(log).toEqual(['reset', 'notice unreadable', 'forget']);
   });
 
   it('reports unreadable when reading throws', async () => {
@@ -617,16 +761,34 @@ describe('runTile', () => {
     expect(d.row).toBe(4);
   });
 
-  it('a newer request makes the older one invalid', async () => {
+  it('does not start cleaning once the request is invalid, e.g. a share arrived', async () => {
+    let cleanedCalled = false;
+    cleanResult = async () => {
+      cleanedCalled = true;
+      return null;
+    };
+    const d = await runTile(
+      false,
+      deps({
+        readClipboard: async () => {
+          valid = false;
+          return DIRTY;
+        },
+      }),
+    );
+    expect(cleanedCalled).toBe(false);
+    expect(d.row).toBe(7);
+  });
+
+  it('does nothing visible when the request turns invalid while cleaning', async () => {
     clips = [DIRTY];
-    cleanResult = async (_t, copyIf) => {
-      valid = false; // a second tap arrived while this one was expanding
-      const result: ProcessResult = { originalUrl: DIRTY, cleanUrl: CLEAN, status: 'clean', removed, hops: [DIRTY] };
-      return { result, copied: copyIf(result) };
+    cleanResult = async (_t, policy) => {
+      valid = false; // the user left while a short link was expanding
+      return { result: cleaned, copied: policy.copyIf(cleaned) };
     };
     const d = await runTile(false, deps());
     expect(d.row).toBe(7);
-    expect(log.some((l) => l.startsWith('toast') || l === 'back' || l.startsWith('remember'))).toBe(false);
+    expect(log.some((l) => l.startsWith('toast') || l === 'back' || l.startsWith('remember') || l === 'forget')).toBe(false);
   });
 
   it('does not go back when the request turns invalid right after the toast', async () => {
@@ -657,36 +819,83 @@ Expected: FAIL — `Failed to resolve import "./tileFlow"`.
 // apps/mobile/src/lib/tileFlow.ts
 import type { ProcessResult, RuleBundle } from '@linkclean/core';
 import type { CleanOutcome } from './cleaner';
-import { decideTileOutcome, precheckTile } from './tileOutcome';
+import { decideTileOutcome, linkChanged, precheckTile } from './tileOutcome';
 import type { TileDecision, TileToast } from './tileOutcome';
 
 export const FOCUS_TIMEOUT_MS = 1500;
 export const EMPTY_RETRY_MS = 100;
+
+// Tracks the one tile request that may still copy, toast and return (spec §3.1, §4.6).
+export interface TileGate {
+  start(): number | null; // null while a request runs: a second tap is the same request
+  isValid(id: number): boolean; // may still copy, toast, return and write history
+  showsResult(id: number): boolean; // its result may still replace the home screen
+  busy(): boolean; // a request owns the clipboard; automatic clipboard work must wait
+  leave(): void; // Untail went to the background
+  cancel(): void; // the user did something else in Untail
+  finish(id: number): void;
+}
+
+export function createTileGate(): TileGate {
+  let seq = 0;
+  let active: number | null = null;
+  let left = false;
+  return {
+    start() {
+      if (active !== null && !left) return null;
+      seq += 1;
+      active = seq;
+      left = false;
+      return active;
+    },
+    isValid: (id) => active === id && !left,
+    showsResult: (id) => active === id,
+    busy: () => active !== null,
+    leave() {
+      if (active !== null) left = true;
+    },
+    cancel() {
+      active = null;
+    },
+    finish(id) {
+      if (active === id) active = null;
+    },
+  };
+}
+
+export interface CleanPolicy {
+  copyIf(r: ProcessResult): boolean;
+  recordIf(r: ProcessResult): boolean;
+}
 
 export interface TileFlowDeps {
   waitForFocus(timeoutMs: number): Promise<boolean>;
   readClipboard(): Promise<string>;
   sleep(ms: number): Promise<void>;
   rules(): RuleBundle;
-  // Runs the normal cleaning queue; copyIf restricts the automatic copy.
-  clean(text: string, copyIf: (r: ProcessResult) => boolean): Promise<CleanOutcome | null>;
+  // Runs the normal cleaning queue with the tile's copy and history conditions.
+  clean(text: string, policy: CleanPolicy): Promise<CleanOutcome | null>;
   isValid(): boolean;
   noteSeen(text: string): void; // the clipboard watch must not offer this text again
+  resetScreen(): void; // rows 2-4: clear the input box and any older result
   showNotice(n: 'no_link' | 'unreadable' | null): void;
   toast(t: TileToast): void;
   moveToBack(): Promise<boolean>;
   remember(r: { row: 1 | 2; removed: number; expandedOnly: boolean }): Promise<void>;
+  forget(): Promise<void>; // rows 3-6: an older "last tile tap" line must not stay on screen
 }
 
 // Android only lets the focused app read the clipboard, so wait for focus, then read once more if the
-// first read came back empty (focus can arrive a moment after the shade closes).
+// first read came back empty (focus can arrive a moment after the shade closes). Never read once the
+// request is invalid: the user may have left.
 async function readAfterFocus(d: TileFlowDeps): Promise<string | null> {
   const focused = await d.waitForFocus(FOCUS_TIMEOUT_MS).catch(() => false);
-  if (!focused) return null;
+  if (!focused || !d.isValid()) return null;
   try {
     const first = await d.readClipboard();
     if (first !== '') return first;
     await d.sleep(EMPTY_RETRY_MS);
+    if (!d.isValid()) return null;
     return await d.readClipboard();
   } catch {
     return null;
@@ -698,14 +907,19 @@ export async function runTile(wasInForeground: boolean, d: TileFlowDeps): Promis
   if (text !== null) d.noteSeen(text);
   const pre = text === null ? null : precheckTile(text, d.rules());
   let outcome: CleanOutcome | null = null;
-  if (text !== null && pre?.kind === 'needs_cleaning') {
-    const raw = text.trim();
-    outcome = await d.clean(text, (r) => r.status === 'clean' && r.cleanUrl !== raw);
+  if (text !== null && pre?.kind === 'needs_cleaning' && d.isValid()) {
+    outcome = await d.clean(text, {
+      copyIf: (r) => r.status === 'clean' && linkChanged(r),
+      // History follows the setting for rows 1, 5 and 6 only (spec §3.2).
+      recordIf: (r) => d.isValid() && (r.status !== 'clean' || linkChanged(r)),
+    });
   }
   const decision = decideTileOutcome({ read: text === null ? 'unreadable' : 'ok', pre, outcome, wasInForeground, valid: d.isValid() });
   if (decision.row === 7) return decision;
+  if (decision.row >= 2 && decision.row <= 4) d.resetScreen();
   d.showNotice(decision.row === 3 ? 'no_link' : decision.row === 4 ? 'unreadable' : null);
   if (decision.remember) await d.remember(decision.remember).catch(() => undefined);
+  else await d.forget().catch(() => undefined);
   // Toast first, while Untail is still on screen, so it is not queued behind system toasts.
   if (decision.toast && d.isValid()) d.toast(decision.toast);
   if (decision.goBack && d.isValid()) await d.moveToBack().catch(() => false);
@@ -716,7 +930,7 @@ export async function runTile(wasInForeground: boolean, d: TileFlowDeps): Promis
 - [ ] **Step 4: Run the tests to verify they pass**
 
 Run: `pnpm --filter @linkclean/mobile test -- src/lib/tileFlow.test.ts`
-Expected: PASS (10 tests).
+Expected: PASS (17 tests).
 
 - [ ] **Step 5: Run the whole mobile suite and typecheck**
 
@@ -727,7 +941,7 @@ Expected: all tests pass, no type errors.
 
 ```bash
 git add apps/mobile/src/lib/tileFlow.ts apps/mobile/src/lib/tileFlow.test.ts
-git commit -m "feat(mobile): run a tile request through focus, read, clean and return"
+git commit -m "feat(mobile): tile request gate and flow from focus to return"
 ```
 
 ---
@@ -745,7 +959,7 @@ git commit -m "feat(mobile): run a tile request through focus, read, clean and r
 - `android/src/main/java/com/ttylab/untail/tile/CleanLinkTileService.kt`
 - `android/src/main/java/com/ttylab/untail/tile/UntailTileModule.kt`
 - `android/src/main/res/values/strings.xml`, `values-b+zh+Hant/strings.xml`, `values-zh-rTW/strings.xml`, `values-ja/strings.xml`
-- `android/src/main/res/drawable-nodpi/ic_untail_tile.png`
+- `android/src/main/res/drawable-xxxhdpi/ic_untail_tile.png`
 
 **Interfaces:**
 - Produces (JS, `modules/untail-tile/index.ts`):
@@ -829,16 +1043,16 @@ android {
 <resources><string name="untail_tile_label">リンクをクリーン</string></resources>
 ```
 
-- [ ] **Step 4: Icon** — crop the gecko from the adaptive monochrome icon (1024×1024, safe zone in the middle) and scale to 96 px:
+- [ ] **Step 4: Icon** — crop the gecko from the adaptive monochrome icon (1024×1024, safe zone in the middle) and scale to 96 px. 96 px in `drawable-xxxhdpi` is 24dp; Android scales it down for lower densities and tints it by its alpha channel (spec §3.1).
 
 ```bash
-cd apps/mobile
-mkdir -p modules/untail-tile/android/src/main/res/drawable-nodpi
-sips -c 680 680 assets/monochrome.png --out modules/untail-tile/android/src/main/res/drawable-nodpi/ic_untail_tile.png
-sips -Z 96 modules/untail-tile/android/src/main/res/drawable-nodpi/ic_untail_tile.png
-sips -g pixelWidth -g pixelHeight modules/untail-tile/android/src/main/res/drawable-nodpi/ic_untail_tile.png
+D=apps/mobile/modules/untail-tile/android/src/main/res/drawable-xxxhdpi
+mkdir -p $D
+sips -c 680 680 apps/mobile/assets/monochrome.png --out $D/ic_untail_tile.png
+sips -Z 96 $D/ic_untail_tile.png
+sips -g pixelWidth -g pixelHeight -g hasAlpha $D/ic_untail_tile.png
 ```
-Expected: 96 × 96. Open the PNG (Read tool) and confirm the gecko is centred and not cut off; if it is, repeat with a larger crop (for example 760).
+Expected: 96 × 96, `hasAlpha: yes`. Open the PNG (Read tool) and confirm the gecko is centred and not cut off; if it is, repeat with a larger crop (for example 760).
 
 - [ ] **Step 5: `TileLaunchStore.kt` and `ForegroundTracker.kt`**
 
@@ -983,9 +1197,9 @@ class CleanLinkTileService : TileService() {
 
   override fun onClick() {
     try {
-      // Read before launching: once Untail starts, it is in front either way.
-      val wasInForeground = ForegroundTracker.isStarted
-      val launch = Runnable { launchUntail(wasInForeground) }
+      // Read the foreground state when the launch happens, which is after unlocking when locked
+      // (spec §4.2). It must still be read before launchUntail starts the activity.
+      val launch = Runnable { launchUntail(ForegroundTracker.isStarted) }
       if (isLocked) unlockAndRun(launch) else launch.run()
     } catch (e: Exception) {
       Log.w(TAG, "tile click failed", e)
@@ -1077,19 +1291,23 @@ class UntailTileModule : Module() {
         promise.resolve(true)
         return@AsyncFunction
       }
-      val observer = activity.window.decorView.viewTreeObserver
+      val decor = activity.window.decorView
       var done = false
       lateinit var listener: ViewTreeObserver.OnWindowFocusChangeListener
+      lateinit var timeout: Runnable
       val finish = { ok: Boolean ->
         if (!done) {
           done = true
-          if (observer.isAlive) observer.removeOnWindowFocusChangeListener(listener)
+          main.removeCallbacks(timeout)
+          // An observer taken before the window attached is dead by now; always remove from the current one.
+          decor.viewTreeObserver.let { if (it.isAlive) it.removeOnWindowFocusChangeListener(listener) }
           promise.resolve(ok)
         }
       }
       listener = ViewTreeObserver.OnWindowFocusChangeListener { focused -> if (focused) finish(true) }
-      observer.addOnWindowFocusChangeListener(listener)
-      main.postDelayed({ finish(activity.hasWindowFocus()) }, timeoutMs.toLong())
+      timeout = Runnable { finish(activity.hasWindowFocus()) }
+      decor.viewTreeObserver.addOnWindowFocusChangeListener(listener)
+      main.postDelayed(timeout, timeoutMs.toLong())
     }.runOnQueue(Queues.MAIN)
 
     AsyncFunction("moveTaskToBack") {
@@ -1108,12 +1326,14 @@ class UntailTileModule : Module() {
         return@AsyncFunction
       }
       var settled = false
-      val observer = activity.window.decorView.viewTreeObserver
+      val decor = activity.window.decorView
       lateinit var focusListener: ViewTreeObserver.OnWindowFocusChangeListener
+      lateinit var timeout: Runnable
       val settle = { result: String ->
         if (!settled) {
           settled = true
-          if (observer.isAlive) observer.removeOnWindowFocusChangeListener(focusListener)
+          main.removeCallbacks(timeout)
+          decor.viewTreeObserver.let { if (it.isAlive) it.removeOnWindowFocusChangeListener(focusListener) }
           promise.resolve(result)
         }
       }
@@ -1123,8 +1343,9 @@ class UntailTileModule : Module() {
       focusListener = ViewTreeObserver.OnWindowFocusChangeListener { focused ->
         if (!focused) lostFocus = true else if (lostFocus) main.postDelayed({ settle("dismissed") }, 1000)
       }
-      observer.addOnWindowFocusChangeListener(focusListener)
-      main.postDelayed({ settle("dismissed") }, 30_000)
+      timeout = Runnable { settle("dismissed") }
+      decor.viewTreeObserver.addOnWindowFocusChangeListener(focusListener)
+      main.postDelayed(timeout, 30_000)
       try {
         manager.requestAddTileService(
           ComponentName(activity, CleanLinkTileService::class.java),
@@ -1206,19 +1427,21 @@ export async function requestAddTile(): Promise<AddTileResult> {
 
 - [ ] **Step 10: Typecheck, prebuild and release build**
 
+All commands in this step and the next run from the repo root; directory changes stay inside subshells.
+
 ```bash
 pnpm --filter @linkclean/mobile typecheck
-cd apps/mobile && npx expo prebuild --platform android --no-install
-grep -n "untail-tile\|UntailTile" android/settings.gradle android/app/build/generated/autolinking/src/main/java/expo/modules/ExpoModulesPackageList.java 2>/dev/null | head
-cd android && ./gradlew createBundleReleaseJsAndAssets --rerun assembleRelease
+(cd apps/mobile && npx expo prebuild --platform android --no-install)
+(cd apps/mobile/android && ./gradlew createBundleReleaseJsAndAssets --rerun assembleRelease)
+grep -rln "UntailTile" apps/mobile/android/app/build/generated/autolinking | head -3
 ```
-Expected: typecheck clean; the module appears in the autolinking output; `BUILD SUCCESSFUL`. (Use `createBundleReleaseJsAndAssets --rerun` — a plain `assembleRelease` can skip re-bundling JS.)
+Expected: typecheck clean; `BUILD SUCCESSFUL`; the autolinking output (generated by the Gradle build) mentions `UntailTile`. (Use `createBundleReleaseJsAndAssets --rerun` — a plain `assembleRelease` can skip re-bundling JS.)
 
 Check the merged manifest and strings:
 ```bash
-grep -n -A6 "CleanLinkTileService" app/build/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml
+grep -n -A6 "CleanLinkTileService" apps/mobile/android/app/build/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml
 AAPT=$(ls -d ~/Library/Android/sdk/build-tools/* | tail -1)/aapt2
-$AAPT dump resources app/build/outputs/apk/release/app-release.apk | grep -A6 "string/untail_tile_label"
+$AAPT dump resources apps/mobile/android/app/build/outputs/apk/release/app-release.apk | grep -A6 "string/untail_tile_label"
 ```
 Expected: the service with `BIND_QUICK_SETTINGS_TILE`, the QS_TILE action and `TOGGLEABLE_TILE=false`; label values for default, `b+zh+Hant`, `zh-rTW`, `ja` (all four survive resource shrinking).
 
@@ -1229,6 +1452,8 @@ export ANDROID_SERIAL=emulator-5554
 adb install -r apps/mobile/android/app/build/outputs/apk/release/app-release.apk
 adb shell cmd statusbar add-tile com.ttylab.untail/com.ttylab.untail.tile.CleanLinkTileService
 adb shell input keyevent KEYCODE_HOME
+adb shell cmd statusbar expand-settings
+sleep 2                                  # let SystemUI bind the tile service before clicking
 adb shell cmd statusbar click-tile com.ttylab.untail/com.ttylab.untail.tile.CleanLinkTileService
 sleep 3
 adb shell dumpsys window | grep mCurrentFocus
@@ -1254,15 +1479,24 @@ git commit -m "feat(android): quick settings tile module"
 - Modify: `apps/mobile/src/i18n/locales/zh-TW.json`, `en.json`, `ja.json`
 
 **Interfaces:**
-- Consumes: Task 1 `TileToast`; Task 2 `LastTileResult`, `loadLastTileResult`, `saveLastTileResult`, `clearLastTileResult`, `formatHm`; Task 3 `copyIf`; Task 4 `runTile`; Task 5 `consumeTileLaunch`, `addTileLaunchListener`, `waitForWindowFocus`, `moveTaskToBack`, `TileLaunch`
+- Consumes: Task 1 `TileToast`; Task 2 `LastTileResult`, `loadLastTileResult`, `saveLastTileResult`, `clearLastTileResult`, `formatHm`; Task 3 `copyIf`, `recordIf`; Task 4 `createTileGate`, `runTile`, `CleanPolicy`; Task 5 `consumeTileLaunch`, `addTileLaunchListener`, `waitForWindowFocus`, `moveTaskToBack`, `TileLaunch`
 - Produces (added to `AppState` in `AppContext.tsx`):
   ```ts
   tileNotice: 'no_link' | 'unreadable' | null;
   lastTile: LastTileResult | null;
   clearLastTile(): Promise<void>;
   tileRequests: number; // bumped when a tile request starts
-  invalidateTile(): void; // the user did something else; the running tile request must not copy, toast or return
+  invalidateTile(): void; // the user did something else; the running tile request must stop
   ```
+
+The request rules live in the gate (Task 4) and are unit-tested there; this task only connects events to it:
+
+| Event | Gate call |
+|---|---|
+| Tile launch consumed | `start()`; `null` means the tap belongs to the running request and is dropped |
+| App goes to the background | `leave()` |
+| Typing in the input, sending a link, a share (through `submit`), the user's own copy, leaving the home screen | `cancel()` |
+| Request finished | `finish(id)` |
 
 - [ ] **Step 1: Strings** — add these keys to the three locale files (same keys in each; the existing i18n test enforces it).
 
@@ -1320,21 +1554,21 @@ in `"home"`:
 Run: `pnpm --filter @linkclean/mobile test -- src/i18n/i18n.test.ts`
 Expected: PASS.
 
-- [ ] **Step 2: AppContext imports and state** — in `apps/mobile/src/state/AppContext.tsx`:
+- [ ] **Step 2: AppContext imports, state and gate** — in `apps/mobile/src/state/AppContext.tsx`:
 
 Change the react-native import to:
 ```ts
 import { AppState as RNAppState, Platform, ToastAndroid } from 'react-native';
 ```
-Add imports:
+Add imports (keep the existing ones; merge names into the existing `../lib/settings` imports):
 ```ts
 import { addTileLaunchListener, consumeTileLaunch, moveTaskToBack, waitForWindowFocus } from '../../modules/untail-tile';
 import type { TileLaunch } from '../../modules/untail-tile';
-import type { ProcessResult } from '@linkclean/core';
-import { runTile } from '../lib/tileFlow';
+import { createTileGate, runTile } from '../lib/tileFlow';
+import type { CleanPolicy } from '../lib/tileFlow';
 import type { TileToast } from '../lib/tileOutcome';
-import { clearLastTileResult, loadLastTileResult, saveLastTileResult } from '../lib/settings';
-import type { LastTileResult } from '../lib/settings';
+import { DEFAULT_SETTINGS, clearLastTileResult, loadLastTileResult, loadSettings, saveLastTileResult, saveSettings } from '../lib/settings';
+import type { LastTileResult, Settings } from '../lib/settings';
 ```
 Add to `export interface AppState` (after `dismissCleanLinkNotice(): void;`):
 ```ts
@@ -1352,33 +1586,37 @@ function tileToastText(t: TileToast): string {
 }
 ```
 Inside `AppProvider`:
-- rename the input state: `const [input, setInputState] = useState('');` and replace every internal call `setInput(` inside `AppProvider` with `setInputState(` (in `enqueue` and `checkClipboard`; four places).
+- rename the input state: `const [input, setInputState] = useState('');` and replace every internal call `setInput(` inside `AppProvider` with `setInputState(` (in `enqueue` twice and `checkClipboard` once).
 - add after `const [cleanClipboardLink, setCleanClipboardLink] = useState<string | null>(null);` (line 76):
 ```ts
   const [tileNotice, setTileNotice] = useState<'no_link' | 'unreadable' | null>(null);
   const [lastTile, setLastTile] = useState<LastTileResult | null>(null);
   const [tileRequests, setTileRequests] = useState(0);
-  const tileSeq = useRef(0);
-  // The id of the tile request that may still copy, toast and return; null when none.
-  const activeTile = useRef<number | null>(null);
+  const [tile] = useState(createTileGate);
   const readyRef = useRef(false);
+  // Set when the tile event started a request; the 'active' change that follows the new intent
+  // must not run the clipboard check.
+  const skipNextActive = useRef(false);
   const invalidateTile = useCallback(() => {
-    activeTile.current = null;
-  }, []);
+    tile.cancel();
+    setTileNotice(null);
+  }, [tile]);
 ```
+- in `copy`, add `tile.cancel();` as the first line of the callback body, and add `tile` to its dependency array: `[writeClipboard, tile]`.
 
-- [ ] **Step 3: `enqueue` modes** — replace the `enqueue` declaration with:
+- [ ] **Step 3: `enqueue` modes** — replace the comment above `enqueue` and the whole `enqueue` declaration with:
 
 ```ts
   type Mode = 'manual' | 'auto' | 'tile';
-  interface EnqueueOptions {
-    settings?: Settings;
-    copyIf?: (r: ProcessResult) => boolean;
-    isValid?: () => boolean;
+  interface EnqueueOptions extends Partial<CleanPolicy> {
+    settings?: Settings; // settings just loaded, before React has applied them
+    isValid?: () => boolean; // tile: may still copy
+    showsResult?: () => boolean; // tile: may still replace the home screen
   }
   // Jobs run one at a time. An automatic job (from the clipboard) always copies its clean link,
-  // but is dropped once it is stale; a job the user asked for always shows its result. A tile job
-  // copies like an automatic one but always shows its result.
+  // but is dropped once it is stale or a tile request owns the clipboard; a job the user asked for
+  // always shows its result. A tile job copies like an automatic one and shows its result unless the
+  // user has moved on to something else.
   const enqueue = useCallback(
     (text: string, mode: Mode, opts: EnqueueOptions = {}): Promise<CleanOutcome | null> => {
       setInputState(text);
@@ -1387,7 +1625,8 @@ Inside `AppProvider`:
       pendingJobs.current += 1;
       setPending((n) => n + 1);
       const gen = clipboardGen.current;
-      const isCurrent = () => gen === clipboardGen.current && (opts.isValid?.() ?? true);
+      const isCurrent = () =>
+        gen === clipboardGen.current && (opts.isValid?.() ?? true) && (mode !== 'auto' || !tile.busy());
       const job = queue.current.then(async () => {
         try {
           const { rules: r, locale: l } = latest.current;
@@ -1403,11 +1642,13 @@ Inside `AppProvider`:
             now: Date.now,
             isCurrent,
             copyIf: opts.copyIf,
+            recordIf: opts.recordIf,
           });
           if (!isCurrent()) {
             if (mode === 'auto') return null;
+            if (mode === 'tile' && !(opts.showsResult?.() ?? true)) return null;
             // The screen may show newer clipboard content by now; put the requested link back.
-            setInputState(text);
+            if (mode === 'manual') setInputState(text);
           }
           setOutcome(out);
           return out;
@@ -1422,62 +1663,66 @@ Inside `AppProvider`:
       queue.current = job.then(() => undefined);
       return job;
     },
-    [db, writeClipboard],
+    [db, writeClipboard, tile],
   );
 ```
-Update the two existing callers:
+Replace `submit` with:
 ```ts
   const submit = useCallback(
     (text: string) => {
       invalidateTile();
-      setTileNotice(null);
       return enqueue(text, 'manual').then(() => undefined);
     },
     [enqueue, invalidateTile],
   );
 ```
-and in `checkClipboard`: `const out = await enqueue(d.url, 'auto', { settings: s });`
-
-At the very top of `checkClipboard`'s body (before `if (!s.detectClipboard) return;`) add:
+In `checkClipboard`:
+- at the very top of the callback body (before `if (!s.detectClipboard) return;`) add:
 ```ts
       // A tile request owns the clipboard while it runs.
-      if (activeTile.current !== null) return;
+      if (tile.busy()) return;
 ```
+- right after the `} else {
+          raw = await Clipboard.getStringAsync();
+        }` lines that end the iOS/Android branch (before `const d = decideText(raw, watch.current, latest.current.rules);`), add:
+```ts
+        // A tile request may have started while this read was waiting.
+        if (tile.busy()) return;
+```
+- change `const out = await enqueue(d.url, true, s);` to `const out = await enqueue(d.url, 'auto', { settings: s });`
+- change its dependency array from `[enqueue]` to `[enqueue, tile]`.
 
 - [ ] **Step 4: `startTile`** — add after `recheckClipboard.current = () => void checkClipboard(latest.current.settings);` (line 251):
 
 ```ts
   const startTile = useCallback(
     async (launch: TileLaunch) => {
-      const id = ++tileSeq.current;
-      activeTile.current = id;
-      const gen = clipboardGen.current;
-      // Leaving the app bumps clipboardGen; a newer tap or any user action clears activeTile.
-      const isValid = () => activeTile.current === id && clipboardGen.current === gen;
+      const id = tile.start();
+      // A tap while a request runs is the same request (spec §3.1).
+      if (id === null) return;
       setTileRequests((n) => n + 1);
       setClipboardOffer(null);
       setAutoCleaned(null);
       setCleanClipboardLink(null);
       setTileNotice(null);
+      const isValid = () => tile.isValid(id);
       try {
         await runTile(launch.wasInForeground, {
           waitForFocus: waitForWindowFocus,
           readClipboard: () => Clipboard.getStringAsync(),
           sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
           rules: () => latest.current.rules,
-          clean: (text, copyIf) => enqueue(text, 'tile', { copyIf, isValid }),
+          clean: (text, policy) => enqueue(text, 'tile', { ...policy, isValid, showsResult: () => tile.showsResult(id) }),
           isValid,
           noteSeen: (text) => {
             if (text !== '') watch.current = noteSelfWrite(watch.current, text);
           },
-          showNotice: (n) => {
-            if (n !== null) {
-              // Never put clipboard text without a link into the input box.
-              setInputState('');
-              setOutcome(null);
-            }
-            setTileNotice(n);
+          // Never leave clipboard text without a link, or an older result, on the home screen.
+          resetScreen: () => {
+            setInputState('');
+            setOutcome(null);
           },
+          showNotice: setTileNotice,
           toast: (t) => ToastAndroid.show(tileToastText(t), ToastAndroid.SHORT),
           moveToBack: moveTaskToBack,
           remember: async (r) => {
@@ -1485,14 +1730,18 @@ At the very top of `checkClipboard`'s body (before `if (!s.detectClipboard) retu
             setLastTile(value);
             await saveLastTileResult(db, value);
           },
+          forget: async () => {
+            setLastTile(null);
+            await clearLastTileResult(db);
+          },
         });
       } catch {
         // A failed tile request leaves Untail open on the home screen.
       } finally {
-        if (activeTile.current === id) activeTile.current = null;
+        tile.finish(id);
       }
     },
-    [db, enqueue],
+    [db, enqueue, tile],
   );
 ```
 
@@ -1510,12 +1759,18 @@ with
 ```
 replace
 ```ts
+      setSettingsState(s);
+      setRules(r);
       setReady(true);
       void refresh(false);
       void checkClipboard(s);
 ```
 with
 ```ts
+      setSettingsState(s);
+      setRules(r);
+      // A tile request starting right now reads these before React re-renders.
+      latest.current = { ...latest.current, settings: s, rules: r };
       setReady(true);
       readyRef.current = true;
       void refresh(false);
@@ -1523,33 +1778,43 @@ with
       if (launch) void startTile(launch);
       else void checkClipboard(s);
 ```
-in the `'change'` listener replace `void checkClipboard(latest.current.settings);` with
+replace the whole listener statement, from `const sub = RNAppState.addEventListener('change', (state) => {` (line 270) through its closing `});` (the line before `return () => {`), with:
 ```ts
+    const sub = RNAppState.addEventListener('change', (state) => {
+      if (state === 'background') {
+        // Another app may change the clipboard while we are away.
+        clipboardGen.current += 1;
+        tile.leave();
+        skipNextActive.current = false;
+        setTileNotice(null);
+      }
+      // Before startup finishes, startup itself takes the tile request and checks the clipboard.
+      if (state !== 'active' || !readyRef.current) return;
+      void refresh(false);
       const launch = consumeTileLaunch();
       if (launch) void startTile(launch);
+      else if (skipNextActive.current) skipNextActive.current = false;
       else void checkClipboard(latest.current.settings);
-```
-add after the `const sub = RNAppState.addEventListener('change', (state) => {` statement (line 270) ends:
-```ts
-    // Untail was already in front (only the shade covered it), so no 'active' change will come.
+    });
+    // Untail already in front (only the shade covered it) gets the request through this event.
     const tileSub = addTileLaunchListener(() => {
       if (!readyRef.current) return;
       const launch = consumeTileLaunch();
-      if (launch) void startTile(launch);
+      if (!launch) return;
+      skipNextActive.current = true;
+      void startTile(launch);
     });
 ```
-and in the cleanup add `tileSub.remove();`. Add `startTile` to that effect's dependency array: `[db, refresh, checkClipboard, startTile]`.
+In the cleanup add `tileSub.remove();` after `sub.remove();`, and change the effect's dependency array to `[db, refresh, checkClipboard, startTile, tile]`.
 
-- [ ] **Step 6: Expose the new values** — in the `useMemo` value object:
-replace `setInput,` with
+- [ ] **Step 6: Expose the new values** — in the `useMemo` value object replace `setInput,` with
 ```ts
       setInput(text: string) {
         invalidateTile();
-        setTileNotice(null);
         setInputState(text);
       },
 ```
-and add:
+and add after `dismissCleanLinkNotice: () => setCleanClipboardLink(null),`:
 ```ts
       tileNotice,
       lastTile,
@@ -1560,13 +1825,12 @@ and add:
       tileRequests,
       invalidateTile,
 ```
-Add `tileNotice, lastTile, tileRequests, invalidateTile` to the `useMemo` dependency array. (`copy` already bumps `clipboardGen`, which invalidates a running tile request.)
+Add `tileNotice, lastTile, tileRequests, invalidateTile` to the `useMemo` dependency array.
 
-- [ ] **Step 7: Layout watcher** — in `apps/mobile/app/_layout.tsx` change the expo-router import to `import { Link, router, Stack, usePathname } from 'expo-router';`, change `import { useEffect } from 'react';` to `import { useEffect, useRef } from 'react';`, and add next to `ShareWatcher`:
+- [ ] **Step 7: Layout watcher** — in `apps/mobile/app/_layout.tsx` change the expo-router import to `import { Link, router, Stack, usePathname } from 'expo-router';`, change `import { useEffect } from 'react';` to `import { useEffect, useRef } from 'react';`, and add after `ShareWatcher`:
 
 ```tsx
-// A tile request shows its result on the home screen; leaving the home screen while it runs cancels
-// its toast and automatic return.
+// A tile request shows its result on the home screen; leaving the home screen while it runs cancels it.
 function TileWatcher() {
   const { tileRequests, invalidateTile } = useApp();
   const pathname = usePathname();
@@ -1584,9 +1848,9 @@ function TileWatcher() {
   return null;
 }
 ```
-Render `<TileWatcher />` right next to `<ShareWatcher />`.
+Render `<TileWatcher />` right after `<ShareWatcher />`.
 
-- [ ] **Step 8: Home screen** — in `apps/mobile/app/index.tsx` add `tileNotice, lastTile` to the `useApp()` destructuring, import `formatHm` from `'../src/lib/settings'`, and add above the `<TextInput`:
+- [ ] **Step 8: Home screen** — in `apps/mobile/app/index.tsx` add `tileNotice, lastTile` to the `useApp()` destructuring, import `formatHm` from `'../src/lib/settings'`, and add directly above the `<TextInput`:
 
 ```tsx
       {tileNotice && !busy && (
@@ -1608,17 +1872,25 @@ and between `{(busy || !ready) && <ActivityIndicator color={c.accent} />}` (line
       )}
 ```
 
-- [ ] **Step 9: History clear** — in `apps/mobile/app/history.tsx` change `const { db } = useApp();` to `const { db, clearLastTile } = useApp();` and the clear action to:
+- [ ] **Step 9: History clear** — in `apps/mobile/app/history.tsx` change `const { db } = useApp();` (line 16) to `const { db, clearLastTile } = useApp();` and the clear action (line 36) to:
 ```tsx
-<Pressable onPress={() => confirm(t('history.clearConfirm'), async () => { await clearHistory(db); await clearLastTile(); })}>
+<Pressable
+  onPress={() =>
+    confirm(t('history.clearConfirm'), async () => {
+      await clearHistory(db);
+      await clearLastTile();
+    })
+  }
+>
 ```
+If `confirm`'s callback type does not accept an async function, wrap it: `() => void (async () => { await clearHistory(db); await clearLastTile(); })()`.
 
 - [ ] **Step 10: Tests and typecheck**
 
 Run: `pnpm --filter @linkclean/mobile test && pnpm --filter @linkclean/mobile typecheck`
 Expected: all pass; no type errors.
 
-- [ ] **Step 11: Emulator end-to-end** (rebuild as in Task 5 Step 10, install, tile already added)
+- [ ] **Step 11: Emulator end-to-end** — rebuild and install as in Task 5 Steps 10–11 (all commands from the repo root), tile already added.
 
 Put a dirty link on the emulator clipboard without touching the Mac clipboard:
 ```bash
@@ -1630,6 +1902,8 @@ adb shell input text 'https://example.com/a?utm_source=tile_test'
 adb shell input keycombination 113 29   # Ctrl+A
 adb shell input keycombination 113 31   # Ctrl+C
 adb shell input keyevent KEYCODE_ESCAPE
+adb shell cmd statusbar expand-settings
+sleep 2                                  # let SystemUI bind the tile service
 adb shell cmd statusbar click-tile com.ttylab.untail/com.ttylab.untail.tile.CleanLinkTileService
 sleep 4
 adb shell dumpsys window | grep mCurrentFocus
@@ -1642,7 +1916,7 @@ adb shell input keycombination 113 50   # Ctrl+V
 adb shell uiautomator dump /sdcard/ui.xml >/dev/null && adb shell cat /sdcard/ui.xml | grep -o 'https://example.com/a[^"]*' | head -1
 adb shell rm -f /sdcard/ui.xml
 ```
-Expected: `https://example.com/a` (no `utm_source`). Tap the tile again with the same clean link: Untail opens, toasts "No tracking codes in this link; nothing to change" (or the zh-TW text), returns; the clipboard is unchanged. Open Untail: the "last tile tap" line shows the time and the no-tracking text.
+Expected: `https://example.com/a` (no `utm_source`). Tap the tile again (expand-settings, wait, click-tile) with the same clean link: Untail opens, toasts "No tracking codes in this link; nothing to change" (or the zh-TW text), returns; the clipboard is unchanged. Open Untail: the "last tile tap" line shows the time and the no-tracking text.
 
 - [ ] **Step 12: Commit**
 
@@ -1823,7 +2097,7 @@ $SDK/cmdline-tools/latest/bin/avdmanager create avd -n Tile_API_34 -k "system-im
 | 7 | Short link with "展開短網址" off | Stays, result card shows partial |
 | 8 | Locked screen, tap tile | Asks to unlock, then runs |
 | 9 | Untail open on home / Settings / History, pull shade, tap tile | Goes to home, shows result, does not leave Untail |
-| 10 | Tap tile twice quickly on a short link | One result; at most one toast and one return |
+| 10 | From another app, tap tile twice quickly on a short link | One result, one toast, one return to the other app |
 | 11 | Leave Untail while a short link expands | No toast, no return, clipboard not overwritten |
 | 12 | Return target | The app that was in front, never the launcher (acceptance gate) |
 | 13 | System toasts seen | Record "pasted from clipboard" and clipboard preview behaviour |
