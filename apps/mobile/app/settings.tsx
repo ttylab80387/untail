@@ -8,11 +8,13 @@ import { useApp } from '../src/state/AppContext';
 import { useColors } from '../src/theme';
 import { useBottomPadding } from '../src/bottomPadding';
 import { confirmAutoClean } from '../src/confirmAuto';
+import { useAddTile } from '../src/components/useAddTile';
 
 export default function SettingsScreen() {
   const bottomPadding = useBottomPadding();
   const { t } = useTranslation();
   const c = useColors();
+  const addTile = useAddTile();
   const { settings, setSettings, rules, refreshRules } = useApp();
   const [updating, setUpdating] = useState(false);
   const [outcome, setOutcome] = useState<UpdateOutcome | null>(null);
@@ -59,6 +61,19 @@ export default function SettingsScreen() {
       {row('history', t('settings.history'))}
       {row('detectClipboard', t('settings.detectClipboard'), t('settings.detectClipboardHint'))}
       {row('autoClipboard', t('settings.autoClipboard'), t('settings.autoClipboardHint'))}
+      {addTile.visible && (
+        <View style={[styles.block, { backgroundColor: c.card, borderColor: c.border }]}>
+          {addTile.canPrompt && (
+            <Pressable disabled={addTile.added} onPress={() => void addTile.request()}>
+              <Text style={{ color: c.accent, opacity: addTile.added ? 0.5 : 1 }}>
+                {addTile.added ? t('settings.addTileAdded') : t('settings.addTile')}
+              </Text>
+            </Pressable>
+          )}
+          {!addTile.canPrompt && <Text style={{ color: c.text }}>{t('settings.addTile')}</Text>}
+          <Text style={{ color: c.muted, fontSize: 12 }}>{t('settings.addTileHint')}</Text>
+        </View>
+      )}
 
       <View style={[styles.block, { backgroundColor: c.card, borderColor: c.border }]}>
         <Text style={{ color: c.text }}>{t('settings.rulesVersion', { version: rules.version })}</Text>

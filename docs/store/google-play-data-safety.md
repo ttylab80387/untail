@@ -61,3 +61,10 @@
 - 1.1 加入內購：付款由 Google Play 處理，App 不經手；依當時的實作重新確認表單
 - 加入連結安全功能：清單下載不含使用者資料；逐站展開已在 0.1.2 上線（連線範圍變小，收集的資料類型不變）
 - 歷史紀錄保存「附帶文字」、匯出 CSV：仍然只在手機上，匯出由使用者選擇目的地
+
+## 0.1.3 — Quick Settings tile
+
+- The "Clean link" tile reads the clipboard only after the user taps it and Untail is in front.
+- Clipboard content is processed on the device and not sent anywhere, except short-link expansion,
+  which is already declared (web browsing history, optional, not shared).
+- No new data type or purpose: the form stays as it is.

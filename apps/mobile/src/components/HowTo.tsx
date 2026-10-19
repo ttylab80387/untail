@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { confirmAutoClean } from '../confirmAuto';
 import { useApp } from '../state/AppContext';
 import { useColors } from '../theme';
+import { useAddTile } from './useAddTile';
 
 // Fills the empty home screen with the three ways to use the app, so the share sheet entry
 // and automatic cleaning can be found without a separate onboarding flow.
@@ -12,6 +13,7 @@ export function HowTo() {
   const { t } = useTranslation();
   const c = useColors();
   const { settings, setSettings } = useApp();
+  const addTile = useAddTile();
   const autoOn = settings.autoClipboard && settings.detectClipboard;
 
   // Automatic cleaning only runs when clipboard detection is on.
@@ -52,6 +54,22 @@ export function HowTo() {
           )}
         </>,
       )}
+      {addTile.visible &&
+        step(
+          4,
+          <>
+            <Text style={{ color: c.text, lineHeight: 20 }}>{t('howto.tile')}</Text>
+            {addTile.canPrompt && !addTile.added ? (
+              <Pressable onPress={() => void addTile.request()} style={[styles.button, { borderColor: c.accent }]}>
+                <Text style={{ color: c.accent, fontWeight: '700' }}>{t('settings.addTile')}</Text>
+              </Pressable>
+            ) : (
+              <Text style={{ color: c.muted, fontSize: 12, lineHeight: 18 }}>
+                {addTile.added ? t('settings.addTileAdded') : t('settings.addTileHint')}
+              </Text>
+            )}
+          </>,
+        )}
     </View>
   );
 }
