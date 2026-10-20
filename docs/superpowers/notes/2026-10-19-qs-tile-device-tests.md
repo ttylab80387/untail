@@ -30,6 +30,26 @@ How the clipboard was filled on the emulator: type the text into the Settings se
 | Cold start, second tile tap 2–3 s after the first | Stayed in Untail (20 s watched) | Back in Settings search after about 4 s (clipboard not checked in these runs) |
 | Cold tile tap, then `am kill`, new tracking link copied, Untail reopened from recents | Untail cleaned the clipboard and left on its own | Normal start: "There is a link on the clipboard. Get a clean link?", clipboard untouched |
 
+## Xperia 5 II, Android 12 (API 31), system language zh-Hant-TW, 2026-10-20
+
+Release APK sideloaded (build with the review fixes). Tile added with `cmd statusbar add-tile`.
+How the clipboard was filled: open the URL in Chrome, tap the address bar, tap the copy-link icon (Android 12 `input` has no `keycombination`, and the Settings search toolbar could not be driven reliably).
+
+| # | Result | Notes |
+|---|---|---|
+| 1 | Pass | No system dialog below Android 13: Settings shows "加入快速設定" with the hint, not tappable; how-to step 4 shows the hint. |
+| 2 | Pass | Untail force-stopped: tile tap opened Untail and returned to Chrome; history row `https://example.com/c`. |
+| 3 | Pass | Untail in recents: toast "已複製乾淨連結（移除 1 項）" over Chrome; result card and "上次點磚（10:07）：已複製乾淨連結，移除 1 項" on home. Return took under a second. |
+| 4 | Pass | `https://example.com/clean`: back in Chrome, no history row; home shows "上次點磚（10:08）：連結沒有追蹤碼，不用改". |
+| 5 | Not run | Covered on the emulator; Chrome copy only gives URLs. |
+| 6, 10, 11 | Not run | Need a real short link. |
+| 7 | Not run | Covered on the emulator. |
+| 8 | Not run | Needs the user to unlock. |
+| 9 | Pass | Untail in front on the History page: tile tap went to home, showed the result card, stayed in Untail. |
+| 12 | Pass | Returns went to Chrome, never the launcher. |
+| 13 | Observed | Untail's toast shows over Chrome after the return. |
+| 14 | Pass | Tile label "清理連結" in zh-Hant-TW. |
+
 ## Phones and other emulators
 
-Not run yet: emulator API 33 and 34 (system images not downloaded), Xperia 5 II (Android 12), Xperia 1 V (Android 15), LG V35 (Android 10), vivo V2514 (Android 16, Play install).
+Not run yet: emulator API 33 and 34 (system images not downloaded), Xperia 1 V (Android 15), LG V35 (Android 10), vivo V2514 (Android 16, Play install).
