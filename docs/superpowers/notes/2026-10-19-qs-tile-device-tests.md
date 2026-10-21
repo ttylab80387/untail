@@ -50,6 +50,21 @@ How the clipboard was filled: open the URL in Chrome, tap the address bar, tap t
 | 13 | Observed | Untail's toast shows over Chrome after the return. |
 | 14 | Pass | Tile label "清理連結" in zh-Hant-TW. |
 
+## LG V35, Android 10 (API 29, stock V350AWM30e), system language zh-TW, 2026-10-21
+
+Release APK sideloaded (Untail was not installed before). Tile added with `cmd statusbar add-tile`; LG's tile editor lists it as page 1, position 1, label "清理連結".
+Clipboard filled from Chrome's address-bar copy-link button. Run just before the phone was reflashed to LineageOS, so this is the only Android 10 result.
+
+| # | Result | Notes |
+|---|---|---|
+| 1 | Pass | No add-tile dialog below Android 13: Settings shows "加入快速設定" with the hint, not tappable. |
+| 2 | Pass | Untail force-stopped: Untail opened, then Chrome came back; home shows "上次點磚（11:48）：已複製乾淨連結，移除 1 項", result `https://example.com/a`, history row at 11:48:28. |
+| 3 | Pass | Untail in recents: return was too quick for the 0.5 s focus poll; history row `https://example.com/b` at 11:49:35. |
+| 4 | Pass | `https://example.com/clean`: no history row; "上次點磚（11:49）：連結沒有追蹤碼，不用改". |
+| 9 | Pass | Untail in front on the History page: tile tap went to home and stayed; line updated to 11:50. |
+| 12 | Pass | Returns went to Chrome. |
+| 14 | Pass | Tile label "清理連結". |
+
 ## Phones and other emulators
 
-Not run yet: emulator API 33 and 34 (system images not downloaded), Xperia 1 V (Android 15), LG V35 (Android 10), vivo V2514 (Android 16, Play install).
+Not run yet: emulator API 33 and 34 (system images not downloaded), Xperia 1 V (Android 15), vivo V2514 (Android 16, Play install).
