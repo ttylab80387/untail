@@ -102,7 +102,7 @@
     "p3": "Short-link expansion: when a link you submit is an allow-listed short or share link (for example Facebook, Threads, bit.ly), the app contacts that service directly from your phone to find the original URL. It sends a HEAD request first and falls back to GET only if the service does not support HEAD (page content is then downloaded but never parsed or executed). Further redirects are chosen by that service; for some services (for example Xiaohongshu) the app only reads the first target the short link points to and does not contact that site. You can turn this off in Settings.With \"Clean clipboard links automatically\" on, this also happens when the app cleans a clipboard link as it opens. The first expansion request always uses HTTPS; later redirects are up to that service.",
     "p4": "History is kept only in the app's local storage and is never sent to any server by the app. Android system backup is disabled; on iOS it may be included, like other app data, in your own iCloud or computer backups. History can be turned off and cleared at any time.",
     "p5": "The clipboard is used only when you tap Paste or Copy, when automatic copying of clean links is on, or when \"Detect links on the clipboard\" is on (checked when you open the app; on iOS the app only checks whether a link is present and reads it when you tap Paste). With \"Clean clipboard links automatically\" on, the app reads the clipboard when you open it and replaces a link that has tracking codes with the clean link. Nothing else from the clipboard is stored; like a link you clean by hand, an automatically cleaned link is saved to the on-device history only when \"Keep history\" is on.",
-    "p6": "Reporting a problem: only when you tap \"Report a problem\" and then tap Send in your own mail app does an email reach the developer (ttylab80387@gmail.com). It contains the original link, the clean link, the app and rules versions, and your email address; you can see and edit everything before sending. The developer uses it only to fix the cleaning rules and deletes it once that is done, within 90 days at most; to have it deleted sooner, email the same address. The app itself sends nothing."
+    "p6": "Reporting a problem: only when you tap \"Report a problem\" and then tap Send in your own mail app does an email reach the developer (support@ttylab80387.com). It contains the original link, the clean link, the app and rules versions, and your email address; you can see and edit everything before sending. The developer uses it only to fix the cleaning rules and deletes it once that is done, within 90 days at most; to have it deleted sooner, email the same address. The app itself sends nothing."
   },
   "nav": {
     "history": "History",
@@ -111,7 +111,7 @@
   "report": {
     "subject": "Untail report: link not cleaned well",
     "note": "Please describe the problem briefly (for example: a tracking code was left in, or the link does not open). Note: the original link below may identify the person who shared it; delete anything you do not want to send.",
-    "noMail": "No mail app found. Please email ttylab80387@gmail.com.",
+    "noMail": "No mail app found. Please email support@ttylab80387.com.",
     "copyEmail": "Copy address",
     "ok": "OK"
   },

@@ -5,6 +5,6 @@ import Constants from 'expo-constants';
 export const SITE_BASE_URL = 'https://ttylab80387.github.io/untail/';
 
 // Where "Report a problem" emails go; also the store listings' contact address.
-export const SUPPORT_EMAIL = 'ttylab80387@gmail.com';
+export const SUPPORT_EMAIL = 'support@ttylab80387.com';
 
 export const USER_AGENT = `Untail/${Constants.expoConfig?.version ?? '0'}`;
