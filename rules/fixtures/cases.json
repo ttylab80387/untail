@@ -553,5 +553,51 @@
       "status": "clean",
       "removedKeys": []
     }
+  },
+  {
+    "name": "instagr.am short domain post with a rotating share ID",
+    "input": "https://instagr.am/p/TESTpost05/?srtk=VEVTVHNoYXJlaWQ=",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://instagr.am/p/TESTpost05/",
+      "status": "clean",
+      "removedKeys": [
+        "srtk"
+      ]
+    }
+  },
+  {
+    "name": "instagram post without a trailing slash still drops the rotating share ID",
+    "input": "https://www.instagram.com/p/TESTpost06?psln=VEVTVHNoYXJlaWQ=",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.instagram.com/p/TESTpost06",
+      "status": "clean",
+      "removedKeys": [
+        "psln"
+      ]
+    }
+  },
+  {
+    "name": "instagram rotating share ID in upper case is removed",
+    "input": "https://www.instagram.com/reel/TESTreel04/?XTOK=VEVTVHNoYXJlaWQ=",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.instagram.com/reel/TESTreel04/",
+      "status": "clean",
+      "removedKeys": [
+        "XTOK"
+      ]
+    }
+  },
+  {
+    "name": "instagram help pages keep 4-letter parameters (rule limited to www, m and the bare domain)",
+    "input": "https://help.instagram.com/p/TESTpage01/?lang=en",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://help.instagram.com/p/TESTpage01/?lang=en",
+      "status": "clean",
+      "removedKeys": []
+    }
   }
 ]

@@ -79,7 +79,7 @@
       ]
     },
     "instagram rotating share id": {
-      "urlPattern": "^https?:\\/\\/(?:[a-z0-9-]+\\.)*?instagram\\.com\\/(?:reels?|p)\\/[^/?#]+\\/?(?:[?#]|$)",
+      "urlPattern": "^https?:\\/\\/(?:(?:(?:www|m)\\.)?instagram\\.com|instagr\\.am)\\/(?:reels?|p)\\/[^/?#]+\\/?(?:[?#]|$)",
       "rules": [
         "[a-z]{4}"
       ]

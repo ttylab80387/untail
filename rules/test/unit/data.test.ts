@@ -107,10 +107,12 @@ describe('checked-in rule data', () => {
   });
 
   it('explains every known rotating Instagram share ID name as a sharer ID', () => {
-    for (const key of ['stkn', 'exln', 'xtok', 'rpxt', 'vrfl', 'obrf', 'psln', 'cplk', 'mdxt', 'srtk', 'dlrf']) {
-      const p = explain(key, 'www.instagram.com');
-      expect([key, p.category]).toEqual([key, 'sharer_id']);
-      expect(p.desc).toBeDefined();
+    for (const host of ['www.instagram.com', 'instagr.am']) {
+      for (const key of ['stkn', 'exln', 'xtok', 'rpxt', 'vrfl', 'obrf', 'psln', 'cplk', 'mdxt', 'srtk', 'dlrf']) {
+        const p = explain(key, host);
+        expect([host, key, p.category]).toEqual([host, key, 'sharer_id']);
+        expect(p.desc).toBeDefined();
+      }
     }
   });
 });
