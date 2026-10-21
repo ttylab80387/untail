@@ -482,5 +482,51 @@
         "utm_source"
       ]
     }
+  },
+  {
+    "name": "instagram reel share ID under a rotating 4-letter name (xtok)",
+    "input": "https://www.instagram.com/reel/TESTreel02/?xtok=VEVTVHNoYXJlaWQ=",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.instagram.com/reel/TESTreel02/",
+      "status": "clean",
+      "removedKeys": [
+        "xtok"
+      ]
+    }
+  },
+  {
+    "name": "instagram post keeps img_index while dropping a rotating share ID (rpxt)",
+    "input": "https://www.instagram.com/p/TESTpost02/?img_index=2&rpxt=VEVTVHNoYXJlaWQ=",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.instagram.com/p/TESTpost02/?img_index=2",
+      "status": "clean",
+      "removedKeys": [
+        "rpxt"
+      ]
+    }
+  },
+  {
+    "name": "instagram /reels/ path with a rotating share ID (cplk)",
+    "input": "https://www.instagram.com/reels/TESTreel03/?cplk=VEVTVHNoYXJlaWQ=",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.instagram.com/reels/TESTreel03/",
+      "status": "clean",
+      "removedKeys": [
+        "cplk"
+      ]
+    }
+  },
+  {
+    "name": "instagram profile pages keep 4-letter parameters (rule limited to reel and post paths)",
+    "input": "https://www.instagram.com/someone/?abcd=1",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.instagram.com/someone/?abcd=1",
+      "status": "clean",
+      "removedKeys": []
+    }
   }
 ]

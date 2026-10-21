@@ -1075,5 +1075,95 @@
       "en": "Yandex ads click identifier used for conversion tracking.",
       "ja": "Yandex 広告のクリック識別子。コンバージョン計測に使われます。"
     }
+  },
+  "instagram.com:xtok": {
+    "owner": "Meta",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "Instagram 的分享識別碼。參數名稱每次分享都會換成不同的 4 個字母，但值是同一個綁定帳號的分享 ID，可能讓 Instagram 得知是誰分享的。作用和 igsh 相同。",
+      "en": "Instagram share identifier. The parameter name changes to different four letters with each share, but the value is the same account-bound share ID, which may reveal to Instagram who shared the link. Works like igsh.",
+      "ja": "Instagram の共有識別子。パラメータ名は共有のたびに別の 4 文字に変わりますが、値はアカウントに紐付いた同じ共有 ID で、誰が共有したかを Instagram が把握できる可能性があります。igsh と同じ役割です。"
+    }
+  },
+  "instagram.com:rpxt": {
+    "owner": "Meta",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "Instagram 的分享識別碼。參數名稱每次分享都會換成不同的 4 個字母，但值是同一個綁定帳號的分享 ID，可能讓 Instagram 得知是誰分享的。作用和 igsh 相同。",
+      "en": "Instagram share identifier. The parameter name changes to different four letters with each share, but the value is the same account-bound share ID, which may reveal to Instagram who shared the link. Works like igsh.",
+      "ja": "Instagram の共有識別子。パラメータ名は共有のたびに別の 4 文字に変わりますが、値はアカウントに紐付いた同じ共有 ID で、誰が共有したかを Instagram が把握できる可能性があります。igsh と同じ役割です。"
+    }
+  },
+  "instagram.com:vrfl": {
+    "owner": "Meta",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "Instagram 的分享識別碼。參數名稱每次分享都會換成不同的 4 個字母，但值是同一個綁定帳號的分享 ID，可能讓 Instagram 得知是誰分享的。作用和 igsh 相同。",
+      "en": "Instagram share identifier. The parameter name changes to different four letters with each share, but the value is the same account-bound share ID, which may reveal to Instagram who shared the link. Works like igsh.",
+      "ja": "Instagram の共有識別子。パラメータ名は共有のたびに別の 4 文字に変わりますが、値はアカウントに紐付いた同じ共有 ID で、誰が共有したかを Instagram が把握できる可能性があります。igsh と同じ役割です。"
+    }
+  },
+  "instagram.com:obrf": {
+    "owner": "Meta",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "Instagram 的分享識別碼。參數名稱每次分享都會換成不同的 4 個字母，但值是同一個綁定帳號的分享 ID，可能讓 Instagram 得知是誰分享的。作用和 igsh 相同。",
+      "en": "Instagram share identifier. The parameter name changes to different four letters with each share, but the value is the same account-bound share ID, which may reveal to Instagram who shared the link. Works like igsh.",
+      "ja": "Instagram の共有識別子。パラメータ名は共有のたびに別の 4 文字に変わりますが、値はアカウントに紐付いた同じ共有 ID で、誰が共有したかを Instagram が把握できる可能性があります。igsh と同じ役割です。"
+    }
+  },
+  "instagram.com:psln": {
+    "owner": "Meta",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "Instagram 的分享識別碼。參數名稱每次分享都會換成不同的 4 個字母，但值是同一個綁定帳號的分享 ID，可能讓 Instagram 得知是誰分享的。作用和 igsh 相同。",
+      "en": "Instagram share identifier. The parameter name changes to different four letters with each share, but the value is the same account-bound share ID, which may reveal to Instagram who shared the link. Works like igsh.",
+      "ja": "Instagram の共有識別子。パラメータ名は共有のたびに別の 4 文字に変わりますが、値はアカウントに紐付いた同じ共有 ID で、誰が共有したかを Instagram が把握できる可能性があります。igsh と同じ役割です。"
+    }
+  },
+  "instagram.com:cplk": {
+    "owner": "Meta",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "Instagram 的分享識別碼。參數名稱每次分享都會換成不同的 4 個字母，但值是同一個綁定帳號的分享 ID，可能讓 Instagram 得知是誰分享的。作用和 igsh 相同。",
+      "en": "Instagram share identifier. The parameter name changes to different four letters with each share, but the value is the same account-bound share ID, which may reveal to Instagram who shared the link. Works like igsh.",
+      "ja": "Instagram の共有識別子。パラメータ名は共有のたびに別の 4 文字に変わりますが、値はアカウントに紐付いた同じ共有 ID で、誰が共有したかを Instagram が把握できる可能性があります。igsh と同じ役割です。"
+    }
+  },
+  "instagram.com:mdxt": {
+    "owner": "Meta",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "Instagram 的分享識別碼。參數名稱每次分享都會換成不同的 4 個字母，但值是同一個綁定帳號的分享 ID，可能讓 Instagram 得知是誰分享的。作用和 igsh 相同。",
+      "en": "Instagram share identifier. The parameter name changes to different four letters with each share, but the value is the same account-bound share ID, which may reveal to Instagram who shared the link. Works like igsh.",
+      "ja": "Instagram の共有識別子。パラメータ名は共有のたびに別の 4 文字に変わりますが、値はアカウントに紐付いた同じ共有 ID で、誰が共有したかを Instagram が把握できる可能性があります。igsh と同じ役割です。"
+    }
+  },
+  "instagram.com:srtk": {
+    "owner": "Meta",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "Instagram 的分享識別碼。參數名稱每次分享都會換成不同的 4 個字母，但值是同一個綁定帳號的分享 ID，可能讓 Instagram 得知是誰分享的。作用和 igsh 相同。",
+      "en": "Instagram share identifier. The parameter name changes to different four letters with each share, but the value is the same account-bound share ID, which may reveal to Instagram who shared the link. Works like igsh.",
+      "ja": "Instagram の共有識別子。パラメータ名は共有のたびに別の 4 文字に変わりますが、値はアカウントに紐付いた同じ共有 ID で、誰が共有したかを Instagram が把握できる可能性があります。igsh と同じ役割です。"
+    }
+  },
+  "instagram.com:dlrf": {
+    "owner": "Meta",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "Instagram 的分享識別碼。參數名稱每次分享都會換成不同的 4 個字母，但值是同一個綁定帳號的分享 ID，可能讓 Instagram 得知是誰分享的。作用和 igsh 相同。",
+      "en": "Instagram share identifier. The parameter name changes to different four letters with each share, but the value is the same account-bound share ID, which may reveal to Instagram who shared the link. Works like igsh.",
+      "ja": "Instagram の共有識別子。パラメータ名は共有のたびに別の 4 文字に変わりますが、値はアカウントに紐付いた同じ共有 ID で、誰が共有したかを Instagram が把握できる可能性があります。igsh と同じ役割です。"
+    }
   }
 }
