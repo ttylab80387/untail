@@ -63,6 +63,7 @@ Clipboard filled from Chrome's address-bar copy-link button. Run just before the
 | 4 | Pass | `https://example.com/clean`: no history row; "上次點磚（11:49）：連結沒有追蹤碼，不用改". |
 | 9 | Pass | Untail in front on the History page: tile tap went to home and stayed; line updated to 11:50. |
 | 12 | Pass | Returns went to Chrome. |
+| 13 | Observed | On-device screenshots right after a tile tap (row 2 case) show Untail's toast "連結沒有追蹤碼，不用改" at the bottom over Chrome; gone a few frames later. No system "pasted" toast on Android 10. |
 | 14 | Pass | Tile label "清理連結". |
 
 ## Phones and other emulators
