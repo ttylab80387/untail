@@ -528,5 +528,20 @@
       "status": "clean",
       "removedKeys": []
     }
+  },
+  {
+    "name": "the other four click IDs are removed on sites excepted from global rules",
+    "input": "https://github.com/someone/project?dclid=TESTCLICK5&msclkid=TESTCLICK6&twclid=TESTCLICK7&yclid=TESTCLICK8",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://github.com/someone/project",
+      "status": "clean",
+      "removedKeys": [
+        "dclid",
+        "msclkid",
+        "twclid",
+        "yclid"
+      ]
+    }
   }
 ]

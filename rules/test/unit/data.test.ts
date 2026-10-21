@@ -89,4 +89,28 @@ describe('checked-in rule data', () => {
       expect(p.desc).toBeDefined();
     }
   });
+
+  it('explains ad click IDs with the ad platform that owns them', () => {
+    const owners: [string, string][] = [
+      ['fbclid', 'Meta'],
+      ['gclid', 'Google'],
+      ['dclid', 'Google'],
+      ['msclkid', 'Microsoft'],
+      ['twclid', 'X'],
+      ['yclid', 'Yandex'],
+    ];
+    for (const [key, owner] of owners) {
+      const p = explain(key, 'github.com');
+      expect([key, p.category, p.owner]).toEqual([key, 'ad_click', owner]);
+      expect(p.desc).toBeDefined();
+    }
+  });
+
+  it('explains every known rotating Instagram share ID name as a sharer ID', () => {
+    for (const key of ['stkn', 'exln', 'xtok', 'rpxt', 'vrfl', 'obrf', 'psln', 'cplk', 'mdxt', 'srtk', 'dlrf']) {
+      const p = explain(key, 'www.instagram.com');
+      expect([key, p.category]).toEqual([key, 'sharer_id']);
+      expect(p.desc).toBeDefined();
+    }
+  });
 });
