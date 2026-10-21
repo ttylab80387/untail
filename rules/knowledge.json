@@ -1035,5 +1035,45 @@
       "en": "Newer Instagram share identifier (a base64-encoded random code) tied to this share, which may reveal to Instagram who shared the link.",
       "ja": "Instagram の新しい共有識別子（base64 でエンコードされたランダムなコード）。この共有に紐付き、誰が共有したかを Instagram が把握できる可能性があります。"
     }
+  },
+  "dclid": {
+    "owner": "Google",
+    "category": "ad_click",
+    "risk": "medium",
+    "desc": {
+      "zh-TW": "Google 展示廣告（Campaign Manager 360、Display & Video 360）的點擊識別碼，用來追蹤廣告的轉換成效。",
+      "en": "Google display ads (Campaign Manager 360, Display & Video 360) click identifier used for conversion tracking.",
+      "ja": "Google ディスプレイ広告（Campaign Manager 360、Display & Video 360）のクリック識別子。コンバージョン計測に使われます。"
+    }
+  },
+  "msclkid": {
+    "owner": "Microsoft",
+    "category": "ad_click",
+    "risk": "medium",
+    "desc": {
+      "zh-TW": "Microsoft Advertising（Bing 廣告）的點擊識別碼，用來追蹤廣告的轉換成效。",
+      "en": "Microsoft Advertising (Bing Ads) click identifier used for conversion tracking.",
+      "ja": "Microsoft Advertising（Bing 広告）のクリック識別子。コンバージョン計測に使われます。"
+    }
+  },
+  "twclid": {
+    "owner": "X",
+    "category": "ad_click",
+    "risk": "medium",
+    "desc": {
+      "zh-TW": "X（Twitter）廣告的點擊識別碼，讓網站與 X 把這次造訪和廣告點擊關聯起來。",
+      "en": "X (Twitter) ads click identifier that lets the site and X link this visit to the ad click.",
+      "ja": "X（Twitter）広告のクリック識別子。サイトと X がこの訪問を広告のクリックと結び付けられます。"
+    }
+  },
+  "yclid": {
+    "owner": "Yandex",
+    "category": "ad_click",
+    "risk": "medium",
+    "desc": {
+      "zh-TW": "Yandex 廣告的點擊識別碼，用來追蹤廣告的轉換成效。",
+      "en": "Yandex ads click identifier used for conversion tracking.",
+      "ja": "Yandex 広告のクリック識別子。コンバージョン計測に使われます。"
+    }
   }
 }

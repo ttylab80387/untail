@@ -433,5 +433,54 @@
         "exln"
       ]
     }
+  },
+  {
+    "name": "click IDs are removed on sites excepted from global rules (github.com fbclid)",
+    "input": "https://github.com/someone/project?fbclid=TESTCLICK001",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://github.com/someone/project",
+      "status": "clean",
+      "removedKeys": [
+        "fbclid"
+      ]
+    }
+  },
+  {
+    "name": "github.com keeps its own parameters while dropping a click ID",
+    "input": "https://github.com/someone/project?tab=readme-ov-file&fbclid=TESTCLICK002",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://github.com/someone/project?tab=readme-ov-file",
+      "status": "clean",
+      "removedKeys": [
+        "fbclid"
+      ]
+    }
+  },
+  {
+    "name": "click IDs are removed on sites excepted from global rules (gitlab.com gclid)",
+    "input": "https://gitlab.com/someone/project?gclid=TESTCLICK003",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://gitlab.com/someone/project",
+      "status": "clean",
+      "removedKeys": [
+        "gclid"
+      ]
+    }
+  },
+  {
+    "name": "ordinary sites list each click ID once although two providers match it",
+    "input": "https://example.com/a?id=5&fbclid=TESTCLICK004&utm_source=z",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://example.com/a?id=5",
+      "status": "clean",
+      "removedKeys": [
+        "fbclid",
+        "utm_source"
+      ]
+    }
   }
 ]

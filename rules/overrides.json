@@ -66,6 +66,17 @@
         "stkn",
         "exln"
       ]
+    },
+    "click ids": {
+      "urlPattern": ".*",
+      "rules": [
+        "fbclid",
+        "gclid",
+        "dclid",
+        "msclkid",
+        "twclid",
+        "yclid"
+      ]
     }
   }
 }
