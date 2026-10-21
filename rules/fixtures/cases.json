@@ -543,5 +543,15 @@
         "yclid"
       ]
     }
+  },
+  {
+    "name": "instagram post media endpoint keeps its 4-letter size parameter (rule limited to the post page itself)",
+    "input": "https://www.instagram.com/p/TESTpost04/media/?size=l",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.instagram.com/p/TESTpost04/media/?size=l",
+      "status": "clean",
+      "removedKeys": []
+    }
   }
 ]
