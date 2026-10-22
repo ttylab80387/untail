@@ -705,5 +705,18 @@
       "status": "clean",
       "removedKeys": []
     }
+  },
+  {
+    "name": "bilibili recommend-list video link drops spmid and from_spmid, keeps the part number",
+    "input": "https://www.bilibili.com/video/BV1test0002?from_spmid=tm.recommend.0.0&p=1&spmid=united.player-video-detail.0.0",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.bilibili.com/video/BV1test0002?p=1",
+      "status": "clean",
+      "removedKeys": [
+        "from_spmid",
+        "spmid"
+      ]
+    }
   }
 ]

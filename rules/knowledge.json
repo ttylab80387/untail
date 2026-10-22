@@ -1365,5 +1365,25 @@
       "en": "Trip.com internal stamp; purpose undocumented.",
       "ja": "Trip.com の内部スタンプ。用途は非公開です。"
     }
+  },
+  "bilibili.com:spmid": {
+    "owner": "Bilibili",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "站內位置標記，記錄分享時你在哪個頁面或區塊。",
+      "en": "In-site position marker recording which page or section you were on when sharing.",
+      "ja": "サイト内の位置マーカー。共有したときにどのページや枠にいたかを記録します。"
+    }
+  },
+  "bilibili.com:from_spmid": {
+    "owner": "Bilibili",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "站內位置標記，記錄你是從哪個頁面或區塊點進來的，例如推薦列表。",
+      "en": "In-site position marker recording which page or section you came from, such as the recommendations list.",
+      "ja": "サイト内の位置マーカー。おすすめ一覧など、どのページや枠から来たかを記録します。"
+    }
   }
 }
