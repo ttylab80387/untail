@@ -51,6 +51,7 @@
       ]
     },
     "bilibili.com": {
+      "urlPattern": "^https?:\\/\\/(?:[a-z0-9-]+\\.)*?bilibili\\.com(?:[/:?#]|$)",
       "rules": [
         "bbid",
         "ts",

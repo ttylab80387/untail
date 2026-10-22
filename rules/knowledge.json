@@ -1371,9 +1371,9 @@
     "category": "session",
     "risk": "low",
     "desc": {
-      "zh-TW": "站內位置標記，記錄分享時你在哪個頁面或區塊。",
-      "en": "In-site position marker recording which page or section you were on when sharing.",
-      "ja": "サイト内の位置マーカー。共有したときにどのページや枠にいたかを記録します。"
+      "zh-TW": "站內頁面或區塊的位置標記。",
+      "en": "In-site page or section marker.",
+      "ja": "サイト内のページやセクションを示す位置マーカー。"
     }
   },
   "bilibili.com:from_spmid": {
