@@ -1331,9 +1331,9 @@
     "category": "session",
     "risk": "low",
     "desc": {
-      "zh-TW": "Trip.com 標記這是不是你第一次進入這個飯店頁，屬於瀏覽行為紀錄。",
-      "en": "Trip.com flag for whether this is your first visit to this hotel page; a record of browsing behaviour.",
-      "ja": "Trip.com のフラグ。このホテルページへの初回訪問かどうかを示す、閲覧行動の記録です。"
+      "zh-TW": "Trip.com 的標記，看起來是記錄這是不是第一次進入這個飯店頁，屬於瀏覽行為紀錄。",
+      "en": "Trip.com flag that appears to record whether this is the first time the hotel page was opened; a record of browsing behaviour.",
+      "ja": "Trip.com のフラグ。このホテルページを初めて開いたかどうかを記録しているとみられる、閲覧行動の記録です。"
     }
   },
   "trip.com:substamp": {

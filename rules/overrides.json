@@ -85,7 +85,7 @@
       ]
     },
     "trip.com hotel": {
-      "urlPattern": "^https?:\\/\\/(?:[a-z0-9-]+\\.)*?trip\\.com\\/(?:m\\/)?hotels\\/",
+      "urlPattern": "^https?:\\/\\/(?:[a-z0-9-]+\\.)*?trip\\.com\\/m\\/hotels\\/v2\\/detail\\/?(?:[?#]|$)",
       "rules": [
         "UniqueKey",
         "masterhotelid_tracelogid",

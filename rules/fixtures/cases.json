@@ -602,10 +602,10 @@
   },
   {
     "name": "trip.com hotel page drops the encoded UniqueKey and the source trackers",
-    "input": "https://tw.trip.com/m/hotels/v2/detail/?hotelId=123456789&UniqueKey=H4sITESTKEY&cityId=30&listScene=0&adult=2&children=0&masterhotelid_tracelogid=TESTTRACE-01&subStamp=196&priceCurr=TWD&checkIn=2026-11-01&checkOut=2026-11-02&crn=1&fromList=1&display=incavg&isFirstEnterDetailPage=T&fromPageId=1234567890",
+    "input": "https://tw.trip.com/m/hotels/v2/detail/?hotelId=123456789&UniqueKey=H4sITESTKEY&cityId=30&listScene=0&adult=2&children=0&masterhotelid_tracelogid=TESTTRACE-01&subStamp=196&allSelectedFilters=31%24123456789~80%2480%7C2%7C1!2~17%241&priceCurr=TWD&checkIn=2026-11-01&checkOut=2026-11-02&crn=1&fromList=1&display=incavg&isFirstEnterDetailPage=T&fromPageId=1234567890",
     "responses": {},
     "expected": {
-      "cleanUrl": "https://tw.trip.com/m/hotels/v2/detail/?hotelId=123456789&cityId=30&adult=2&children=0&priceCurr=TWD&checkIn=2026-11-01&checkOut=2026-11-02&crn=1&display=incavg",
+      "cleanUrl": "https://tw.trip.com/m/hotels/v2/detail/?hotelId=123456789&cityId=30&adult=2&children=0&allSelectedFilters=31%24123456789~80%2480%7C2%7C1!2~17%241&priceCurr=TWD&checkIn=2026-11-01&checkOut=2026-11-02&crn=1&display=incavg",
       "status": "clean",
       "removedKeys": [
         "UniqueKey",
@@ -624,6 +624,59 @@
     "responses": {},
     "expected": {
       "cleanUrl": "https://www.trip.com/flights/?UniqueKey=H4sITESTKEY&fromPageId=1234567890",
+      "status": "clean",
+      "removedKeys": []
+    }
+  },
+  {
+    "name": "trip.com hotel rule matches the bare domain and any-case parameter names",
+    "input": "https://trip.com/m/hotels/v2/detail/?hotelId=123456789&uniquekey=H4sITESTKEY&FROMPAGEID=1234567890",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://trip.com/m/hotels/v2/detail/?hotelId=123456789",
+      "status": "clean",
+      "removedKeys": [
+        "uniquekey",
+        "FROMPAGEID"
+      ]
+    }
+  },
+  {
+    "name": "trip.com rule leaves desktop hotel pages alone until they are verified",
+    "input": "https://www.trip.com/hotels/detail/?hotelId=123456789&UniqueKey=H4sITESTKEY&fromPageId=1234567890",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.trip.com/hotels/detail/?hotelId=123456789&UniqueKey=H4sITESTKEY&fromPageId=1234567890",
+      "status": "clean",
+      "removedKeys": []
+    }
+  },
+  {
+    "name": "trip.com rule ignores look-alike hosts",
+    "input": "https://notrip.com/m/hotels/v2/detail/?hotelId=123456789&UniqueKey=H4sITESTKEY",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://notrip.com/m/hotels/v2/detail/?hotelId=123456789&UniqueKey=H4sITESTKEY",
+      "status": "clean",
+      "removedKeys": []
+    }
+  },
+  {
+    "name": "trip.com rule ignores trip.com used as a subdomain elsewhere",
+    "input": "https://trip.com.evil.example/m/hotels/v2/detail/?hotelId=123456789&UniqueKey=H4sITESTKEY",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://trip.com.evil.example/m/hotels/v2/detail/?hotelId=123456789&UniqueKey=H4sITESTKEY",
+      "status": "clean",
+      "removedKeys": []
+    }
+  },
+  {
+    "name": "trip.com rule ignores trip.com placed before an @",
+    "input": "https://trip.com@evil.example/m/hotels/v2/detail/?hotelId=123456789&UniqueKey=H4sITESTKEY",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://trip.com@evil.example/m/hotels/v2/detail/?hotelId=123456789&UniqueKey=H4sITESTKEY",
       "status": "clean",
       "removedKeys": []
     }
