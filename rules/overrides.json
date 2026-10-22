@@ -73,6 +73,35 @@
         "oat_content",
         "ts"
       ]
+    },
+    "click ids": {
+      "urlPattern": ".*",
+      "rules": [
+        "fbclid",
+        "gclid",
+        "dclid",
+        "msclkid",
+        "twclid",
+        "yclid"
+      ]
+    },
+    "instagram rotating share id": {
+      "urlPattern": "^https?:\\/\\/(?:(?:(?:www|m)\\.)?instagram\\.com|instagr\\.am)\\/(?:reels?|p)\\/[^/?#]+\\/?(?:[?#]|$)",
+      "rules": [
+        "[a-z]{4}"
+      ]
+    },
+    "trip.com hotel": {
+      "urlPattern": "^https?:\\/\\/(?:[a-z0-9-]+\\.)*?trip\\.com\\/m\\/hotels\\/v2\\/detail\\/?(?:[?#]|$)",
+      "rules": [
+        "UniqueKey",
+        "masterhotelid_tracelogid",
+        "fromPageId",
+        "fromList",
+        "listScene",
+        "isFirstEnterDetailPage",
+        "subStamp"
+      ]
     }
   }
 }

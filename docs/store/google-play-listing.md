@@ -123,7 +123,7 @@ Untail - リンクの追跡コード除去
 | 欄位 | 填寫 |
 |---|---|
 | 應用程式類別 | 工具 |
-| 聯絡電子郵件 | ttylab80387@gmail.com |
+| 聯絡電子郵件 | support@ttylab80387.com |
 | 網站 | https://github.com/ttylab80387/untail |
 | 隱私權政策 | https://ttylab80387.github.io/untail/privacy.html |
 | 廣告 | 不含廣告 |

@@ -96,4 +96,39 @@ describe('checked-in rule data', () => {
     const bad = Object.entries(knowledge as Record<string, KnowledgeEntry>).filter(([, k]) => !v011.includes(k.category));
     expect(bad.map(([key]) => key)).toEqual([]);
   });
+
+  it('explains ad click IDs with the ad platform that owns them', () => {
+    const owners: [string, string][] = [
+      ['fbclid', 'Meta'],
+      ['gclid', 'Google'],
+      ['dclid', 'Google'],
+      ['msclkid', 'Microsoft'],
+      ['twclid', 'X'],
+      ['yclid', 'Yandex'],
+    ];
+    for (const [key, owner] of owners) {
+      const p = explain(key, 'github.com');
+      expect([key, p.category, p.owner]).toEqual([key, 'ad_click', owner]);
+      expect(p.desc).toBeDefined();
+    }
+  });
+
+  it('explains every known rotating Instagram share ID name as a sharer ID', () => {
+    for (const host of ['www.instagram.com', 'instagr.am']) {
+      for (const key of ['stkn', 'exln', 'xtok', 'rpxt', 'vrfl', 'obrf', 'psln', 'cplk', 'mdxt', 'srtk', 'dlrf']) {
+        const p = explain(key, host);
+        expect([host, key, p.category]).toEqual([host, key, 'sharer_id']);
+        expect(p.desc).toBeDefined();
+      }
+    }
+  });
+
+  it('explains the Trip.com hotel trackers as Trip.com session data', () => {
+    const keys = ['UniqueKey', 'masterhotelid_tracelogid', 'fromPageId', 'fromList', 'listScene', 'isFirstEnterDetailPage', 'subStamp'];
+    for (const key of keys) {
+      const p = explain(key, 'tw.trip.com');
+      expect([key, p.category, p.owner]).toEqual([key, 'session', 'Trip.com']);
+      expect(p.desc).toBeDefined();
+    }
+  });
 });
