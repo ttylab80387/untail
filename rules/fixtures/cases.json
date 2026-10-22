@@ -599,5 +599,33 @@
       "status": "clean",
       "removedKeys": []
     }
+  },
+  {
+    "name": "trip.com hotel page drops the encoded UniqueKey and the source trackers",
+    "input": "https://tw.trip.com/m/hotels/v2/detail/?hotelId=123456789&UniqueKey=H4sITESTKEY&cityId=30&listScene=0&adult=2&children=0&masterhotelid_tracelogid=TESTTRACE-01&subStamp=196&priceCurr=TWD&checkIn=2026-11-01&checkOut=2026-11-02&crn=1&fromList=1&display=incavg&isFirstEnterDetailPage=T&fromPageId=1234567890",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://tw.trip.com/m/hotels/v2/detail/?hotelId=123456789&cityId=30&adult=2&children=0&priceCurr=TWD&checkIn=2026-11-01&checkOut=2026-11-02&crn=1&display=incavg",
+      "status": "clean",
+      "removedKeys": [
+        "UniqueKey",
+        "listScene",
+        "masterhotelid_tracelogid",
+        "subStamp",
+        "fromList",
+        "isFirstEnterDetailPage",
+        "fromPageId"
+      ]
+    }
+  },
+  {
+    "name": "trip.com rule leaves pages outside hotels alone",
+    "input": "https://www.trip.com/flights/?UniqueKey=H4sITESTKEY&fromPageId=1234567890",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.trip.com/flights/?UniqueKey=H4sITESTKEY&fromPageId=1234567890",
+      "status": "clean",
+      "removedKeys": []
+    }
   }
 ]

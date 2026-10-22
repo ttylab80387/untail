@@ -83,6 +83,18 @@
       "rules": [
         "[a-z]{4}"
       ]
+    },
+    "trip.com hotel": {
+      "urlPattern": "^https?:\\/\\/(?:[a-z0-9-]+\\.)*?trip\\.com\\/(?:m\\/)?hotels\\/",
+      "rules": [
+        "UniqueKey",
+        "masterhotelid_tracelogid",
+        "fromPageId",
+        "fromList",
+        "listScene",
+        "isFirstEnterDetailPage",
+        "subStamp"
+      ]
     }
   }
 }

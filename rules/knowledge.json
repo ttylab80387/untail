@@ -1275,5 +1275,75 @@
       "en": "Instagram share identifier. Users have observed that its parameter name changes to different four letters with each share while the value stays the same share ID; it may reveal to Instagram who shared the link. Works like igsh.",
       "ja": "Instagram の共有識別子。ユーザーの観察では、パラメータ名は共有のたびに別の 4 文字に変わり、値は同じ共有 ID のままです。誰が共有したかを Instagram が把握できる可能性があります。igsh と同じ役割です。"
     }
+  },
+  "trip.com:uniquekey": {
+    "owner": "Trip.com",
+    "category": "session",
+    "risk": "medium",
+    "desc": {
+      "zh-TW": "Trip.com 壓縮編碼過的資料，裡面有當時的報價、搜尋追蹤 ID，以及一段疑似用來識別訪客的代碼。",
+      "en": "Trip.com compressed, encoded data holding the price quote at the time, the search trace ID and a code that looks like a visitor identifier.",
+      "ja": "Trip.com の圧縮・エンコードされたデータ。当時の見積もり、検索のトレース ID、訪問者の識別子とみられるコードを含みます。"
+    }
+  },
+  "trip.com:masterhotelid_tracelogid": {
+    "owner": "Trip.com",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "Trip.com 搜尋列表的追蹤 ID，記錄你是從哪一次搜尋點進來的。",
+      "en": "Trip.com search-list trace ID recording which search you came from.",
+      "ja": "Trip.com の検索一覧のトレース ID。どの検索から来たかを記録します。"
+    }
+  },
+  "trip.com:frompageid": {
+    "owner": "Trip.com",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "Trip.com 來源頁面編號，記錄你是從哪一頁點進來的。",
+      "en": "Trip.com source page ID recording which page you came from.",
+      "ja": "Trip.com の遷移元ページ ID。どのページから来たかを記録します。"
+    }
+  },
+  "trip.com:fromlist": {
+    "owner": "Trip.com",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "Trip.com 來源標記，表示你是從飯店列表點進來的。",
+      "en": "Trip.com flag saying you came from the hotel list.",
+      "ja": "Trip.com のフラグ。ホテル一覧から来たことを示します。"
+    }
+  },
+  "trip.com:listscene": {
+    "owner": "Trip.com",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "Trip.com 列表情境標記，用途未公開。",
+      "en": "Trip.com list-context flag; purpose undocumented.",
+      "ja": "Trip.com の一覧コンテキストのフラグ。用途は非公開です。"
+    }
+  },
+  "trip.com:isfirstenterdetailpage": {
+    "owner": "Trip.com",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "Trip.com 標記這是不是你第一次進入這個飯店頁，屬於瀏覽行為紀錄。",
+      "en": "Trip.com flag for whether this is your first visit to this hotel page; a record of browsing behaviour.",
+      "ja": "Trip.com のフラグ。このホテルページへの初回訪問かどうかを示す、閲覧行動の記録です。"
+    }
+  },
+  "trip.com:substamp": {
+    "owner": "Trip.com",
+    "category": "session",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "Trip.com 的內部標記，用途未公開。",
+      "en": "Trip.com internal stamp; purpose undocumented.",
+      "ja": "Trip.com の内部スタンプ。用途は非公開です。"
+    }
   }
 }

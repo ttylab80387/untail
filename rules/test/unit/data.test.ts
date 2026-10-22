@@ -115,4 +115,13 @@ describe('checked-in rule data', () => {
       }
     }
   });
+
+  it('explains the Trip.com hotel trackers as Trip.com session data', () => {
+    const keys = ['UniqueKey', 'masterhotelid_tracelogid', 'fromPageId', 'fromList', 'listScene', 'isFirstEnterDetailPage', 'subStamp'];
+    for (const key of keys) {
+      const p = explain(key, 'tw.trip.com');
+      expect([key, p.category, p.owner]).toEqual([key, 'session', 'Trip.com']);
+      expect(p.desc).toBeDefined();
+    }
+  });
 });
