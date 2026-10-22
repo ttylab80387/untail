@@ -458,5 +458,252 @@
       "status": "clean",
       "removedKeys": []
     }
+  },
+  {
+    "name": "click IDs are removed on sites excepted from global rules (github.com fbclid)",
+    "input": "https://github.com/someone/project?fbclid=TESTCLICK001",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://github.com/someone/project",
+      "status": "clean",
+      "removedKeys": [
+        "fbclid"
+      ]
+    }
+  },
+  {
+    "name": "github.com keeps its own parameters while dropping a click ID",
+    "input": "https://github.com/someone/project?tab=readme-ov-file&fbclid=TESTCLICK002",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://github.com/someone/project?tab=readme-ov-file",
+      "status": "clean",
+      "removedKeys": [
+        "fbclid"
+      ]
+    }
+  },
+  {
+    "name": "click IDs are removed on sites excepted from global rules (gitlab.com gclid)",
+    "input": "https://gitlab.com/someone/project?gclid=TESTCLICK003",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://gitlab.com/someone/project",
+      "status": "clean",
+      "removedKeys": [
+        "gclid"
+      ]
+    }
+  },
+  {
+    "name": "ordinary sites list each click ID once although two providers match it",
+    "input": "https://example.com/a?id=5&fbclid=TESTCLICK004&utm_source=z",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://example.com/a?id=5",
+      "status": "clean",
+      "removedKeys": [
+        "fbclid",
+        "utm_source"
+      ]
+    }
+  },
+  {
+    "name": "instagram reel share ID under a rotating 4-letter name (xtok)",
+    "input": "https://www.instagram.com/reel/TESTreel02/?xtok=VEVTVHNoYXJlaWQ=",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.instagram.com/reel/TESTreel02/",
+      "status": "clean",
+      "removedKeys": [
+        "xtok"
+      ]
+    }
+  },
+  {
+    "name": "instagram post keeps img_index while dropping a rotating share ID (rpxt)",
+    "input": "https://www.instagram.com/p/TESTpost02/?img_index=2&rpxt=VEVTVHNoYXJlaWQ=",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.instagram.com/p/TESTpost02/?img_index=2",
+      "status": "clean",
+      "removedKeys": [
+        "rpxt"
+      ]
+    }
+  },
+  {
+    "name": "instagram /reels/ path with a rotating share ID (cplk)",
+    "input": "https://www.instagram.com/reels/TESTreel03/?cplk=VEVTVHNoYXJlaWQ=",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.instagram.com/reels/TESTreel03/",
+      "status": "clean",
+      "removedKeys": [
+        "cplk"
+      ]
+    }
+  },
+  {
+    "name": "instagram profile pages keep 4-letter parameters (rule limited to reel and post paths)",
+    "input": "https://www.instagram.com/someone/?abcd=1",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.instagram.com/someone/?abcd=1",
+      "status": "clean",
+      "removedKeys": []
+    }
+  },
+  {
+    "name": "the other four click IDs are removed on sites excepted from global rules",
+    "input": "https://github.com/someone/project?dclid=TESTCLICK5&msclkid=TESTCLICK6&twclid=TESTCLICK7&yclid=TESTCLICK8",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://github.com/someone/project",
+      "status": "clean",
+      "removedKeys": [
+        "dclid",
+        "msclkid",
+        "twclid",
+        "yclid"
+      ]
+    }
+  },
+  {
+    "name": "instagram post media endpoint keeps its 4-letter size parameter (rule limited to the post page itself)",
+    "input": "https://www.instagram.com/p/TESTpost04/media/?size=l",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.instagram.com/p/TESTpost04/media/?size=l",
+      "status": "clean",
+      "removedKeys": []
+    }
+  },
+  {
+    "name": "instagr.am short domain post with a rotating share ID",
+    "input": "https://instagr.am/p/TESTpost05/?srtk=VEVTVHNoYXJlaWQ=",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://instagr.am/p/TESTpost05/",
+      "status": "clean",
+      "removedKeys": [
+        "srtk"
+      ]
+    }
+  },
+  {
+    "name": "instagram post without a trailing slash still drops the rotating share ID",
+    "input": "https://www.instagram.com/p/TESTpost06?psln=VEVTVHNoYXJlaWQ=",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.instagram.com/p/TESTpost06",
+      "status": "clean",
+      "removedKeys": [
+        "psln"
+      ]
+    }
+  },
+  {
+    "name": "instagram rotating share ID in upper case is removed",
+    "input": "https://www.instagram.com/reel/TESTreel04/?XTOK=VEVTVHNoYXJlaWQ=",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.instagram.com/reel/TESTreel04/",
+      "status": "clean",
+      "removedKeys": [
+        "XTOK"
+      ]
+    }
+  },
+  {
+    "name": "instagram help pages keep 4-letter parameters (rule limited to www, m and the bare domain)",
+    "input": "https://help.instagram.com/p/TESTpage01/?lang=en",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://help.instagram.com/p/TESTpage01/?lang=en",
+      "status": "clean",
+      "removedKeys": []
+    }
+  },
+  {
+    "name": "trip.com hotel page drops the encoded UniqueKey and the source trackers",
+    "input": "https://tw.trip.com/m/hotels/v2/detail/?hotelId=123456789&UniqueKey=H4sITESTKEY&cityId=30&listScene=0&adult=2&children=0&masterhotelid_tracelogid=TESTTRACE-01&subStamp=196&allSelectedFilters=31%24123456789~80%2480%7C2%7C1!2~17%241&priceCurr=TWD&checkIn=2026-11-01&checkOut=2026-11-02&crn=1&fromList=1&display=incavg&isFirstEnterDetailPage=T&fromPageId=1234567890",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://tw.trip.com/m/hotels/v2/detail/?hotelId=123456789&cityId=30&adult=2&children=0&allSelectedFilters=31%24123456789~80%2480%7C2%7C1!2~17%241&priceCurr=TWD&checkIn=2026-11-01&checkOut=2026-11-02&crn=1&display=incavg",
+      "status": "clean",
+      "removedKeys": [
+        "UniqueKey",
+        "listScene",
+        "masterhotelid_tracelogid",
+        "subStamp",
+        "fromList",
+        "isFirstEnterDetailPage",
+        "fromPageId"
+      ]
+    }
+  },
+  {
+    "name": "trip.com rule leaves pages outside hotels alone",
+    "input": "https://www.trip.com/flights/?UniqueKey=H4sITESTKEY&fromPageId=1234567890",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.trip.com/flights/?UniqueKey=H4sITESTKEY&fromPageId=1234567890",
+      "status": "clean",
+      "removedKeys": []
+    }
+  },
+  {
+    "name": "trip.com hotel rule matches the bare domain and any-case parameter names",
+    "input": "https://trip.com/m/hotels/v2/detail/?hotelId=123456789&uniquekey=H4sITESTKEY&FROMPAGEID=1234567890",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://trip.com/m/hotels/v2/detail/?hotelId=123456789",
+      "status": "clean",
+      "removedKeys": [
+        "uniquekey",
+        "FROMPAGEID"
+      ]
+    }
+  },
+  {
+    "name": "trip.com rule leaves desktop hotel pages alone until they are verified",
+    "input": "https://www.trip.com/hotels/detail/?hotelId=123456789&UniqueKey=H4sITESTKEY&fromPageId=1234567890",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.trip.com/hotels/detail/?hotelId=123456789&UniqueKey=H4sITESTKEY&fromPageId=1234567890",
+      "status": "clean",
+      "removedKeys": []
+    }
+  },
+  {
+    "name": "trip.com rule ignores look-alike hosts",
+    "input": "https://notrip.com/m/hotels/v2/detail/?hotelId=123456789&UniqueKey=H4sITESTKEY",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://notrip.com/m/hotels/v2/detail/?hotelId=123456789&UniqueKey=H4sITESTKEY",
+      "status": "clean",
+      "removedKeys": []
+    }
+  },
+  {
+    "name": "trip.com rule ignores trip.com used as a subdomain elsewhere",
+    "input": "https://trip.com.evil.example/m/hotels/v2/detail/?hotelId=123456789&UniqueKey=H4sITESTKEY",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://trip.com.evil.example/m/hotels/v2/detail/?hotelId=123456789&UniqueKey=H4sITESTKEY",
+      "status": "clean",
+      "removedKeys": []
+    }
+  },
+  {
+    "name": "trip.com rule ignores trip.com placed before an @",
+    "input": "https://trip.com@evil.example/m/hotels/v2/detail/?hotelId=123456789&UniqueKey=H4sITESTKEY",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://trip.com@evil.example/m/hotels/v2/detail/?hotelId=123456789&UniqueKey=H4sITESTKEY",
+      "status": "clean",
+      "removedKeys": []
+    }
   }
 ]
