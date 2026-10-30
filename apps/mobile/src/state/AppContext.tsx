@@ -377,9 +377,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       try {
         let last: LastTileResult | null;
         let loaded: { rules: RuleBundle; source: RulesSource };
-        [s, loaded, last] = await Promise.all([loadSettings(db), loadRules(db, BUNDLED), loadLastTileResult(db).catch(() => null)]);
+        let status: UpdateStatus;
+        // The status is read here too, so Settings shows it before the first check finishes.
+        [s, loaded, last, status] = await Promise.all([
+          loadSettings(db),
+          loadRules(db, BUNDLED),
+          loadLastTileResult(db).catch(() => null),
+          readStatus(db),
+        ]);
         r = loaded.rules;
         src = loaded.source;
+        setRulesStatus(status);
         setLastTile(last);
       } catch {
         // Unreadable storage: keep defaults rather than blocking the app.
