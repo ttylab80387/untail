@@ -63,6 +63,8 @@ describe('checked-in rule data', () => {
       ['www.bilibili.com', 'share_source', 'campaign'],
       ['www.bilibili.com', 'share_medium', 'campaign'],
       ['www.bilibili.com', 'spm_id_from', 'session'],
+      ['www.bilibili.com', 'spmid', 'session'],
+      ['www.bilibili.com', 'from_spmid', 'session'],
       ['www.youtube.com', 'pp', 'session'],
       ['www.youtube.com', 'feature', 'campaign'],
       ['youtu.be', 'feature', 'campaign'],

@@ -705,5 +705,65 @@
       "status": "clean",
       "removedKeys": []
     }
+  },
+  {
+    "name": "bilibili recommend-list video link drops spmid and from_spmid, keeps the part number",
+    "input": "https://www.bilibili.com/video/BV1test0002?from_spmid=tm.recommend.0.0&p=1&spmid=united.player-video-detail.0.0",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.bilibili.com/video/BV1test0002?p=1",
+      "status": "clean",
+      "removedKeys": [
+        "from_spmid",
+        "spmid"
+      ]
+    }
+  },
+  {
+    "name": "bilibili link with only spmid and from_spmid trims to the bare video URL",
+    "input": "https://www.bilibili.com/video/BV1test0002?from_spmid=tm.recommend.0.0&spmid=united.player-video-detail.0.0",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.bilibili.com/video/BV1test0002",
+      "status": "clean",
+      "removedKeys": [
+        "from_spmid",
+        "spmid"
+      ]
+    }
+  },
+  {
+    "name": "bilibili keeps the part number and start time next to spmid",
+    "input": "https://www.bilibili.com/video/BV1test0002?p=2&t=90&spmid=united.player-video-detail.0.0",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.bilibili.com/video/BV1test0002?p=2&t=90",
+      "status": "clean",
+      "removedKeys": [
+        "spmid"
+      ]
+    }
+  },
+  {
+    "name": "bilibili mobile video link drops from_spmid",
+    "input": "https://m.bilibili.com/video/BV1test0002?from_spmid=tm.recommend.0.0",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://m.bilibili.com/video/BV1test0002",
+      "status": "clean",
+      "removedKeys": [
+        "from_spmid"
+      ]
+    }
+  },
+  {
+    "name": "bilibili rules ignore hosts that only start with bilibili.com",
+    "input": "https://bilibili.com.example.org/video/BV1test0002?spmid=x&from_spmid=y&spm_id_from=z",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://bilibili.com.example.org/video/BV1test0002?spmid=x&from_spmid=y&spm_id_from=z",
+      "status": "clean",
+      "removedKeys": []
+    }
   }
 ]
