@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import type { RuleBundle } from '@linkclean/core';
-import { lastPagesDeploy, settleWaitMs } from './pages';
+import { cdnWaitMs } from './pages';
 import { fetchPublished, sameContent } from './published';
 
 const here = (p: string) => fileURLToPath(new URL(p, import.meta.url));
@@ -47,7 +47,7 @@ async function main() {
   const { values } = parseArgs({ options: { base: { type: 'string' }, dist: { type: 'string', default: here('../dist') } } });
   if (!values.base) throw new Error('--base <published site URL> is required');
   // Comparing against a stale CDN copy could skip a reuse or bring back an older version.
-  const wait = settleWaitMs(await lastPagesDeploy(fetchText), Date.now());
+  const wait = await cdnWaitMs(fetchText, Date.now);
   if (wait > 0) {
     console.log(`waiting ${Math.ceil(wait / 1000)} s for the CDN to drop the previous deploy`);
     await new Promise((r) => setTimeout(r, wait));

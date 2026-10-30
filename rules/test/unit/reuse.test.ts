@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
 import type { RuleBundle } from '@linkclean/core';
 import { sha256 } from '../../src/bundle';
-import { CDN_SETTLE_MS, lastPagesDeploy, settleWaitMs } from '../../src/pages';
+import { CDN_SETTLE_MS, cdnWaitMs, lastPagesDeploy, settleWaitMs } from '../../src/pages';
 import { reuseDist } from '../../src/reuse';
 
 const BASE = 'https://example.github.io/untail/';
@@ -80,15 +80,34 @@ describe('Pages deploy settling', () => {
     expect(settleWaitMs(null, 5)).toBe(0);
   });
 
-  it('reads the latest github-pages deployment time and returns null on errors', async () => {
-    const ok = async () => JSON.stringify([{ created_at: '2026-10-29T10:10:40Z' }]);
-    expect(await lastPagesDeploy(ok)).toBe(Date.parse('2026-10-29T10:10:40Z'));
+  it('uses the time the latest deployment finished', async () => {
+    const list = async () => JSON.stringify([{ created_at: '2026-10-29T10:10:40Z', updated_at: '2026-10-29T10:10:54Z' }]);
+    expect(await lastPagesDeploy(list)).toBe(Date.parse('2026-10-29T10:10:54Z'));
     expect(await lastPagesDeploy(async () => '[]')).toBeNull();
-    expect(await lastPagesDeploy(async () => '{"message":"rate limited"}')).toBeNull();
-    expect(
-      await lastPagesDeploy(async () => {
-        throw new Error('offline');
+  });
+
+  it('throws when the deployments lookup fails', async () => {
+    await expect(lastPagesDeploy(async () => '{"message":"Bad credentials"}')).rejects.toThrow();
+    await expect(
+      lastPagesDeploy(async () => {
+        throw new Error('HTTP 503');
       }),
-    ).toBeNull();
+    ).rejects.toThrow();
+  });
+
+  it('cdnWaitMs retries the lookup and waits the full window when it keeps failing', async () => {
+    const noDelay = async () => {};
+    let calls = 0;
+    const flaky = async () => {
+      calls += 1;
+      if (calls < 3) throw new Error('HTTP 503');
+      return JSON.stringify([{ updated_at: new Date(1_000_000).toISOString() }]);
+    };
+    expect(await cdnWaitMs(flaky, () => 1_000_000 + 60_000, noDelay)).toBe(CDN_SETTLE_MS - 60_000);
+    expect(calls).toBe(3);
+    const down = async (): Promise<string> => {
+      throw new Error('HTTP 503');
+    };
+    expect(await cdnWaitMs(down, () => 0, noDelay)).toBe(CDN_SETTLE_MS);
   });
 });
