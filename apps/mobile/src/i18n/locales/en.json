@@ -90,7 +90,7 @@
     "updateNow": "Update rules now",
     "sourceDownloaded": "(downloaded)",
     "sourceBuiltIn": "(built in)",
-    "lastSuccess": "Last updated: {{time}}",
+    "lastSuccess": "Last checked successfully: {{time}}",
     "reportUpdate": "Report update problem",
     "update": {
       "disabled": "No update source configured; using built-in rules.",

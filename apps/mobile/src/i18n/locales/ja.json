@@ -90,7 +90,7 @@
     "updateNow": "今すぐルールを更新",
     "sourceDownloaded": "（ダウンロード済み）",
     "sourceBuiltIn": "（アプリ内蔵）",
-    "lastSuccess": "最終更新：{{time}}",
+    "lastSuccess": "最後に確認できた日時：{{time}}",
     "reportUpdate": "更新の問題を報告",
     "update": {
       "disabled": "更新元が設定されていないため、内蔵ルールを使用しています。",

@@ -90,7 +90,7 @@
     "updateNow": "立即更新規則",
     "sourceDownloaded": "（已下載）",
     "sourceBuiltIn": "（App 內建）",
-    "lastSuccess": "上次成功更新：{{time}}",
+    "lastSuccess": "上次成功檢查：{{time}}",
     "reportUpdate": "回報更新問題",
     "update": {
       "disabled": "尚未設定規則更新來源，目前使用內建規則。",
