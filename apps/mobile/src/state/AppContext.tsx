@@ -26,6 +26,7 @@ import type { Db } from '../lib/db';
 import { loadRules, updateRules } from '../lib/rulesStore';
 import type { RulesSource } from '../lib/rulesStore';
 import type { UpdateOutcome } from '../lib/rulesStore';
+import { makeFetchText } from '../lib/fetchText';
 import { rnFetch } from '../lib/rnFetch';
 import { DEFAULT_SETTINGS, clearLastTileResult, loadLastTileResult, loadSettings, saveLastTileResult, saveSettings } from '../lib/settings';
 import type { LastTileResult, Settings } from '../lib/settings';
@@ -71,11 +72,7 @@ export interface AppState {
 
 const Ctx = createContext<AppState | null>(null);
 
-async function fetchText(url: string): Promise<string> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.text();
-}
+const fetchText = makeFetchText(fetch);
 
 const sha256 = (text: string) => Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, text);
 
