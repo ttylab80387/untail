@@ -16,6 +16,8 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  # The reuse step reads the time of the last Pages deploy.
+  deployments: read
 
 concurrency:
   group: pages
@@ -39,6 +41,8 @@ jobs:
       - run: pnpm test:regression
       # Keep the published version and hash when the content did not change (avoids CDN meta/rules mismatches).
       - run: pnpm --filter @linkclean/rules reuse --base https://ttylab80387.github.io/untail/
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
       - run: mkdir -p site && cp rules/dist/rules.json rules/dist/rules.meta.json docs/site/* site/
       - uses: actions/upload-pages-artifact@v5
         with:
