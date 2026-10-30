@@ -174,3 +174,13 @@ async function check(deps: UpdateDeps): Promise<UpdateOutcome> {
   await setKv(db, K_CACHE, JSON.stringify({ sha256: hash, text }));
   return done('updated');
 }
+
+// Settings shows failures only from the stored status, so a manual result never contradicts a later automatic check.
+export function settingsLines(
+  status: UpdateStatus,
+  manual: UpdateOutcome | null,
+): { failure: FailReason | null; manualKey: UpdateOutcome | null } {
+  const failure = status.failure?.reason ?? null;
+  const manualKey = manual && !manual.startsWith('failed-') && !failure ? manual : null;
+  return { failure, manualKey };
+}

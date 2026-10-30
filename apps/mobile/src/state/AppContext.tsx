@@ -23,8 +23,8 @@ import { cleanInput } from '../lib/cleaner';
 import type { CleanOutcome } from '../lib/cleaner';
 import { decideIos, decideText, initialWatchState, noteSelfWrite, recheckAfterRules, undoTarget } from '../lib/clipboardWatch';
 import type { Db } from '../lib/db';
-import { loadRules, updateRules } from '../lib/rulesStore';
-import type { RulesSource } from '../lib/rulesStore';
+import { loadRules, readStatus, updateRules } from '../lib/rulesStore';
+import type { RulesSource, UpdateStatus } from '../lib/rulesStore';
 import type { UpdateOutcome } from '../lib/rulesStore';
 import { makeFetchText } from '../lib/fetchText';
 import { rnFetch } from '../lib/rnFetch';
@@ -35,6 +35,7 @@ import type { CleanPolicy } from '../lib/tileFlow';
 import type { TileToast } from '../lib/tileOutcome';
 
 const BUNDLED = bundledJson as unknown as RuleBundle;
+export const BUILT_IN_RULES_VERSION = BUNDLED.version;
 
 // iOS can only tell that a URL is present; Android hands us the URL itself.
 export type ClipboardOffer = { kind: 'ios' } | { kind: 'android'; url: string };
@@ -44,6 +45,7 @@ export interface AppState {
   db: Db;
   rules: RuleBundle;
   rulesSource: RulesSource;
+  rulesStatus: UpdateStatus;
   settings: Settings;
   locale: Locale;
   input: string;
@@ -88,6 +90,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [rules, setRules] = useState<RuleBundle>(BUNDLED);
   const [rulesSource, setRulesSource] = useState<RulesSource>('built-in');
+  const [rulesStatus, setRulesStatus] = useState<UpdateStatus>({ lastSuccessAt: null, failure: null });
   const [settings, setSettingsState] = useState<Settings>(DEFAULT_SETTINGS);
   const [input, setInputState] = useState('');
   const [outcome, setOutcome] = useState<CleanOutcome | null>(null);
@@ -147,6 +150,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
               watch.current = recheckAfterRules(before, lastCleanLink.current, next);
               if (watch.current !== before && RNAppState.currentState === 'active') recheckClipboard.current();
             }
+            // Startup, foreground and manual checks all update what Settings shows.
+            setRulesStatus(await readStatus(db));
             return result;
           } finally {
             refreshing.current = null;
@@ -431,6 +436,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       db,
       rules,
       rulesSource,
+      rulesStatus,
       settings,
       locale,
       input,
@@ -476,7 +482,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       tileRequests,
       invalidateTile,
     }),
-    [ready, db, rules, rulesSource, settings, locale, input, outcome, pending, submit, refresh, copy, clipboardOffer, autoCleaned, cleanClipboardLink, tileNotice, lastTile, tileRequests, invalidateTile],
+    [ready, db, rules, rulesSource, rulesStatus, settings, locale, input, outcome, pending, submit, refresh, copy, clipboardOffer, autoCleaned, cleanClipboardLink, tileNotice, lastTile, tileRequests, invalidateTile],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

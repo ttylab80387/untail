@@ -3,7 +3,16 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type { RuleBundle } from '@linkclean/core';
 import { getKv, migrate, setKv } from './db';
 import type { Db } from './db';
-import { CHECK_INTERVAL_MS, MISMATCH_RETRY_MS, compareVersions, loadRules, readStatus, shouldOfferReport, updateRules } from './rulesStore';
+import {
+  CHECK_INTERVAL_MS,
+  MISMATCH_RETRY_MS,
+  compareVersions,
+  loadRules,
+  readStatus,
+  settingsLines,
+  shouldOfferReport,
+  updateRules,
+} from './rulesStore';
 import type { UpdateDeps, UpdateStatus } from './rulesStore';
 import { nodeDb } from './testing/nodeDb';
 
@@ -288,5 +297,20 @@ describe('compareVersions', () => {
     expect(compareVersions('bad', '2026.10.22.1441')).toBeLessThan(0);
     expect(compareVersions('2026.10.22.1441', 'remote')).toBeGreaterThan(0);
     expect(compareVersions('bad', 'worse')).toBe(0);
+  });
+});
+
+describe('settingsLines', () => {
+  const failed: UpdateStatus = { lastSuccessAt: 1, failure: { reason: 'network', at: 2, count: 1 } };
+  const clean: UpdateStatus = { lastSuccessAt: 3, failure: null };
+
+  it('hides a stale manual failure once the stored status has recovered', () => {
+    expect(settingsLines(clean, 'failed-network')).toEqual({ failure: null, manualKey: null });
+  });
+  it('shows only the stored failure when a manual success is older', () => {
+    expect(settingsLines(failed, 'up-to-date')).toEqual({ failure: 'network', manualKey: null });
+  });
+  it('shows a manual success when nothing failed since', () => {
+    expect(settingsLines(clean, 'updated')).toEqual({ failure: null, manualKey: 'updated' });
   });
 });

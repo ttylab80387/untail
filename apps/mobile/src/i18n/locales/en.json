@@ -88,12 +88,19 @@
     "history": "Keep history",
     "rulesVersion": "Rules version: {{version}}",
     "updateNow": "Update rules now",
+    "sourceDownloaded": "(downloaded)",
+    "sourceBuiltIn": "(built in)",
+    "lastSuccess": "Last updated: {{time}}",
+    "reportUpdate": "Report update problem",
     "update": {
       "disabled": "No update source configured; using built-in rules.",
       "throttled": "Checked recently.",
       "up-to-date": "Rules are up to date.",
       "updated": "Rules updated.",
-      "failed": "Update failed; keeping the current rules."
+      "failed-network": "Can't reach the rules site right now. Untail will try again next time you open it.",
+      "failed-mismatch": "The downloaded rules were incomplete. Untail will try again in a few minutes.",
+      "failed-unsupported": "This version of Untail can't read the new rules. Please update the app.",
+      "failed-invalid": "The rules site sent unexpected data. Untail will try again tomorrow."
     },
     "privacy": "Privacy policy",
     "licenses": "Open-source licenses",
@@ -124,6 +131,8 @@
     "settings": "Settings"
   },
   "report": {
+    "updateSubject": "Untail rules update problem",
+    "updateNote": "If you like, add what you noticed (for example, which network you were on). Everything below is shown before you send; delete anything you do not want to send.",
     "subject": "Untail report: link not cleaned well",
     "note": "Please describe the problem briefly (for example: a tracking code was left in, or the link does not open). Note: the original link below may identify the person who shared it; delete anything you do not want to send.",
     "noMail": "No mail app found. Please email support@ttylab80387.com.",

@@ -34,7 +34,7 @@ describe('locale files', () => {
       ...['expand_disabled', 'expand_timeout', 'unresolved', 'network', 'invalid_input'].map((r) => `result.reason.${r}`),
       ...['sharer_id', 'ad_click', 'affiliate', 'campaign', 'session', 'unknown'].map((c) => `category.${c}`),
       ...['high', 'medium', 'low'].map((r) => `risk.${r}`),
-      ...['disabled', 'throttled', 'up-to-date', 'updated', 'failed'].map((o) => `settings.update.${o}`),
+      ...['disabled', 'throttled', 'up-to-date', 'updated', 'failed-network', 'failed-mismatch', 'failed-unsupported', 'failed-invalid'].map((o) => `settings.update.${o}`),
     ];
     for (const key of required) expect(locales.en, key).toHaveProperty([key]);
   });

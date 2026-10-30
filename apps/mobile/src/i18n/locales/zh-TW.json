@@ -88,12 +88,19 @@
     "history": "保存歷史紀錄",
     "rulesVersion": "規則版本：{{version}}",
     "updateNow": "立即更新規則",
+    "sourceDownloaded": "（已下載）",
+    "sourceBuiltIn": "（App 內建）",
+    "lastSuccess": "上次成功更新：{{time}}",
+    "reportUpdate": "回報更新問題",
     "update": {
       "disabled": "尚未設定規則更新來源，目前使用內建規則。",
       "throttled": "最近已檢查過。",
       "up-to-date": "規則已是最新版本。",
       "updated": "規則已更新。",
-      "failed": "更新失敗，繼續使用目前的規則。"
+      "failed-network": "目前連不上規則網站，下次打開 Untail 會再試。",
+      "failed-mismatch": "下載到的規則不完整，幾分鐘後會自動再試。",
+      "failed-unsupported": "這個版本的 Untail 讀不懂新規則，請更新 App。",
+      "failed-invalid": "規則網站回傳的資料有問題，明天會再試。"
     },
     "privacy": "隱私政策",
     "licenses": "開源授權",
@@ -124,6 +131,8 @@
     "settings": "設定"
   },
   "report": {
+    "updateSubject": "Untail 規則更新問題",
+    "updateNote": "可以的話，補充你注意到的情況（例如當時用哪個網路）。下面的內容寄出前都看得到，不想寄的部分可以刪掉。",
     "subject": "Untail 回報：連結沒有處理好",
     "note": "請簡單說明問題（例如：還有追蹤碼沒移除、連結打不開）。注意：下面的原始連結可能含有分享者資訊，不想提供的部分可以先刪掉再寄出。",
     "noMail": "找不到郵件 App。請寄信到 support@ttylab80387.com。",

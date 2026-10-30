@@ -2,6 +2,7 @@ import { Link } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { settingsLines, shouldOfferReport } from '../src/lib/rulesStore';
 import type { UpdateOutcome } from '../src/lib/rulesStore';
 import type { Settings } from '../src/lib/settings';
 import { useApp } from '../src/state/AppContext';
@@ -9,13 +10,15 @@ import { useColors } from '../src/theme';
 import { useBottomPadding } from '../src/bottomPadding';
 import { confirmAutoClean } from '../src/confirmAuto';
 import { useAddTile } from '../src/components/useAddTile';
+import { useRulesReport } from '../src/components/useReport';
 
 export default function SettingsScreen() {
   const bottomPadding = useBottomPadding();
   const { t } = useTranslation();
   const c = useColors();
   const addTile = useAddTile();
-  const { settings, setSettings, rules, refreshRules } = useApp();
+  const { settings, setSettings, rules, rulesSource, rulesStatus, refreshRules, locale } = useApp();
+  const reportUpdate = useRulesReport();
   const [updating, setUpdating] = useState(false);
   const [outcome, setOutcome] = useState<UpdateOutcome | null>(null);
 
@@ -32,12 +35,12 @@ export default function SettingsScreen() {
     setUpdating(true);
     try {
       setOutcome(await refreshRules());
-    } catch {
-      setOutcome('failed-network');
     } finally {
       setUpdating(false);
     }
   };
+
+  const lines = settingsLines(rulesStatus, outcome);
 
   const row = (key: keyof Settings, label: string, hint?: string) => (
     <View style={[styles.row, { backgroundColor: c.card, borderColor: c.border }]}>
@@ -76,11 +79,25 @@ export default function SettingsScreen() {
       )}
 
       <View style={[styles.block, { backgroundColor: c.card, borderColor: c.border }]}>
-        <Text style={{ color: c.text }}>{t('settings.rulesVersion', { version: rules.version })}</Text>
+        <Text style={{ color: c.text }}>
+          {t('settings.rulesVersion', { version: rules.version })}{' '}
+          {t(rulesSource === 'downloaded' ? 'settings.sourceDownloaded' : 'settings.sourceBuiltIn')}
+        </Text>
+        {rulesStatus.lastSuccessAt !== null && (
+          <Text style={{ color: c.muted, fontSize: 12 }}>
+            {t('settings.lastSuccess', { time: new Date(rulesStatus.lastSuccessAt).toLocaleString(locale) })}
+          </Text>
+        )}
         <Pressable disabled={updating} onPress={() => void update()}>
           <Text style={{ color: c.accent, opacity: updating ? 0.5 : 1 }}>{t('settings.updateNow')}</Text>
         </Pressable>
-        {outcome && <Text style={{ color: c.muted }}>{t(`settings.update.${outcome}`)}</Text>}
+        {lines.manualKey && <Text style={{ color: c.muted }}>{t(`settings.update.${lines.manualKey}`)}</Text>}
+        {lines.failure && <Text style={{ color: c.muted }}>{t(`settings.update.failed-${lines.failure}`)}</Text>}
+        {shouldOfferReport(rulesStatus) && (
+          <Pressable onPress={reportUpdate}>
+            <Text style={{ color: c.accent, textDecorationLine: 'underline' }}>{t('settings.reportUpdate')}</Text>
+          </Pressable>
+        )}
       </View>
 
       <Link href="/privacy" style={[styles.link, { color: c.accent }]}>
