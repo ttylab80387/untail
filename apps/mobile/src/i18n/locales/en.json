@@ -149,7 +149,7 @@
     "autoOn": "Auto-clean is on",
     "iosPaste": "On iPhone, set Settings > Apps > Untail > Paste from Other Apps to Allow, or iOS will ask every time you open the app.",
     "autoConfirmTitle": "Turn on auto-clean?",
-    "autoConfirmBody": "When you open the app, Untail reads the clipboard and swaps a link that has tracking codes or hidden characters for the clean link. For a short link it automatically contacts that short-link service to find the original URL (it keeps following redirects only within the same site and does not contact other sites), which sees your IP address and that short link. You can turn this off in Settings at any time.",
+    "autoConfirmBody": "When you open the app, a link on the clipboard that has tracking codes is swapped for the clean link. For a short link, Untail first contacts the short-link service to find the original URL, just as if you opened it yourself, so that service sees the visit. You can turn this off in Settings at any time.",
     "autoConfirmOk": "Turn on",
     "autoConfirmCancel": "Cancel",
     "tile": "After copying a link, pull down the notification shade and tap the “Clean link” tile, then paste in the original app."
