@@ -33,7 +33,7 @@ export default function SettingsScreen() {
     try {
       setOutcome(await refreshRules());
     } catch {
-      setOutcome('failed');
+      setOutcome('failed-network');
     } finally {
       setUpdating(false);
     }

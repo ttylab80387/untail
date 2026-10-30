@@ -132,7 +132,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!refreshing.current) {
         refreshing.current = (async () => {
           try {
-            const result = await updateRules({ db, baseUrl: SITE_BASE_URL, fetchText, sha256, now: Date.now() }, { force });
+            const result = await updateRules(
+              { db, baseUrl: SITE_BASE_URL, fetchText, sha256, now: Date.now(), bundledVersion: BUNDLED.version },
+              { force },
+            );
             if (result === 'updated') {
               const next = await loadRules(db, BUNDLED);
               setRules(next);
