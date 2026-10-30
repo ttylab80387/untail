@@ -89,12 +89,17 @@ async function readCache(db: Db): Promise<Cached | null> {
   }
 }
 
-export async function loadRules(db: Db, bundled: RuleBundle): Promise<RuleBundle> {
+export type RulesSource = 'downloaded' | 'built-in';
+
+// A newer app ships newer rules; an older download must not hide them.
+export async function loadRules(db: Db, bundled: RuleBundle): Promise<{ rules: RuleBundle; source: RulesSource }> {
   try {
-    return (await readCache(db))?.bundle ?? bundled;
+    const cached = (await readCache(db))?.bundle;
+    if (cached && compareVersions(cached.version, bundled.version) > 0) return { rules: cached, source: 'downloaded' };
   } catch {
-    return bundled;
+    // Fall back to the built-in rules.
   }
+  return { rules: bundled, source: 'built-in' };
 }
 
 export async function updateRules(deps: UpdateDeps, opts: { force?: boolean } = {}): Promise<UpdateOutcome> {

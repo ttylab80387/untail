@@ -24,6 +24,7 @@ import type { CleanOutcome } from '../lib/cleaner';
 import { decideIos, decideText, initialWatchState, noteSelfWrite, recheckAfterRules, undoTarget } from '../lib/clipboardWatch';
 import type { Db } from '../lib/db';
 import { loadRules, updateRules } from '../lib/rulesStore';
+import type { RulesSource } from '../lib/rulesStore';
 import type { UpdateOutcome } from '../lib/rulesStore';
 import { rnFetch } from '../lib/rnFetch';
 import { DEFAULT_SETTINGS, clearLastTileResult, loadLastTileResult, loadSettings, saveLastTileResult, saveSettings } from '../lib/settings';
@@ -41,6 +42,7 @@ export interface AppState {
   ready: boolean;
   db: Db;
   rules: RuleBundle;
+  rulesSource: RulesSource;
   settings: Settings;
   locale: Locale;
   input: string;
@@ -88,6 +90,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const locale = resolveLocale(useLocales()[0]?.languageTag ?? 'en');
   const [ready, setReady] = useState(false);
   const [rules, setRules] = useState<RuleBundle>(BUNDLED);
+  const [rulesSource, setRulesSource] = useState<RulesSource>('built-in');
   const [settings, setSettingsState] = useState<Settings>(DEFAULT_SETTINGS);
   const [input, setInputState] = useState('');
   const [outcome, setOutcome] = useState<CleanOutcome | null>(null);
@@ -137,8 +140,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
               { force },
             );
             if (result === 'updated') {
-              const next = await loadRules(db, BUNDLED);
+              const loaded = await loadRules(db, BUNDLED);
+              const next = loaded.rules;
               setRules(next);
+              setRulesSource(loaded.source);
               latest.current = { ...latest.current, rules: next };
               // A clipboard link the old rules called clean may have tracking the new ones know about.
               const before = watch.current;
@@ -366,9 +371,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     void (async () => {
       let s = DEFAULT_SETTINGS;
       let r = BUNDLED;
+      let src: RulesSource = 'built-in';
       try {
         let last: LastTileResult | null;
-        [s, r, last] = await Promise.all([loadSettings(db), loadRules(db, BUNDLED), loadLastTileResult(db).catch(() => null)]);
+        let loaded: { rules: RuleBundle; source: RulesSource };
+        [s, loaded, last] = await Promise.all([loadSettings(db), loadRules(db, BUNDLED), loadLastTileResult(db).catch(() => null)]);
+        r = loaded.rules;
+        src = loaded.source;
         setLastTile(last);
       } catch {
         // Unreadable storage: keep defaults rather than blocking the app.
@@ -376,6 +385,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!alive) return;
       setSettingsState(s);
       setRules(r);
+      setRulesSource(src);
       // A tile request starting right now reads these before React re-renders.
       latest.current = { ...latest.current, settings: s, rules: r };
       setReady(true);
@@ -423,6 +433,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       ready,
       db,
       rules,
+      rulesSource,
       settings,
       locale,
       input,
@@ -468,7 +479,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       tileRequests,
       invalidateTile,
     }),
-    [ready, db, rules, settings, locale, input, outcome, pending, submit, refresh, copy, clipboardOffer, autoCleaned, cleanClipboardLink, tileNotice, lastTile, tileRequests, invalidateTile],
+    [ready, db, rules, rulesSource, settings, locale, input, outcome, pending, submit, refresh, copy, clipboardOffer, autoCleaned, cleanClipboardLink, tileNotice, lastTile, tileRequests, invalidateTile],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

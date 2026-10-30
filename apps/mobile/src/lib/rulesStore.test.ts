@@ -20,10 +20,11 @@ const bundle = (version: string): RuleBundle => ({
   knowledge: {},
 });
 const BUNDLED = bundle('2026.01.01.0000');
+const REMOTE = '2026.10.29.1010';
 
 function site(rules: unknown, meta?: Record<string, unknown>, opts: { rulesFails?: boolean } = {}) {
   const text = typeof rules === 'string' ? rules : JSON.stringify(rules);
-  const m = meta ?? { schemaVersion: 1, version: 'remote', sha256: shaSync(text) };
+  const m = meta ?? { schemaVersion: 1, version: REMOTE, sha256: shaSync(text) };
   const calls: string[] = [];
   const fetchText = async (url: string) => {
     calls.push(url);
@@ -51,16 +52,41 @@ const deps = (fetchText: UpdateDeps['fetchText'], now = NOW, over: Partial<Updat
 });
 
 describe('loadRules', () => {
+  const cache = (version: string) => {
+    const text = JSON.stringify(bundle(version));
+    return setKv(db, 'rules.cache', JSON.stringify({ sha256: shaSync(text), text }));
+  };
+
+  it('uses downloaded rules only when newer than built-in', async () => {
+    await cache(REMOTE);
+    expect(await loadRules(db, BUNDLED)).toEqual({ rules: bundle(REMOTE), source: 'downloaded' });
+  });
+
+  it('uses built-in rules when the cache has the same version', async () => {
+    await cache(BUNDLED.version);
+    expect(await loadRules(db, BUNDLED)).toEqual({ rules: BUNDLED, source: 'built-in' });
+  });
+
+  it('uses built-in rules when they are newer than the cache', async () => {
+    await cache('2025.12.31.2359');
+    expect(await loadRules(db, BUNDLED)).toEqual({ rules: BUNDLED, source: 'built-in' });
+  });
+
+  it('uses built-in rules when the cached version is malformed', async () => {
+    await cache('remote');
+    expect((await loadRules(db, BUNDLED)).source).toBe('built-in');
+  });
+
   it('uses the bundled rules when nothing is cached', async () => {
-    expect(await loadRules(db, BUNDLED)).toBe(BUNDLED);
+    expect((await loadRules(db, BUNDLED)).rules).toBe(BUNDLED);
   });
 
   it('falls back to bundled rules when the cache is corrupted or invalid', async () => {
     await setKv(db, 'rules.cache', '{broken');
-    expect(await loadRules(db, BUNDLED)).toBe(BUNDLED);
+    expect((await loadRules(db, BUNDLED)).rules).toBe(BUNDLED);
     const bad = JSON.stringify({ ...bundle('x'), expanders: {} });
     await setKv(db, 'rules.cache', JSON.stringify({ sha256: shaSync(bad), text: bad }));
-    expect(await loadRules(db, BUNDLED)).toBe(BUNDLED);
+    expect((await loadRules(db, BUNDLED)).rules).toBe(BUNDLED);
   });
 });
 
@@ -70,12 +96,12 @@ describe('updateRules', () => {
   });
 
   it('downloads, verifies and caches a new bundle', async () => {
-    expect(await updateRules(deps(site(bundle('remote')).fetchText))).toBe('updated');
-    expect((await loadRules(db, BUNDLED)).version).toBe('remote');
+    expect(await updateRules(deps(site(bundle(REMOTE)).fetchText))).toBe('updated');
+    expect((await loadRules(db, BUNDLED)).rules.version).toBe(REMOTE);
   });
 
   it('throttles completed checks for 24 hours unless forced', async () => {
-    const s = site(bundle('remote'));
+    const s = site(bundle(REMOTE));
     await updateRules(deps(s.fetchText));
     s.calls.length = 0;
     expect(await updateRules(deps(s.fetchText, NOW + CHECK_INTERVAL_MS - 1))).toBe('throttled');
@@ -84,7 +110,7 @@ describe('updateRules', () => {
   });
 
   it('skips the download when the cached bundle matches', async () => {
-    const s = site(bundle('remote'));
+    const s = site(bundle(REMOTE));
     await updateRules(deps(s.fetchText));
     s.calls.length = 0;
     expect(await updateRules(deps(s.fetchText), { force: true })).toBe('up-to-date');
@@ -92,37 +118,37 @@ describe('updateRules', () => {
   });
 
   it('repairs a corrupted cache even when its stored hash matches', async () => {
-    const s = site(bundle('remote'));
+    const s = site(bundle(REMOTE));
     await updateRules(deps(s.fetchText));
     await setKv(db, 'rules.cache', JSON.stringify({ sha256: s.sha256, text: '{broken' }));
     expect(await updateRules(deps(s.fetchText), { force: true })).toBe('updated');
-    expect((await loadRules(db, BUNDLED)).version).toBe('remote');
+    expect((await loadRules(db, BUNDLED)).rules.version).toBe(REMOTE);
   });
 
   it('rejects a bundle whose hash does not match', async () => {
-    const s = site(bundle('remote'), { schemaVersion: 1, version: 'remote', sha256: 'deadbeef' });
+    const s = site(bundle(REMOTE), { schemaVersion: 1, version: REMOTE, sha256: 'deadbeef' });
     expect(await updateRules(deps(s.fetchText))).toBe('failed-mismatch');
-    expect(await loadRules(db, BUNDLED)).toBe(BUNDLED);
+    expect((await loadRules(db, BUNDLED)).rules).toBe(BUNDLED);
   });
 
   it('rejects a structurally invalid bundle', async () => {
-    expect(await updateRules(deps(site({ ...bundle('remote'), expanders: {} }).fetchText))).toBe('failed-unsupported');
-    expect(await loadRules(db, BUNDLED)).toBe(BUNDLED);
+    expect(await updateRules(deps(site({ ...bundle(REMOTE), expanders: {} }).fetchText))).toBe('failed-unsupported');
+    expect((await loadRules(db, BUNDLED)).rules).toBe(BUNDLED);
   });
 
   it('rejects unsupported meta schema versions', async () => {
-    const s = site(bundle('remote'), { schemaVersion: 2, version: 'remote', sha256: 'x' });
+    const s = site(bundle(REMOTE), { schemaVersion: 2, version: REMOTE, sha256: 'x' });
     expect(await updateRules(deps(s.fetchText))).toBe('failed-unsupported');
   });
 
   it('does not throttle after a failed check', async () => {
-    expect(await updateRules(deps(site(bundle('remote'), undefined, { rulesFails: true }).fetchText))).toBe('failed-network');
+    expect(await updateRules(deps(site(bundle(REMOTE), undefined, { rulesFails: true }).fetchText))).toBe('failed-network');
     expect(Number(await getKv(db, 'rules.checkedAt'))).toBe(0);
-    expect(await updateRules(deps(site(bundle('remote')).fetchText))).toBe('updated');
+    expect(await updateRules(deps(site(bundle(REMOTE)).fetchText))).toBe('updated');
   });
 
   it('throttles after a definite failure so a broken site is not polled on every launch', async () => {
-    const s = site(bundle('remote'), { schemaVersion: 2, version: 'remote', sha256: 'x' });
+    const s = site(bundle(REMOTE), { schemaVersion: 2, version: REMOTE, sha256: 'x' });
     expect(await updateRules(deps(s.fetchText))).toBe('failed-unsupported');
     s.calls.length = 0;
     expect(await updateRules(deps(s.fetchText, NOW + 1))).toBe('throttled');
@@ -136,8 +162,8 @@ describe('updateRules', () => {
         throw new Error('disk I/O error');
       },
     };
-    expect(await updateRules(deps(site(bundle('remote')).fetchText, NOW, { db: broken }))).toBe('failed-network');
-    expect(await loadRules(broken, BUNDLED)).toBe(BUNDLED);
+    expect(await updateRules(deps(site(bundle(REMOTE)).fetchText, NOW, { db: broken }))).toBe('failed-network');
+    expect((await loadRules(broken, BUNDLED)).rules).toBe(BUNDLED);
   });
 });
 
@@ -152,12 +178,12 @@ const fixedMeta = (text: string) => async (url: string) => {
 describe('updateRules failure reasons', () => {
   it('classifies a thrown fetch as failed-network and does not record the check', async () => {
     expect(await updateRules(deps(offline))).toBe('failed-network');
-    const s = site(bundle('remote'));
+    const s = site(bundle(REMOTE));
     expect(await updateRules(deps(s.fetchText, NOW + 1))).toBe('updated');
   });
 
   it('a network failure after an earlier success today still retries on the next open', async () => {
-    const s = site(bundle('remote'));
+    const s = site(bundle(REMOTE));
     expect(await updateRules(deps(s.fetchText))).toBe('updated');
     expect(await updateRules(deps(offline, NOW + 3600000), { force: true })).toBe('failed-network');
     s.calls.length = 0;
@@ -177,7 +203,7 @@ describe('updateRules failure reasons', () => {
   });
 
   it('classifies a hash mismatch as failed-mismatch and retries after 15 minutes', async () => {
-    const s = site(bundle('remote'), { schemaVersion: 1, version: 'remote', sha256: 'deadbeef' });
+    const s = site(bundle(REMOTE), { schemaVersion: 1, version: REMOTE, sha256: 'deadbeef' });
     expect(await updateRules(deps(s.fetchText))).toBe('failed-mismatch');
     s.calls.length = 0;
     expect(await updateRules(deps(s.fetchText, NOW + MISMATCH_RETRY_MS - 1))).toBe('throttled');
@@ -187,9 +213,9 @@ describe('updateRules failure reasons', () => {
   });
 
   it('classifies schemaVersion 2 and an invalid bundle as failed-unsupported', async () => {
-    const v2 = site(bundle('remote'), { schemaVersion: 2, version: 'remote', sha256: 'x' });
+    const v2 = site(bundle(REMOTE), { schemaVersion: 2, version: REMOTE, sha256: 'x' });
     expect(await updateRules(deps(v2.fetchText))).toBe('failed-unsupported');
-    const bad = site({ ...bundle('remote'), expanders: {} });
+    const bad = site({ ...bundle(REMOTE), expanders: {} });
     expect(await updateRules(deps(bad.fetchText), { force: true })).toBe('failed-unsupported');
   });
 
@@ -206,7 +232,7 @@ describe('updateRules failure reasons', () => {
 
 describe('update status', () => {
   it('records lastSuccessAt and clears the failure on up-to-date and updated', async () => {
-    const s = site(bundle('remote'));
+    const s = site(bundle(REMOTE));
     expect(await updateRules(deps(offline))).toBe('failed-network');
     expect(await updateRules(deps(s.fetchText, NOW + 5))).toBe('updated');
     expect(await readStatus(db)).toEqual({ lastSuccessAt: NOW + 5, failure: null });
@@ -216,13 +242,13 @@ describe('update status', () => {
   });
 
   it('a failure keeps the earlier lastSuccessAt', async () => {
-    await updateRules(deps(site(bundle('remote')).fetchText));
+    await updateRules(deps(site(bundle(REMOTE)).fetchText));
     await updateRules(deps(offline, NOW + 9), { force: true });
     expect(await readStatus(db)).toEqual({ lastSuccessAt: NOW, failure: { reason: 'network', at: NOW + 9, count: 1 } });
   });
 
   it('counts the same reason in a row and restarts the count when the reason changes', async () => {
-    const mismatch = site(bundle('remote'), { schemaVersion: 1, version: 'remote', sha256: 'deadbeef' });
+    const mismatch = site(bundle(REMOTE), { schemaVersion: 1, version: REMOTE, sha256: 'deadbeef' });
     await updateRules(deps(offline, NOW), { force: true });
     await updateRules(deps(offline, NOW + 1), { force: true });
     expect((await readStatus(db)).failure).toEqual({ reason: 'network', at: NOW + 1, count: 2 });
@@ -231,7 +257,7 @@ describe('update status', () => {
   });
 
   it('throttled leaves the status unchanged', async () => {
-    await updateRules(deps(site(bundle('remote')).fetchText));
+    await updateRules(deps(site(bundle(REMOTE)).fetchText));
     const before = await readStatus(db);
     expect(await updateRules(deps(offline, NOW + 1))).toBe('throttled');
     expect(await readStatus(db)).toEqual(before);
