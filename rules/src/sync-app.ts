@@ -5,7 +5,7 @@
 import { writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { lastPagesDeploy, settleWaitMs } from './pages';
+import { cdnWaitMs } from './pages';
 import { fetchPublished } from './published';
 
 const here = (p: string) => fileURLToPath(new URL(p, import.meta.url));
@@ -15,10 +15,10 @@ export async function syncApp(
   baseUrl: string,
   outFile: string,
   fetchText: (url: string) => Promise<string>,
-  opts: { lastDeploy?: number | null; now?: number } = {},
+  opts: { waitMs?: number } = {},
 ): Promise<string> {
   // Right after a deploy the CDN may still hand out the previous release, which would pass every check.
-  const wait = settleWaitMs(opts.lastDeploy ?? null, opts.now ?? Date.now());
+  const wait = opts.waitMs ?? 0;
   if (wait > 0) {
     throw new Error(`Pages deployed recently and the CDN may still serve the previous release; run again after ${new Date(Date.now() + wait).toLocaleTimeString()}`);
   }
@@ -40,7 +40,7 @@ async function main() {
       out: { type: 'string', default: here('../../apps/mobile/assets/rules.json') },
     },
   });
-  const version = await syncApp(values.base!, values.out!, fetchText, { lastDeploy: await lastPagesDeploy(fetchText) });
+  const version = await syncApp(values.base!, values.out!, fetchText, { waitMs: await cdnWaitMs(fetchText, Date.now) });
   console.log(`bundled published rules ${version} into ${values.out}`);
 }
 

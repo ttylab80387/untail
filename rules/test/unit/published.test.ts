@@ -76,9 +76,9 @@ describe('syncApp', () => {
     await writeFile(out, 'old');
     const { rulesText, metaText } = published(bundle('2026.10.29.1010'));
     const fetchText = site({ 'rules.json': rulesText, 'rules.meta.json': metaText });
-    await expect(syncApp(BASE, out, fetchText, { lastDeploy: 1_000_000, now: 1_000_000 + 60_000 })).rejects.toThrow(/CDN/);
+    await expect(syncApp(BASE, out, fetchText, { waitMs: 60_000 })).rejects.toThrow(/CDN/);
     expect(await readFile(out, 'utf8')).toBe('old');
-    expect(await syncApp(BASE, out, fetchText, { lastDeploy: 1_000_000, now: 1_000_000 + 15 * 60_000 })).toBe('2026.10.29.1010');
+    expect(await syncApp(BASE, out, fetchText, { waitMs: 0 })).toBe('2026.10.29.1010');
   });
 
   it('writes the published text byte-for-byte', async () => {
