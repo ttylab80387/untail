@@ -22,7 +22,7 @@ pnpm clean-url "<url>"  # clean one link using rules/dist/rules.json
 ## Mobile app
 
 ```bash
-pnpm build:rules && pnpm mobile sync-rules   # refresh the bundled rule snapshot
+pnpm mobile sync-rules                       # bundle the published rules release (see below)
 pnpm mobile test                             # logic tests (Vitest, node:sqlite)
 pnpm mobile typecheck
 pnpm mobile ios                              # build and run on the iOS simulator
@@ -30,6 +30,7 @@ pnpm mobile android                          # build and run on the Android emul
 ```
 
 Rules and the privacy policy are published to https://ttylab80387.github.io/untail/ (`SITE_BASE_URL` in `apps/mobile/src/config.ts`).
+The app's built-in rules are a byte copy of a published release, so it can tell whether a downloaded copy is newer. Release order: push rule changes to main, wait for the Pages deploy, then `pnpm mobile sync-rules` (it refuses to run until 15 minutes after the deploy, while the CDN may still serve the previous release), commit `apps/mobile/assets/rules.json`, and build.
 Manual checks before a release: `docs/testing/device-checklist.md`.
 
 ## Rule data
