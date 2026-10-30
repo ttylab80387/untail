@@ -1,7 +1,11 @@
+import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
 import type { RuleBundle } from '@linkclean/core';
 import { sha256 } from '../../src/bundle';
 import { fetchPublished, sameContent } from '../../src/published';
+import { syncApp } from '../../src/sync-app';
 
 const BASE = 'https://example.github.io/untail/';
 
@@ -62,5 +66,25 @@ describe('sameContent', () => {
 
   it('detects a changed rule', () => {
     expect(sameContent(bundle('a'), bundle('a', ['utm_source', 'fbclid']))).toBe(false);
+  });
+});
+
+describe('syncApp', () => {
+  it('writes the published text byte-for-byte', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'sync-app-'));
+    const out = join(dir, 'rules.json');
+    const { rulesText, metaText } = published(bundle('2026.10.29.1010'));
+    expect(await syncApp(BASE, out, site({ 'rules.json': rulesText, 'rules.meta.json': metaText }))).toBe('2026.10.29.1010');
+    expect(await readFile(out, 'utf8')).toBe(rulesText);
+  });
+
+  it('leaves the existing file untouched when the hash mismatches', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'sync-app-'));
+    const out = join(dir, 'rules.json');
+    await writeFile(out, 'old');
+    const { rulesText } = published(bundle('v'));
+    const metaText = JSON.stringify({ schemaVersion: 1, version: 'v', sha256: sha256('other') });
+    await expect(syncApp(BASE, out, site({ 'rules.json': rulesText, 'rules.meta.json': metaText }))).rejects.toThrow();
+    expect(await readFile(out, 'utf8')).toBe('old');
   });
 });

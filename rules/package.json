@@ -9,6 +9,7 @@
     "test:regression": "vitest run test/regression",
     "test:live": "tsx src/live.ts",
     "reuse": "tsx src/reuse.ts",
+    "sync-app": "tsx src/sync-app.ts",
     "clean-url": "tsx src/cli.ts",
     "typecheck": "tsc --noEmit -p ."
   },

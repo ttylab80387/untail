@@ -9,7 +9,7 @@
     "android": "expo run:android",
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit -p .",
-    "sync-rules": "node scripts/sync-rules.mjs",
+    "sync-rules": "pnpm --filter @linkclean/rules sync-app",
     "bundle-check": "expo export --platform ios --platform android --output-dir .expo-export-check"
   },
   "dependencies": {
