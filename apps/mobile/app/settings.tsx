@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { settingsLines, shouldOfferReport } from '../src/lib/rulesStore';
-import type { UpdateOutcome } from '../src/lib/rulesStore';
+import type { ManualResult } from '../src/lib/rulesStore';
 import type { Settings } from '../src/lib/settings';
 import { useApp } from '../src/state/AppContext';
 import { useColors } from '../src/theme';
@@ -20,7 +20,7 @@ export default function SettingsScreen() {
   const { settings, setSettings, rules, rulesSource, rulesStatus, refreshRules, locale } = useApp();
   const reportUpdate = useRulesReport();
   const [updating, setUpdating] = useState(false);
-  const [outcome, setOutcome] = useState<UpdateOutcome | null>(null);
+  const [outcome, setOutcome] = useState<ManualResult | null>(null);
 
   const toggle = (key: keyof Settings) => (value: boolean) => {
     // Automatic cleaning only runs when clipboard detection is on.
@@ -34,7 +34,9 @@ export default function SettingsScreen() {
   const update = async () => {
     setUpdating(true);
     try {
-      setOutcome(await refreshRules());
+      setOutcome({ outcome: await refreshRules(), at: Date.now() });
+    } catch {
+      setOutcome({ outcome: 'failed-network', at: Date.now() });
     } finally {
       setUpdating(false);
     }

@@ -305,12 +305,18 @@ describe('settingsLines', () => {
   const clean: UpdateStatus = { lastSuccessAt: 3, failure: null };
 
   it('hides a stale manual failure once the stored status has recovered', () => {
-    expect(settingsLines(clean, 'failed-network')).toEqual({ failure: null, manualKey: null });
+    expect(settingsLines(clean, { outcome: 'failed-network', at: 2 })).toEqual({ failure: null, manualKey: null });
   });
-  it('shows only the stored failure when a manual success is older', () => {
-    expect(settingsLines(failed, 'up-to-date')).toEqual({ failure: 'network', manualKey: null });
+  it('shows a manual failure that the status could not record', () => {
+    expect(settingsLines(clean, { outcome: 'failed-network', at: 5 })).toEqual({ failure: null, manualKey: 'failed-network' });
+    expect(settingsLines({ lastSuccessAt: null, failure: null }, { outcome: 'failed-network', at: 5 }).manualKey).toBe('failed-network');
+  });
+  it('shows only the stored failure when a manual result is older or the same failure', () => {
+    expect(settingsLines(failed, { outcome: 'up-to-date', at: 1 })).toEqual({ failure: 'network', manualKey: null });
+    expect(settingsLines(failed, { outcome: 'failed-network', at: 2 })).toEqual({ failure: 'network', manualKey: null });
   });
   it('shows a manual success when nothing failed since', () => {
-    expect(settingsLines(clean, 'updated')).toEqual({ failure: null, manualKey: 'updated' });
+    expect(settingsLines(clean, { outcome: 'updated', at: 3 })).toEqual({ failure: null, manualKey: 'updated' });
   });
 });
+

@@ -175,12 +175,20 @@ async function check(deps: UpdateDeps): Promise<UpdateOutcome> {
   return done('updated');
 }
 
-// Settings shows failures only from the stored status, so a manual result never contradicts a later automatic check.
+export interface ManualResult {
+  outcome: UpdateOutcome;
+  at: number;
+}
+
+// Failures come from the stored status, so a manual result never contradicts a later automatic check.
+// A manual failure still shows when the status could not record it and nothing succeeded since.
 export function settingsLines(
   status: UpdateStatus,
-  manual: UpdateOutcome | null,
+  manual: ManualResult | null,
 ): { failure: FailReason | null; manualKey: UpdateOutcome | null } {
   const failure = status.failure?.reason ?? null;
-  const manualKey = manual && !manual.startsWith('failed-') && !failure ? manual : null;
-  return { failure, manualKey };
+  if (!manual || failure) return { failure, manualKey: null };
+  if (!manual.outcome.startsWith('failed-')) return { failure, manualKey: manual.outcome };
+  const recoveredSince = status.lastSuccessAt !== null && status.lastSuccessAt >= manual.at;
+  return { failure, manualKey: recoveredSince ? null : manual.outcome };
 }
