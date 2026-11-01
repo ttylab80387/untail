@@ -94,8 +94,9 @@ async function resolve(
     try {
       for (let hop = 0; hop < MAX_HOPS; hop++) {
         let res = await send('HEAD');
-        // Some services reject HEAD outright (405) or answer it with 404; GET still redirects.
-        if (res.status === 405 || res.status === 404) res = await send('GET');
+        // Some services refuse HEAD (405, 404, or 403 on momo.dm) but still redirect GET. Other errors,
+        // such as 401 or 429, say nothing about HEAD, so they are not retried.
+        if (res.status === 403 || res.status === 404 || res.status === 405) res = await send('GET');
         if (!(res.status >= 300 && res.status < 400 && res.location)) {
           if (res.status >= 400) throw new Stopped('network', [...trail]);
           return trail;

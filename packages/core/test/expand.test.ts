@@ -203,6 +203,38 @@ describe('expandUrl', () => {
     expect(calls.map((c) => c.method)).toEqual(['HEAD', 'GET']);
   });
 
+  it('retries with GET when HEAD is refused with 403 (momo.dm answers HEAD this way)', async () => {
+    const calls: Call[] = [];
+    const r = await expandUrl(
+      'https://bit.ly/x',
+      expanders,
+      opts(fakeFetch({ 'HEAD https://bit.ly/x': { url: 'https://bit.ly/x', status: 403 }, 'GET https://bit.ly/x': { url: 'https://bit.ly/x', status: 301, location: 'https://ex.com/a' } }, calls)),
+    );
+    expect(r.url).toBe('https://ex.com/a');
+    expect(calls.map((c) => c.method)).toEqual(['HEAD', 'GET']);
+  });
+
+  it('reports network when GET is refused too', async () => {
+    const calls: Call[] = [];
+    const r = await expandUrl('https://bit.ly/x', expanders, opts(fakeFetch({ 'https://bit.ly/x': { url: 'https://bit.ly/x', status: 403 } }, calls)));
+    expect(r.reason).toBe('network');
+    expect(calls.map((c) => c.method)).toEqual(['HEAD', 'GET']);
+  });
+
+  it.each([401, 410, 429])('does not retry with GET when HEAD answers %i', async (status) => {
+    const calls: Call[] = [];
+    const r = await expandUrl('https://bit.ly/x', expanders, opts(fakeFetch({ 'https://bit.ly/x': { url: 'https://bit.ly/x', status } }, calls)));
+    expect(r.reason).toBe('network');
+    expect(calls.map((c) => c.method)).toEqual(['HEAD']);
+  });
+
+  it('does not retry with GET when HEAD fails with a server error', async () => {
+    const calls: Call[] = [];
+    const r = await expandUrl('https://bit.ly/x', expanders, opts(fakeFetch({ 'https://bit.ly/x': { url: 'https://bit.ly/x', status: 503 } }, calls)));
+    expect(r.reason).toBe('network');
+    expect(calls.map((c) => c.method)).toEqual(['HEAD']);
+  });
+
   it('reads a cross-site destination from Location without requesting it', async () => {
     const calls: Call[] = [];
     const fetch = fakeFetch(
