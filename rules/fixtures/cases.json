@@ -765,5 +765,134 @@
       "status": "clean",
       "removedKeys": []
     }
+  },
+  {
+    "name": "shopee regional share short link stops at the cross-site redirect",
+    "input": "https://tw.shp.ee/TEST01shp",
+    "responses": {
+      "https://tw.shp.ee/TEST01shp": "https://shopee.tw/product/196606866/46953948826?d_id=406cb&uls_trackid=TRACK01&utm_content=TOKEN01"
+    },
+    "expected": {
+      "cleanUrl": "https://shopee.tw/product/196606866/46953948826",
+      "status": "clean",
+      "removedKeys": [
+        "share-id",
+        "d_id",
+        "uls_trackid",
+        "utm_content"
+      ]
+    }
+  },
+  {
+    "name": "shopee share short link without a region",
+    "input": "https://shp.ee/TEST02shp",
+    "responses": {
+      "https://shp.ee/TEST02shp": "https://shopee.tw/product/1/2?uls_trackid=TRACK02"
+    },
+    "expected": {
+      "cleanUrl": "https://shopee.tw/product/1/2",
+      "status": "clean",
+      "removedKeys": [
+        "share-id",
+        "uls_trackid"
+      ]
+    }
+  },
+  {
+    "name": "shopee affiliate short link stops at the first redirect",
+    "input": "https://s.shopee.tw/TEST03aff",
+    "responses": {
+      "https://s.shopee.tw/TEST03aff": "https://shopee.tw/opaanlp/1827219908/46815724842?__mobile__=1&credential_token=CRED03&exp_group=rollout&gads_t_sig=SIG03&lang=zh-Hant&mmp_pid=an_16375460005&uls_trackid=TRACK03&utm_campaign=id_CAMP03&utm_content=----&utm_medium=affiliates&utm_source=an_16375460005&utm_term=TERM03"
+    },
+    "expected": {
+      "cleanUrl": "https://shopee.tw/opaanlp/1827219908/46815724842?__mobile__=1&lang=zh-Hant",
+      "status": "clean",
+      "removedKeys": [
+        "share-id",
+        "credential_token",
+        "exp_group",
+        "gads_t_sig",
+        "mmp_pid",
+        "uls_trackid",
+        "utm_campaign",
+        "utm_content",
+        "utm_medium",
+        "utm_source",
+        "utm_term"
+      ]
+    }
+  },
+  {
+    "name": "shopee share short link that hops within shp.ee first",
+    "input": "https://shp.ee/TEST04shp",
+    "responses": {
+      "https://shp.ee/TEST04shp": "https://tw.shp.ee/TEST04shp",
+      "https://tw.shp.ee/TEST04shp": "https://shopee.tw/product/1/2?uls_trackid=TRACK04"
+    },
+    "expected": {
+      "cleanUrl": "https://shopee.tw/product/1/2",
+      "status": "clean",
+      "removedKeys": [
+        "share-id",
+        "uls_trackid"
+      ]
+    }
+  },
+  {
+    "name": "shopee an_redir endpoint is not a share id",
+    "input": "https://s.shopee.tw/an_redir?origin_link=https%3A%2F%2Fshopee.tw%2Fproduct%2F1%2F2",
+    "responses": {
+      "https://s.shopee.tw/an_redir?origin_link=https%3A%2F%2Fshopee.tw%2Fproduct%2F1%2F2": "https://shopee.tw/product/1/2?uls_trackid=TRACK05"
+    },
+    "expected": {
+      "cleanUrl": "https://shopee.tw/product/1/2",
+      "status": "clean",
+      "removedKeys": [
+        "uls_trackid"
+      ]
+    }
+  },
+  {
+    "name": "shopee lookalike hosts keep their parameters",
+    "input": "https://shopee.tw.evil.example/product/1/2?d_id=1&credential_token=2&sp_atk=3",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://shopee.tw.evil.example/product/1/2?d_id=1&credential_token=2&sp_atk=3",
+      "status": "clean",
+      "removedKeys": []
+    }
+  },
+  {
+    "name": "shopee-prefixed domains keep their parameters",
+    "input": "https://shopee.company/product/1/2?sp_atk=3",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://shopee.company/product/1/2?sp_atk=3",
+      "status": "clean",
+      "removedKeys": []
+    }
+  },
+  {
+    "name": "shopee pages other than product pages keep the Shopee link parameters",
+    "input": "https://shopee.tw/user/account?credential_token=1&d_id=2",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://shopee.tw/user/account?credential_token=1&d_id=2",
+      "status": "clean",
+      "removedKeys": []
+    }
+  },
+  {
+    "name": "shopee product pages in other regions are cleaned too",
+    "input": "https://shopee.sg/product/1/2?sp_atk=1&uls_trackid=2",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://shopee.sg/product/1/2",
+      "status": "clean",
+      "removedKeys": [
+        "sp_atk",
+        "uls_trackid"
+      ]
+    }
   }
 ]

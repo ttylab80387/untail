@@ -1385,5 +1385,85 @@
       "en": "In-site position marker recording which page or section you came from, such as the recommendations list.",
       "ja": "サイト内の位置マーカー。おすすめ一覧など、どのページや枠から来たかを記録します。"
     }
+  },
+  "shp.ee:share-id": {
+    "owner": "Shopee",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "蝦皮短網址裡的代碼，綁定這次分享或這條分潤連結，可能讓蝦皮得知是誰分享的。已展開成原始網址並移除。",
+      "en": "Code in the Shopee short link, tied to this share or affiliate link, that may let Shopee know who shared it. Expanded to the original URL and removed.",
+      "ja": "Shopee 短縮リンクのコード。この共有やアフィリエイトリンクに紐付き、誰が共有したかを Shopee が把握できる可能性があります。元の URL に展開して除去しました。"
+    }
+  },
+  "shopee.tw:share-id": {
+    "owner": "Shopee",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "蝦皮短網址裡的代碼，綁定這次分享或這條分潤連結，可能讓蝦皮得知是誰分享的。已展開成原始網址並移除。",
+      "en": "Code in the Shopee short link, tied to this share or affiliate link, that may let Shopee know who shared it. Expanded to the original URL and removed.",
+      "ja": "Shopee 短縮リンクのコード。この共有やアフィリエイトリンクに紐付き、誰が共有したかを Shopee が把握できる可能性があります。元の URL に展開して除去しました。"
+    }
+  },
+  "shopee.tw:mmp_pid": {
+    "owner": "Shopee",
+    "category": "unknown",
+    "risk": "medium",
+    "desc": {
+      "zh-TW": "蝦皮分潤連結附帶的參數，用途未公開。在分潤連結上，它的值曾與 utm_source 裡的分潤者 ID 相同。",
+      "en": "Parameter on Shopee affiliate links. Its purpose is not public; on affiliate links its value has matched the affiliate ID in utm_source.",
+      "ja": "Shopee のアフィリエイトリンクに付くパラメータ。用途は公開されていません。アフィリエイトリンクでは utm_source のアフィリエイター ID と同じ値だったことがあります。"
+    }
+  },
+  "shopee.tw:d_id": {
+    "owner": "Shopee",
+    "category": "unknown",
+    "risk": "medium",
+    "desc": {
+      "zh-TW": "蝦皮分享連結附帶的代碼，用途未公開，可能與這次分享有關。",
+      "en": "Code added to Shopee share links. Its purpose is not public and it may be tied to this share.",
+      "ja": "Shopee の共有リンクに付くコード。用途は公開されておらず、この共有に関連している可能性があります。"
+    }
+  },
+  "shopee.tw:uls_trackid": {
+    "owner": "Shopee",
+    "category": "unknown",
+    "risk": "medium",
+    "desc": {
+      "zh-TW": "蝦皮短網址轉址時加上的參數，名稱看起來是追蹤 ID，用途未公開。",
+      "en": "Parameter added when a Shopee short link redirects. Its name suggests a tracking ID; its purpose is not public.",
+      "ja": "Shopee の短縮リンクがリダイレクトするときに付くパラメータ。名前からは追跡 ID とみられますが、用途は公開されていません。"
+    }
+  },
+  "shopee.tw:credential_token": {
+    "owner": "Shopee",
+    "category": "unknown",
+    "risk": "medium",
+    "desc": {
+      "zh-TW": "蝦皮分潤連結轉址時附帶的代碼，名稱看起來是憑證，用途未公開。",
+      "en": "Code added when a Shopee affiliate link redirects. Its name suggests a credential; its purpose is not public.",
+      "ja": "Shopee のアフィリエイトリンクがリダイレクトするときに付くコード。名前からは認証情報とみられますが、用途は公開されていません。"
+    }
+  },
+  "shopee.tw:gads_t_sig": {
+    "owner": "Shopee",
+    "category": "unknown",
+    "risk": "medium",
+    "desc": {
+      "zh-TW": "蝦皮分潤連結附帶的一段加密資料，內容無法讀取，名稱看起來與廣告追蹤有關。",
+      "en": "Encrypted data on Shopee affiliate links. Its content cannot be read, and its name suggests ad tracking.",
+      "ja": "Shopee のアフィリエイトリンクに付く暗号化されたデータ。内容は読み取れず、名前からは広告の追跡に関係するとみられます。"
+    }
+  },
+  "shopee.tw:exp_group": {
+    "owner": "Shopee",
+    "category": "unknown",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "蝦皮分潤連結附帶的參數，名稱看起來是實驗分組，用途未公開。",
+      "en": "Parameter on Shopee affiliate links. Its name suggests an experiment group; its purpose is not public.",
+      "ja": "Shopee のアフィリエイトリンクに付くパラメータ。名前からは実験グループとみられますが、用途は公開されていません。"
+    }
   }
 }

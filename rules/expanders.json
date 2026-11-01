@@ -39,7 +39,16 @@
     "match": "^https?://lin\\.ee/",
     "firstHop": true
   },
+  "shopee share": {
+    "match": "^https?://(?:tw\\.)?shp\\.ee/",
+    "shareId": "^/([^/?#]+)"
+  },
+  "shopee affiliate": {
+    "match": "^https?://s\\.shopee\\.tw/",
+    "firstHop": true,
+    "shareId": "^/(?!an_redir(?:[/?#]|$))([^/?#]+)"
+  },
   "generic": {
-    "match": "^https?://(bit\\.ly|t\\.co|lnkd\\.in|amzn\\.to|shp\\.ee|fb\\.me)/"
+    "match": "^https?://(bit\\.ly|t\\.co|lnkd\\.in|amzn\\.to|fb\\.me)/"
   }
 }

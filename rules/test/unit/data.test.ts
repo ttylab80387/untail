@@ -36,7 +36,7 @@ describe('checked-in rule data', () => {
   });
 
   it('explains the share code of every expanded share-link host', () => {
-    const hosts = ['www.facebook.com', 'www.threads.com', 'vt.tiktok.com', 'b23.tv', 'bili2233.cn', 'xhslink.com', 'www.reddit.com'];
+    const hosts = ['www.facebook.com', 'www.threads.com', 'vt.tiktok.com', 'b23.tv', 'bili2233.cn', 'xhslink.com', 'www.reddit.com', 'tw.shp.ee', 'shp.ee', 's.shopee.tw'];
     for (const host of hosts) expect(explain('share-id', host).category, host).toBe('sharer_id');
   });
 
@@ -123,6 +123,16 @@ describe('checked-in rule data', () => {
         expect(p.desc).toBeDefined();
       }
     }
+  });
+
+  it('explains Shopee link params as undocumented, and keeps utm_source a campaign tag', () => {
+    for (const key of ['d_id', 'uls_trackid', 'mmp_pid', 'credential_token', 'gads_t_sig', 'exp_group']) {
+      const p = explain(key, 'shopee.tw');
+      expect([key, p.category, p.owner]).toEqual([key, 'unknown', 'Shopee']);
+      expect(p.desc).toBeDefined();
+    }
+    // Only affiliate links carry an affiliate ID here; other links use ordinary sources like fb.
+    expect(explain('utm_source', 'shopee.tw').category).toBe('campaign');
   });
 
   it('explains the Trip.com hotel trackers as Trip.com session data', () => {

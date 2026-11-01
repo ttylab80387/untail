@@ -105,6 +105,20 @@
         "isFirstEnterDetailPage",
         "subStamp"
       ]
+    },
+    "shopee": {
+      "urlPattern": "^https?:\\/\\/(?:[a-z0-9-]+\\.)*?shopee\\.(?:com|tw|sg|ph|vn|co\\.th|co\\.id|com\\.my|com\\.br)(?:[/:?#]|$)"
+    },
+    "shopee product links": {
+      "urlPattern": "^https?:\\/\\/(?:www\\.)?shopee\\.(?:com|tw|sg|ph|vn|co\\.th|co\\.id|com\\.my|com\\.br)\\/(?:product|opaanlp)\\/",
+      "rules": [
+        "d_id",
+        "uls_trackid",
+        "mmp_pid",
+        "credential_token",
+        "gads_t_sig",
+        "exp_group"
+      ]
     }
   }
 }
