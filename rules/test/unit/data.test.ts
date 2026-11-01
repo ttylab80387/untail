@@ -36,7 +36,7 @@ describe('checked-in rule data', () => {
   });
 
   it('explains the share code of every expanded share-link host', () => {
-    const hosts = ['www.facebook.com', 'www.threads.com', 'vt.tiktok.com', 'b23.tv', 'bili2233.cn', 'xhslink.com', 'www.reddit.com', 'tw.shp.ee', 'shp.ee', 's.shopee.tw'];
+    const hosts = ['www.facebook.com', 'www.threads.com', 'vt.tiktok.com', 'b23.tv', 'bili2233.cn', 'xhslink.com', 'www.reddit.com', 'tw.shp.ee', 'shp.ee', 's.shopee.tw', 'momo.dm', 's.momoshop.com.tw'];
     for (const host of hosts) expect(explain('share-id', host).category, host).toBe('sharer_id');
   });
 
@@ -133,6 +133,22 @@ describe('checked-in rule data', () => {
     }
     // Only affiliate links carry an affiliate ID here; other links use ordinary sources like fb.
     expect(explain('utm_source', 'shopee.tw').category).toBe('campaign');
+  });
+
+  it('explains momo affiliate params without showing the encrypted payload as a referral code', () => {
+    const cases: [string, string][] = [
+      ['affi_param', 'sharer_id'],
+      ['affi_type', 'campaign'],
+      ['osm', 'campaign'],
+      ['pid', 'unknown'],
+      ['action_id', 'sharer_id'],
+      ['wh_uuid', 'session'],
+    ];
+    for (const [key, category] of cases) {
+      const p = explain(key, 'www.momoshop.com.tw');
+      expect([key, p.category, p.owner]).toEqual([key, category, 'momo']);
+      expect(p.desc).toBeDefined();
+    }
   });
 
   it('explains the Trip.com hotel trackers as Trip.com session data', () => {

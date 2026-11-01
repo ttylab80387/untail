@@ -1465,5 +1465,85 @@
       "en": "Parameter on Shopee affiliate links. Its name suggests an experiment group; its purpose is not public.",
       "ja": "Shopee のアフィリエイトリンクに付くパラメータ。名前からは実験グループとみられますが、用途は公開されていません。"
     }
+  },
+  "momo.dm:share-id": {
+    "owner": "momo",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "momo 分享短網址裡的代碼，綁定這次分享，可能讓 momo 得知是誰分享的，或是哪位分潤者的連結。已展開成原始網址並移除。",
+      "en": "Code in the momo share short link, tied to this share, that may let momo know who shared it or which affiliate made the link. Expanded to the original URL and removed.",
+      "ja": "momo の共有短縮リンクのコード。この共有に紐付き、誰が共有したか、どのアフィリエイターのリンクかを momo が把握できる可能性があります。元の URL に展開して除去しました。"
+    }
+  },
+  "momoshop.com.tw:affi_param": {
+    "owner": "momo",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "momo 分潤連結的加密資料，內容無法讀取。名稱和連結來源都顯示這是分潤用的參數，可能讓 momo 得知是哪位分潤者分享的。",
+      "en": "Encrypted data on momo affiliate links. Its content cannot be read, but its name and the link it comes from show it is for affiliate tracking, and it may let momo know which affiliate shared it.",
+      "ja": "momo のアフィリエイトリンクに付く暗号化されたデータ。内容は読み取れませんが、名前とリンクの出どころからアフィリエイト用とみられ、どのアフィリエイターが共有したかを momo が把握できる可能性があります。"
+    }
+  },
+  "momoshop.com.tw:affi_type": {
+    "owner": "momo",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "momo 分潤連結的類型標記。",
+      "en": "Type marker on momo affiliate links.",
+      "ja": "momo のアフィリエイトリンクの種類を示すマーカー。"
+    }
+  },
+  "momoshop.com.tw:osm": {
+    "owner": "momo",
+    "category": "campaign",
+    "risk": "low",
+    "desc": {
+      "zh-TW": "momo 的流量來源標記，分潤連結會標成 league（聯盟行銷）。",
+      "en": "momo traffic source marker; affiliate links are marked league (affiliate marketing).",
+      "ja": "momo の流入元マーカー。アフィリエイトリンクでは league（アフィリエイト）と記録されます。"
+    }
+  },
+  "momoshop.com.tw:pid": {
+    "owner": "momo",
+    "category": "unknown",
+    "risk": "medium",
+    "desc": {
+      "zh-TW": "momo 分潤連結附帶的數字代碼，用途未公開。",
+      "en": "Numeric code on momo affiliate links. Its purpose is not public.",
+      "ja": "momo のアフィリエイトリンクに付く数字のコード。用途は公開されていません。"
+    }
+  },
+  "momoshop.com.tw:action_id": {
+    "owner": "momo",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "momo 分潤連結的點擊紀錄 ID，裡面包含分潤短網址的代碼，可追溯到這條分享。",
+      "en": "Click record ID on momo affiliate links. It contains the affiliate short-link code, so it can be traced back to this share.",
+      "ja": "momo のアフィリエイトリンクのクリック記録 ID。アフィリエイト短縮リンクのコードを含み、この共有までたどれます。"
+    }
+  },
+  "momoshop.com.tw:wh_uuid": {
+    "owner": "momo",
+    "category": "session",
+    "risk": "medium",
+    "desc": {
+      "zh-TW": "momo 的訪客識別碼。打開分潤短網址時，momo 的轉址伺服器會發出同樣值的 wh_uuid cookie。",
+      "en": "momo visitor ID. When the affiliate short link is opened, momo's redirect server issues a wh_uuid cookie with the same value.",
+      "ja": "momo の訪問者 ID。アフィリエイト短縮リンクを開くと、momo のリダイレクトサーバーが同じ値の wh_uuid クッキーを発行します。"
+    }
+  },
+  "s.momoshop.com.tw:share-id": {
+    "owner": "momo",
+    "category": "sharer_id",
+    "risk": "high",
+    "desc": {
+      "zh-TW": "momo 分潤短網址裡的代碼，綁定這條分潤連結，可能讓 momo 得知是誰分享的。已展開成原始網址並移除。",
+      "en": "Code in the momo affiliate short link, tied to this affiliate link, that may let momo know who shared it. Expanded to the original URL and removed.",
+      "ja": "momo のアフィリエイト短縮リンクのコード。このアフィリエイトリンクに紐付き、誰が共有したかを momo が把握できる可能性があります。元の URL に展開して除去しました。"
+    }
   }
 }

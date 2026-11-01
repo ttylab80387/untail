@@ -119,6 +119,23 @@
         "gads_t_sig",
         "exp_group"
       ]
+    },
+    "momo app redirect": {
+      "urlPattern": "^https?:\\/\\/(?:www\\.|m\\.)?momoshop\\.com\\.tw\\/event\\/appRedirect\\.jsp\\?",
+      "redirections": [
+        "^https?:\\/\\/(?:www\\.|m\\.)?momoshop\\.com\\.tw\\/event\\/appRedirect\\.jsp\\?(?:(?!goodsUrl(?:[=&#]|$))[^&#=%]*(?:=[^&#]*)?&)*goodsUrl=(https?:\\/\\/(?:www\\.|m\\.)?momoshop\\.com\\.tw\\/[^&#]*|https?%3A%2F%2F(?:www\\.|m\\.)?momoshop\\.com\\.tw%2F[^&#]*)"
+      ]
+    },
+    "momo product links": {
+      "urlPattern": "^https?:\\/\\/(?:www\\.|m\\.)?momoshop\\.com\\.tw\\/(?:goods\\/GoodsDetail\\.jsp|goods\\.momo)(?:[?#]|$)",
+      "rules": [
+        "action_id",
+        "wh_uuid",
+        "affi_param",
+        "affi_type",
+        "pid",
+        "osm"
+      ]
     }
   }
 }

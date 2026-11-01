@@ -894,5 +894,141 @@
         "uls_trackid"
       ]
     }
+  },
+  {
+    "name": "momo share short link expands and leaves the app redirect page",
+    "input": "https://momo.dm/TEST01momo",
+    "responses": {
+      "https://momo.dm/TEST01momo": "https://www.momoshop.com.tw/event/appRedirect.jsp?status=0&goodsUrl=https://m.momoshop.com.tw/goods.momo?i_code=10419093&simOrderYn=0"
+    },
+    "expected": {
+      "cleanUrl": "https://m.momoshop.com.tw/goods.momo?i_code=10419093",
+      "status": "clean",
+      "removedKeys": [
+        "share-id"
+      ]
+    }
+  },
+  {
+    "name": "momo app redirect page opens the product directly",
+    "input": "https://www.momoshop.com.tw/event/appRedirect.jsp?status=0&goodsUrl=https%3A%2F%2Fm.momoshop.com.tw%2Fgoods.momo%3Fi_code%3D10419093",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://m.momoshop.com.tw/goods.momo?i_code=10419093",
+      "status": "clean",
+      "removedKeys": []
+    }
+  },
+  {
+    "name": "momo product pages keep i_code",
+    "input": "https://m.momoshop.com.tw/goods.momo?i_code=10419093",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://m.momoshop.com.tw/goods.momo?i_code=10419093",
+      "status": "clean",
+      "removedKeys": []
+    }
+  },
+  {
+    "name": "momo affiliate short link stops at the first redirect",
+    "input": "https://s.momoshop.com.tw/s/TEST02momo",
+    "responses": {
+      "https://s.momoshop.com.tw/s/TEST02momo": "https://www.momoshop.com.tw/event/appRedirect.jsp?status=0&goodsUrl=https%3A%2F%2Fwww.momoshop.com.tw%2Fgoods%2FGoodsDetail.jsp%3Fi_code%3D14598754%26utm_medium%3Dperson%26action_id%3DACTION-TEST02momo%26wh_uuid%3DVISITOR02%26affi_param%3DAFFI%252Fblob%252B02%26affi_type%3Dnormal%26pid%3D202106435156%26osm%3Dleague%26utm_source%3Dleague"
+    },
+    "expected": {
+      "cleanUrl": "https://www.momoshop.com.tw/goods/GoodsDetail.jsp?i_code=14598754",
+      "status": "clean",
+      "removedKeys": [
+        "share-id",
+        "utm_medium",
+        "action_id",
+        "wh_uuid",
+        "affi_param",
+        "affi_type",
+        "pid",
+        "osm",
+        "utm_source"
+      ]
+    }
+  },
+  {
+    "name": "momo pages other than product pages keep pid and osm",
+    "input": "https://www.momoshop.com.tw/category/LgrpCategory.jsp?l_code=1&pid=7&osm=x",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.momoshop.com.tw/category/LgrpCategory.jsp?l_code=1&pid=7&osm=x",
+      "status": "clean",
+      "removedKeys": []
+    }
+  },
+  {
+    "name": "momo app redirect takes the first goodsUrl",
+    "input": "https://www.momoshop.com.tw/event/appRedirect.jsp?goodsUrl=https%3A%2F%2Fm.momoshop.com.tw%2Fgoods.momo%3Fi_code%3D10419093&goodsUrl=https%3A%2F%2Fm.momoshop.com.tw%2Fgoods.momo%3Fi_code%3D1",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://m.momoshop.com.tw/goods.momo?i_code=10419093",
+      "status": "clean",
+      "removedKeys": []
+    }
+  },
+  {
+    "name": "momo app redirect is not unwrapped to another site",
+    "input": "https://www.momoshop.com.tw/event/appRedirect.jsp?goodsUrl=https%3A%2F%2Foutside.example%2Fx",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.momoshop.com.tw/event/appRedirect.jsp?goodsUrl=https%3A%2F%2Foutside.example%2Fx",
+      "status": "clean",
+      "removedKeys": []
+    }
+  },
+  {
+    "name": "momo app redirect is not unwrapped to a lookalike host",
+    "input": "https://www.momoshop.com.tw/event/appRedirect.jsp?goodsUrl=https%3A%2F%2Fm.momoshop.com.tw.evil.example%2Fgoods.momo",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.momoshop.com.tw/event/appRedirect.jsp?goodsUrl=https%3A%2F%2Fm.momoshop.com.tw.evil.example%2Fgoods.momo",
+      "status": "clean",
+      "removedKeys": []
+    }
+  },
+  {
+    "name": "momo app redirect is not unwrapped when mixed encoding hides another host",
+    "input": "https://www.momoshop.com.tw/event/appRedirect.jsp?goodsUrl=https://m.momoshop.com.tw%2F@outside.example/x",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.momoshop.com.tw/event/appRedirect.jsp?goodsUrl=https://m.momoshop.com.tw%2F@outside.example/x",
+      "status": "clean",
+      "removedKeys": []
+    }
+  },
+  {
+    "name": "momo app redirect is not unwrapped when an earlier parameter name is percent-encoded",
+    "input": "https://www.momoshop.com.tw/event/appRedirect.jsp?%67oodsUrl=https%3A%2F%2Fm.momoshop.com.tw%2Fgoods.momo%3Fi_code%3D111&goodsUrl=https%3A%2F%2Fm.momoshop.com.tw%2Fgoods.momo%3Fi_code%3D222",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.momoshop.com.tw/event/appRedirect.jsp?%67oodsUrl=https%3A%2F%2Fm.momoshop.com.tw%2Fgoods.momo%3Fi_code%3D111&goodsUrl=https%3A%2F%2Fm.momoshop.com.tw%2Fgoods.momo%3Fi_code%3D222",
+      "status": "clean",
+      "removedKeys": []
+    }
+  },
+  {
+    "name": "momo app redirect is not unwrapped to a later goodsUrl when the first one is outside",
+    "input": "https://www.momoshop.com.tw/event/appRedirect.jsp?goodsUrl=https%3A%2F%2Foutside.example%2Fx&goodsUrl=https%3A%2F%2Fm.momoshop.com.tw%2Fgoods.momo%3Fi_code%3D1",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.momoshop.com.tw/event/appRedirect.jsp?goodsUrl=https%3A%2F%2Foutside.example%2Fx&goodsUrl=https%3A%2F%2Fm.momoshop.com.tw%2Fgoods.momo%3Fi_code%3D1",
+      "status": "clean",
+      "removedKeys": []
+    }
+  },
+  {
+    "name": "momo app redirect is not unwrapped when the first goodsUrl has no value",
+    "input": "https://www.momoshop.com.tw/event/appRedirect.jsp?goodsUrl&goodsUrl=https%3A%2F%2Fm.momoshop.com.tw%2Fx",
+    "responses": {},
+    "expected": {
+      "cleanUrl": "https://www.momoshop.com.tw/event/appRedirect.jsp?goodsUrl&goodsUrl=https%3A%2F%2Fm.momoshop.com.tw%2Fx",
+      "status": "clean",
+      "removedKeys": []
+    }
   }
 ]

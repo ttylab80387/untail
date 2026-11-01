@@ -48,6 +48,15 @@
     "firstHop": true,
     "shareId": "^/(?!an_redir(?:[/?#]|$))([^/?#]+)"
   },
+  "momo": {
+    "match": "^https?://momo\\.dm/",
+    "shareId": "^/([^/?#]+)"
+  },
+  "momo affiliate": {
+    "match": "^https?://s\\.momoshop\\.com\\.tw/s/",
+    "firstHop": true,
+    "shareId": "^/s/([^/?#]+)"
+  },
   "generic": {
     "match": "^https?://(bit\\.ly|t\\.co|lnkd\\.in|amzn\\.to|fb\\.me)/"
   }
